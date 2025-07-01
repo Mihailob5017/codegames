@@ -7,6 +7,24 @@
 	"type": "commonjs",
 	"main": "index.js",
 	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1"
+		"dev": "nodemon src/index.ts",
+		"build": "tsc ",
+		"lint": "eslint . --ext .ts",
+		"lint:fix": "eslint . --ext .ts --fix",
+		"app:build": "docker-compose up --build -d",
+		"app:up": "docker-compose up -d",
+		"app:down": "docker-compose down",
+		"app:test": "docker-compose -f docker-compose.test.yml up --build"
+	},
+	"dependencies": {
+		"dotenv": "^17.0.0",
+		"express": "^5.1.0",
+		"nodemon": "^3.1.10",
+		"ts-node": "^10.9.2",
+		"typescript": "^5.8.3"
+	},
+	"devDependencies": {
+		"@types/express": "^5.0.3",
+		"@types/node": "^24.0.8"
 	}
 }
