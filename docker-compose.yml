@@ -24,6 +24,10 @@ services:
     depends_on:
       - db
       - redis
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+    command: npm run dev
 
 volumes:
   pgdata:

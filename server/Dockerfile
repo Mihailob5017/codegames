@@ -1,16 +1,23 @@
-# backend/Dockerfile
 FROM node:22-alpine
 
 WORKDIR /app
 
+# Copy package files and install dependencies
 COPY package*.json ./
+RUN npm ci --quiet
 
-RUN npm install
+# Copy Prisma schema and generate client
+COPY prisma ./prisma/
+RUN npx prisma generate
 
+# Copy the rest of the application code
 COPY . .
 
-RUN npm run build
+# Install bash and wait-for-it script
+RUN apk add --no-cache bash
+ADD https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh /wait-for-it.sh
+RUN chmod +x /wait-for-it.sh
 
-EXPOSE 5000
+EXPOSE 4000
 
-CMD ["npm", "start"]
+CMD ["/wait-for-it.sh", "db:5432", "--", "npm", "run", "dev"]

@@ -7,24 +7,36 @@
 	"type": "commonjs",
 	"main": "index.js",
 	"scripts": {
-		"dev": "nodemon src/index.ts",
+		"dev": "nodemon index.ts",
+		"generate": "prisma generate",
 		"build": "tsc ",
 		"lint": "eslint . --ext .ts",
+		"test": "jest",
+		"test:watch": "jest --watchAll",
 		"lint:fix": "eslint . --ext .ts --fix",
-		"app:build": "docker-compose up --build -d",
+		"app:build": "docker-compose up --build",
+		"app:rebuild": "docker-compose build",
 		"app:up": "docker-compose up -d",
 		"app:down": "docker-compose down",
 		"app:test": "docker-compose -f docker-compose.test.yml up --build"
 	},
 	"dependencies": {
-		"dotenv": "^17.0.0",
+		"@prisma/client": "^6.11.0",
+		"dotenv": "^17.0.1",
 		"express": "^5.1.0",
 		"nodemon": "^3.1.10",
+		"prisma": "^6.11.0",
+		"redis": "^5.5.6",
+		"supertest": "^7.1.1",
+		"ts-jest": "^29.4.0",
 		"ts-node": "^10.9.2",
 		"typescript": "^5.8.3"
 	},
 	"devDependencies": {
 		"@types/express": "^5.0.3",
-		"@types/node": "^24.0.8"
+		"@types/jest": "^30.0.0",
+		"@types/node": "^24.0.10",
+		"@types/supertest": "^6.0.3",
+		"jest": "^30.0.3"
 	}
 }

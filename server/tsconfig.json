@@ -1,7 +1,7 @@
 {
 	"compilerOptions": {
-		"target": "ES2021", // Modern JS target
-		"module": "CommonJS", // Required for Node.js
+		"target": "es6", // Modern JS target
+		"module": "commonjs", // Required for Node.js
 		"rootDir": "src", // Your source files
 		"outDir": "dist", // Compiled output
 		"strict": true, // All strict type checks
@@ -10,7 +10,7 @@
 		"skipLibCheck": true, // Skip .d.ts checks for faster builds
 		"moduleResolution": "node", // Resolve modules like Node
 		"resolveJsonModule": true, // Allows importing .json files
-		"types": ["node"], // Node.js + Jest types
+		"types": ["node", "jest"], // Node.js + Jest types
 		"allowSyntheticDefaultImports": true, // For cleaner imports
 		"sourceMap": true // Helpful for debugging
 	},
