@@ -1,5 +1,5 @@
 import express, { Express } from 'express';
-
+import adminRouter from '../routes/adminRoute';
 /**
  * Sets up middleware and routes for the Express application.
  *
@@ -13,9 +13,8 @@ import express, { Express } from 'express';
 
 export const setupExpress = (app: Express): Express => {
 	app.use(express.json());
-
-	const rootRouter = express.Router();
-	app.use('/', rootRouter);
+	const adminRoute = process.env.ADMIN_ROUTE;
+	app.use(`/${adminRoute}`, adminRouter);
 
 	return app;
 };

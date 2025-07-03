@@ -10,13 +10,17 @@ RUN npm ci --quiet
 COPY prisma ./prisma/
 RUN npx prisma generate
 
+
 # Copy the rest of the application code
 COPY . .
 
+RUN npx prisma migrate
 # Install bash and wait-for-it script
 RUN apk add --no-cache bash
 ADD https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh /wait-for-it.sh
 RUN chmod +x /wait-for-it.sh
+
+
 
 EXPOSE 4000
 

@@ -2,14 +2,15 @@ import dontenv from 'dotenv';
 dontenv.config();
 
 import express from 'express';
-import { PrismaClient } from './generated/prisma/client';
-import { setupExpress, setupPrismaClient } from './config';
 
-const prisma = new PrismaClient();
+import { setupExpress } from './config/expressSetup';
+import { setupPrismaClient } from './config/prismaSetup';
+import { prismaClient } from './utils/contants';
+
 const startServer = async () => {
 	const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 	const app = express();
-	await setupPrismaClient(prisma);
+	await setupPrismaClient(prismaClient);
 	setupExpress(app).listen(port, () => {
 		console.log(`Server is running on http://localhost:${port}`);
 	});
@@ -17,6 +18,6 @@ const startServer = async () => {
 
 startServer().catch((error) => {
 	console.error('Failed to start server:', error);
-	prisma.$disconnect();
+	prismaClient.$disconnect();
 	process.exit(1);
 });

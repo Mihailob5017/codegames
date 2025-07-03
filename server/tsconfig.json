@@ -2,7 +2,7 @@
 	"compilerOptions": {
 		"target": "es6", // Modern JS target
 		"module": "commonjs", // Required for Node.js
-		"rootDir": "src", // Your source files
+		"rootDir": ".", // Your source files
 		"outDir": "dist", // Compiled output
 		"strict": true, // All strict type checks
 		"esModuleInterop": true, // Allow default import compatibility
@@ -12,8 +12,8 @@
 		"resolveJsonModule": true, // Allows importing .json files
 		"types": ["node", "jest"], // Node.js + Jest types
 		"allowSyntheticDefaultImports": true, // For cleaner imports
-		"sourceMap": true // Helpful for debugging
+		"sourceMap": true // Helpful for debugging,
 	},
-	"include": ["src/**/*.ts"],
+	"include": ["**/*.ts"],
 	"exclude": ["node_modules", "dist"]
 }
