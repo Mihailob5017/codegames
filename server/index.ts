@@ -3,8 +3,8 @@ dontenv.config();
 
 import express from 'express';
 
-import { setupExpress } from './config/expressSetup';
-import { setupPrismaClient } from './config/prismaSetup';
+import { setupExpress } from './config/express-config';
+import { setupPrismaClient } from './config/prisma-config';
 import { prismaClient } from './utils/contants';
 
 const startServer = async () => {

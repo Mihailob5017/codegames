@@ -1,5 +1,6 @@
 import express, { Express } from 'express';
-import adminRouter from '../routes/adminRoute';
+import adminRouter from '../routes/admin-route';
+import { errorMiddleware } from '../middlewares/error-middleware';
 /**
  * Sets up middleware and routes for the Express application.
  *
@@ -15,6 +16,8 @@ export const setupExpress = (app: Express): Express => {
 	app.use(express.json());
 	const adminRoute = process.env.ADMIN_ROUTE;
 	app.use(`/${adminRoute}`, adminRouter);
+
+	app.use(errorMiddleware);
 
 	return app;
 };
