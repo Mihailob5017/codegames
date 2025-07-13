@@ -1,6 +1,9 @@
-import AdminService from '../services/admin-service';
-import { ControllerFn, ResponseObject } from '../types/common/controller-types';
-import { HttpError } from '../types/common/error-types';
+import AdminService from '../../services/admin/admin-service';
+import {
+	ControllerFn,
+	ResponseObject,
+} from '../../types/common/controller-types';
+import { HttpError } from '../../types/common/error-types';
 
 export class AdminController {
 	static whoami: ControllerFn = async (req, res, next) => {
@@ -35,9 +38,6 @@ export class AdminController {
 		try {
 			const { id } = req.params;
 			const user = await AdminService.deleteUser(id);
-			if (!user) {
-				throw new HttpError(404, 'User not found');
-			}
 			const responseObj = ResponseObject.success(
 				200,
 				'User  successfully deleted',
