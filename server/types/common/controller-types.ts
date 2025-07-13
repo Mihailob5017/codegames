@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { HttpStatusCode } from '../../utils/contants';
+import { HttpStatusCode } from '../../utils/constants';
 import { HttpError } from './error-types';
 
 interface IResponseObject {

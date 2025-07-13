@@ -3,7 +3,6 @@ import {
 	ControllerFn,
 	ResponseObject,
 } from '../../types/common/controller-types';
-import { HttpError } from '../../types/common/error-types';
 
 export class AdminController {
 	static whoami: ControllerFn = async (req, res, next) => {

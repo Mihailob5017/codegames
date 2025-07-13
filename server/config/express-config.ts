@@ -2,7 +2,7 @@ import express, { Express } from 'express';
 import { errorMiddleware } from '../middlewares/error-middleware';
 
 import adminRouter from '../routes/admin-route';
-
+import loginRouter from '../routes/login-route';
 class ExpressSingleton {
 	private static instance: ExpressSingleton;
 	private app: Express;
@@ -28,6 +28,7 @@ class ExpressSingleton {
 		}
 
 		this.app.use(`/${adminRoute}`, adminRouter);
+		this.app.use('/login', loginRouter);
 	}
 
 	/**
