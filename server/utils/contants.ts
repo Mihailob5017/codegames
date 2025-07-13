@@ -1,7 +1,3 @@
-import { PrismaClient } from '../generated/prisma/client';
-
-export const prismaClient: PrismaClient = new PrismaClient();
-
 export const HTTP_RESPONSE_CODE = {
 	NOT_FOUND: 404,
 	CREATED: 201,

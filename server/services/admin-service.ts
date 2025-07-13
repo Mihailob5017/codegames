@@ -1,51 +1,30 @@
-import { prismaClient } from '../utils/contants';
 import { User } from '../generated/prisma';
+import { AdminRepository } from '../repositories/admin-repositories';
 
-/**
- * Retrieves all users from the database.
- * @returns An array of `User` objects containing all users from the database.
- */
-export const getAllUsers = async (): Promise<User[]> => {
-	try {
-		const users = await prismaClient.user.findMany();
-		return users;
-	} catch (error) {
-		throw error;
+class AdminService {
+	static async getAllUsers(): Promise<User[]> {
+		try {
+			return await AdminRepository.getAllUsers();
+		} catch (error) {
+			throw new Error('Failed to fetch all users');
+		}
 	}
-};
 
-/**
- * Retrieves a user from the database by their unique ID.
- * @param {string} id - The unique ID of the user to retrieve.
- * @returns {Promise<User | null>} A promise that resolves to the user object if found,
- * or null if no user with the given ID exists.
- * @throws Will throw an error if the database query fails.
- */
-
-export const getUser = async (id: string): Promise<User | null> => {
-	try {
-		const user = await prismaClient.user.findUnique({
-			where: { id },
-		});
-		return user;
-	} catch (error) {
-		throw error;
+	static async getUser(id: string): Promise<User | null> {
+		try {
+			return await AdminRepository.getUser(id);
+		} catch (error) {
+			throw new Error(`Failed to fetch user with id: ${id}`);
+		}
 	}
-};
 
-/**
- * Deletes a user from the database with the given `id`.
- * @param {string} id The ID of the user to delete.
- * @returns The deleted user.
- * @throws Will throw an error if the user does not exist.
- */
-export const deleteUser = async (id: string): Promise<User> => {
-	try {
-		const user = await prismaClient.user.delete({
-			where: { id },
-		});
-		return user;
-	} catch (error) {
-		throw error;
+	static async deleteUser(id: string): Promise<User> {
+		try {
+			return await AdminRepository.deleteUser(id);
+		} catch (error) {
+			throw new Error(`Failed to delete user with id: ${id}`);
+		}
 	}
-};
+}
+
+export default AdminService;
