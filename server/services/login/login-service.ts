@@ -1,29 +1,69 @@
 import { CreateUserInput } from '../../models/user-model';
+import { LoginRepository } from '../../repositories/login-repositories';
 import { HttpError } from '../../types/common/error-types';
-import { HttpStatusCode } from '../../utils/constants';
+import {
+	encryptPassword,
+	generateId,
+	generateToken,
+} from '../../utils/helpers';
 import { validateSignup } from '../../utils/request-validator';
 
 export class SignupService {
-	private instance: SignupService;
-	private userInput: CreateUserInput;
-	constructor(userInput?: CreateUserInput) {
-		if (!userInput) {
-			throw new HttpError(HttpStatusCode.BAD_REQUEST, 'User input is required');
-		}
+	private userInput: Partial<CreateUserInput> = {} as CreateUserInput;
+
+	constructor(userInput: Partial<CreateUserInput>) {
 		this.userInput = userInput;
-		this.instance = new SignupService();
 	}
 
-	private getLoginService(): SignupService {
-		return this.instance;
+	public normalizeInput(): SignupService {
+		const { token, expiry } = generateToken();
+		this.userInput = {
+			...this.userInput,
+			id: generateId() as string,
+			createdAt: new Date(),
+			updatedAt: new Date(),
+			googleId: this.userInput.isGoogleLogin ? this.userInput.googleId : '',
+			isProfileDeleted: false,
+			isProfileOpen: true,
+			currency: 0,
+			pointsScored: 0,
+			role: 'user',
+			verifyToken: token,
+			verifyTokenExpiry: expiry,
+			verified: false,
+			passwordHash: encryptPassword(this.userInput.passwordHash as string),
+		};
+
+		return this;
+	}
+	public validateInput(): SignupService {
+		validateSignup(this.userInput as CreateUserInput);
+		return this;
 	}
 
-	public checkUserInput(): SignupService {
-		validateSignup(this.userInput);
-		return this.getLoginService();
+	public async checkIfUserExists(): Promise<SignupService> {
+		const uniqueParams = {
+			email: this.userInput.email as string,
+			username: this.userInput.username as string,
+			phoneNumb: this.userInput.phoneNumb as string,
+		};
+
+		const existingUser = await LoginRepository.checkIfUserExists(uniqueParams);
+
+		if (existingUser !== null) {
+			throw new HttpError(400, 'User already exists');
+		}
+
+		return this;
 	}
 
-	public checkIfUserExists(id: string): SignupService {
-		return this.getLoginService();
+	public async saveUser(): Promise<SignupService> {
+		if (this.userInput.id === undefined) {
+			throw new HttpError(400, 'User id is required');
+		} else {
+			await LoginRepository.saveUser(this.userInput as CreateUserInput);
+
+			return Promise.resolve(this);
+		}
 	}
 }

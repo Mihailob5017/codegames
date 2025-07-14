@@ -8,12 +8,15 @@ import {
 export class LoginController {
 	static signup: ControllerFn = async (req, res, next) => {
 		try {
-			const userInput: CreateUserInput = req.body;
-			const signupInstance = new SignupService(userInput);
-
-			signupInstance.checkUserInput();
-
-			const responseObj = ResponseObject.success(200, 'Hello Admin');
+			const signupService = new SignupService(req.body);
+			await signupService.normalizeInput();
+			await signupService.validateInput();
+			await signupService.checkIfUserExists();
+			await signupService.saveUser();
+			const responseObj = ResponseObject.success(
+				200,
+				'User successfully created'
+			);
 			responseObj.send(res);
 		} catch (error) {
 			next(error);

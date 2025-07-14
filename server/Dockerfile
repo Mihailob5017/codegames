@@ -4,7 +4,7 @@ WORKDIR /app
 
 # Copy package files and install dependencies
 COPY package*.json ./
-RUN npm ci --quiet
+RUN npm install
 
 # Copy Prisma schema and generate client
 COPY prisma ./prisma/

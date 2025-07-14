@@ -22,3 +22,9 @@ export type UserType = {
 	pointsScored?: number;
 	isProfileOpen?: boolean;
 };
+
+export type UniqueInputTypes = {
+	username: string;
+	email: string;
+	phoneNumb: string;
+};

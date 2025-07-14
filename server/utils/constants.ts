@@ -92,4 +92,6 @@ export const ZodParams = {
 	},
 } as const;
 
+export const bcryptSaltRounds = 10;
+
 export type Role = (typeof ZodParams.role.types)[number];

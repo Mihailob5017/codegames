@@ -1,5 +1,39 @@
 import * as z from 'zod';
 import { ZodParams } from '../utils/constants';
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// model User {
+//   // Main information
+//   id String @id @unique
+//   username String @unique @db.VarChar(20)
+//   email String @unique @db.VarChar(20)
+//   phoneNumb String @unique @db.VarChar(20)
+//   // Login-metadata
+//   isGoogleLogin Boolean @default(false)
+//   passwordHash String?
+//   googleId String?
+//   verifyToken Int
+//   verifyTokenExpiry DateTime
+//   verified Boolean @default(false)
+//   role Role @default(user)
+//   // User info
+//   firstName String
+//   lastName String
+//   country String
+//   isAvatarSelected Boolean @default(false)
+//   avatar String?
+//   isProfileDeleted Boolean @default(false)
+//   // Leaderboard & Challenges
+//   currency Int @default(0)
+//   pointsScored Int @default(0)
+//   isProfileOpen Boolean @default(true)
+//   // ChallangesUnlocked etc
+//   // History etc
+//   // Timestamps
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @default(now()) @updatedAt
+// }
 
 export const CreateUserInputSchema = z.object({
 	id: z.uuidv4(),
@@ -16,7 +50,7 @@ export const CreateUserInputSchema = z.object({
 		.min(ZodParams.phoneNum.min, ZodParams.errors.phoneNum.min)
 		.startsWith(ZodParams.phoneNum.prefix, ZodParams.errors.phoneNum.prefix),
 	isGoogleLogin: z.boolean().default(ZodParams.defaults.isGoogleLogin),
-	passwordHash: z.string().optional(),
+	passwordHash: z.string(),
 	googleId: z.string().optional(),
 	verifyToken: z.number(),
 	verifyTokenExpiry: z.date(),
@@ -26,7 +60,7 @@ export const CreateUserInputSchema = z.object({
 	lastName: z.string(),
 	country: z.string(),
 	isAvatarSelected: z.boolean().default(ZodParams.defaults.isAvatarSelected),
-	avatar: z.string().optional(),
+	avatar: z.string().or(z.null()).optional(),
 	isProfileDeleted: z.boolean().default(ZodParams.defaults.isProfileDeleted),
 	currency: z.number().default(ZodParams.defaults.currency),
 	pointsScored: z.number().default(ZodParams.defaults.pointsScored),
