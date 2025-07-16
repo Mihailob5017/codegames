@@ -25,7 +25,7 @@ services:
     ports:
       - '4000:4000'
     env_file:
-      - .env
+      - ./server/.env
     depends_on:
       - db
       - redis
@@ -33,6 +33,17 @@ services:
       - ./server:/app
       - /app/node_modules
     command: npm run dev
-
+  frontend:
+    build: './client'
+    ports:
+      - '5173:5173'
+    env_file:
+      - ./client/.env
+    depends_on:
+      - backend
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    command: npm run dev
 volumes:
   pgdata:

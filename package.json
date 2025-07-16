@@ -1,5 +1,15 @@
 {
-  "dependencies": {
-    "uuid": "^11.1.0"
-  }
+	"name": "codegames",
+	"version": "1.0.0",
+	"description": "a leetcode clone",
+	"license": "ISC",
+	"author": "",
+	"type": "commonjs",
+	"main": "index.js",
+	"scripts": {
+		"app:build": "docker-compose up --build",
+		"app:up": "docker-compose up",
+		"app:down": "docker-compose down",
+		"app:test": "docker-compose -f docker-compose.test.yml up --build"
+	}
 }
