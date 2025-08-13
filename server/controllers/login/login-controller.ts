@@ -9,13 +9,17 @@ export class LoginController {
 	static signup: ControllerFn = async (req, res, next) => {
 		try {
 			const signupService = new SignupService(req.body);
-			await signupService.normalizeInput();
-			await signupService.validateInput();
+			signupService.normalizeInput();
+			signupService.validateInput();
 			await signupService.checkIfUserExists();
 			await signupService.saveUser();
+			const response = await signupService.getResponse();
+			signupService.sendVerificationToken();
+
 			const responseObj = ResponseObject.success(
 				200,
-				'User successfully created'
+				'User successfully created, a verification token has been sent to your email',
+				response
 			);
 			responseObj.send(res);
 		} catch (error) {

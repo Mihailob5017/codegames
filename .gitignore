@@ -9,3 +9,7 @@ node_modules
 /generated/prisma
 
 server/prisma/migrations/*
+
+client/src/exams/*
+
+**/.DS_Store

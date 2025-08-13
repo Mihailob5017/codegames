@@ -8,7 +8,7 @@ export class LoginRepository {
 	static checkIfUserExists(
 		uniqueParams: UniqueInputTypes
 	): Promise<User | null> {
-		return PrismaServiceInstance.getClient().user.findUniqueOrThrow({
+		return PrismaServiceInstance.getClient().user.findUnique({
 			where: uniqueParams,
 		});
 	}
