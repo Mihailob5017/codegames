@@ -50,7 +50,7 @@ export const CreateUserInputSchema = z.object({
 		.min(ZodParams.phoneNum.min, ZodParams.errors.phoneNum.min)
 		.startsWith(ZodParams.phoneNum.prefix, ZodParams.errors.phoneNum.prefix),
 	isGoogleLogin: z.boolean().default(ZodParams.defaults.isGoogleLogin),
-	passwordHash: z.string(),
+	passwordHash: z.string().nullable().optional(),
 	googleId: z.string().optional(),
 	verifyToken: z.number(),
 	verifyTokenExpiry: z.date(),

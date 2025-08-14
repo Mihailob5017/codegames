@@ -24,5 +24,13 @@ export const comparePassword = (password: string, hash: string): boolean => {
 export const generateJWT = (jwtPayload: JwtPayloadType) => {
 	const jwtSecret = process.env.JWT_SECRET as string;
 
-	return jwt.sign(jwtPayload, jwtSecret);
+	return jwt.sign(jwtPayload, jwtSecret, {
+		expiresIn: '1d',
+	});
+};
+
+export const verifyJWT = (token: string) => {
+	const jwtSecret = process.env.JWT_SECRET as string;
+
+	return jwt.verify(token, jwtSecret) as JwtPayloadType;
 };

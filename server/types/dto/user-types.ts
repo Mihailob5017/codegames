@@ -26,13 +26,14 @@ export type UserType = {
 export type UniqueInputTypes = {
 	username: string;
 	email: string;
-	phoneNumb: string;
 };
 
 export type JwtPayloadType = {
+	id: string;
 	username: string;
 	email: string;
 	passwordHash: string;
+	phoneNumb: string;
 };
 
 export type CreateUserResponseType = {

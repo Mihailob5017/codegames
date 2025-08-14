@@ -17,4 +17,17 @@ export class LoginRepository {
 			data: user,
 		});
 	}
+
+	static async getUser(id: string): Promise<User | null> {
+		return PrismaServiceInstance.getClient().user.findUnique({
+			where: { id },
+		});
+	}
+
+	static async updateUser(user: Partial<CreateUserInput>): Promise<User> {
+		return PrismaServiceInstance.getClient().user.update({
+			where: { id: user.id },
+			data: user,
+		});
+	}
 }

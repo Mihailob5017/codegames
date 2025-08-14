@@ -11,11 +11,17 @@ import {
 	generateId,
 	generateJWT,
 	generateToken,
+	verifyJWT,
 } from '../../utils/auth';
 import { validateSignup } from '../../utils/request-validator';
 import { htmlTemplate } from '../../templates/html';
 import { textTemplate } from '../../templates/text';
 const nodemailer = require('nodemailer');
+
+type TokenData = {
+	token: string;
+	expiry: Date;
+};
 export class SignupService {
 	private userInput: Partial<CreateUserInput> = {} as CreateUserInput;
 	private transporter: typeof nodemailer;
@@ -94,13 +100,74 @@ export class SignupService {
 
 	private generateJWT = async (): Promise<string> => {
 		const jwtPayload: JwtPayloadType = {
+			id: this.userInput.id as string,
 			username: this.userInput.username as string,
 			email: this.userInput.email as string,
 			passwordHash: this.userInput.passwordHash as string,
+			phoneNumb: this.userInput.phoneNumb as string,
 		};
 
 		return generateJWT(jwtPayload);
 	};
+
+	private async getUserOTP(): Promise<Partial<UserType>> {
+		const user = await LoginRepository.getUser(this.userInput.id as string);
+		if (!user) {
+			throw new HttpError(404, 'User not found');
+		}
+
+		return {
+			verifyToken: user.verifyToken,
+			verifyTokenExpiry: user.verifyTokenExpiry,
+		};
+	}
+
+	public async getOTP(token: string): Promise<SignupService> {
+		const payload = verifyJWT(token);
+		const { id, email, username, phoneNumb } = payload;
+
+		this.userInput = { id, email, username, phoneNumb };
+
+		const userOTP = await this.getUserOTP();
+
+		this.userInput = {
+			...this.userInput,
+			verifyToken: userOTP.verifyToken,
+			verifyTokenExpiry: userOTP.verifyTokenExpiry,
+		};
+
+		return this;
+	}
+
+	public async verifyUser(): Promise<SignupService> {
+		const user = await LoginRepository.getUser(this.userInput.id as string);
+		if (!user) {
+			throw new HttpError(404, 'User not found');
+		}
+
+		if (!user.verified) {
+			await LoginRepository.updateUser({
+				id: this.userInput.id as string,
+				verified: true,
+			});
+		}
+		return this;
+	}
+
+	public async verifyOTP(otp: number): Promise<SignupService> {
+		const userOTP = await this.getUserOTP();
+		const { verifyToken, verifyTokenExpiry: expiration } = userOTP;
+
+		if (String(verifyToken) !== String(otp)) {
+			throw new HttpError(400, 'Invalid OTP');
+		}
+
+		// if (expiration && expiration < new Date()) {
+		// 	throw new HttpError(400, 'OTP expired');
+		// }
+
+		return this;
+	}
 	public async getResponse(): Promise<CreateUserResponseType> {
 		const jsonwebtoken = await this.generateJWT();
 
