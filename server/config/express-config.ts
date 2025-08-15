@@ -4,11 +4,9 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { errorMiddleware } from '../middlewares/error-middleware';
 import { parseEnvVar, parseEnvInt } from '../utils/helpers';
-import { RATE_LIMITS, HttpStatusCode } from '../utils/constants';
-import { HttpError } from '../types/common/error-types';
+import { RATE_LIMITS } from '../utils/constants';
 
-import adminRouter from '../routes/admin-route';
-import loginRouter from '../routes/login-route';
+import { MainRouter } from '../routes';
 
 export interface ServerConfig {
 	port: number;
@@ -23,10 +21,16 @@ class ExpressServer {
 	private static instance: ExpressServer;
 	private app: Express;
 	private config: ServerConfig;
+	private mainRouter: MainRouter;
 
 	private constructor() {
 		this.config = this.loadConfiguration();
 		this.app = express();
+		this.mainRouter = new MainRouter({
+			apiPrefix: this.config.apiPrefix,
+			adminRoute: this.config.adminRoute,
+			nodeEnv: this.config.nodeEnv,
+		});
 		this.setupMiddleware();
 		this.setupRoutes();
 		this.setupErrorHandling();
@@ -155,27 +159,8 @@ class ExpressServer {
 	}
 
 	private setupRoutes(): void {
-		const apiPrefix = `/${this.config.apiPrefix}`;
-
-		// Health check
-		this.app.get('/health', (req: Request, res: Response) => {
-			res.status(HttpStatusCode.OK).json({
-				status: 'healthy',
-				timestamp: new Date().toISOString(),
-				environment: this.config.nodeEnv,
-			});
-		});
-
-		// API routes
-		this.app.use(`${apiPrefix}/${this.config.adminRoute}`, adminRouter);
-		this.app.use(`${apiPrefix}/auth`, loginRouter);
-
-		this.app.all('/{*any}', (req: Request, res: Response) => {
-			throw new HttpError(
-				HttpStatusCode.NOT_FOUND,
-				`Route ${req.originalUrl} not found`
-			);
-		});
+		// Use the main router for all routes
+		this.app.use('/', this.mainRouter.getRouter());
 	}
 
 	private setupErrorHandling(): void {
