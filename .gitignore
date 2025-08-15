@@ -12,4 +12,6 @@ server/prisma/migrations/*
 
 client/src/exams/*
 
+server/dist
+
 **/.DS_Store

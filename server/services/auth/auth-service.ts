@@ -9,6 +9,7 @@ import {
 	JwtPayloadType,
 	UserType,
 } from '../../types/dto/user-types';
+import { Role } from '../../utils/constants';
 import {
 	encryptPassword,
 	generateId,
@@ -197,6 +198,7 @@ export class AuthService implements ISignupService {
 			email: this.userInput.email as string,
 			passwordHash: this.userInput.passwordHash as string,
 			phoneNumb: this.userInput.phoneNumb as string,
+			role: this.userInput.role as Role,
 		};
 
 		return generateJWT(jwtPayload);

@@ -4,22 +4,16 @@ import { AuthMiddleware } from '../middlewares/auth-middleware';
 
 const router = Router();
 
-router.post('/create-user', LoginController.signup);
-
-// google signup/login
-
-// verify otp
+router.post('/signup', LoginController.signup);
 router.post('/verify-otp', AuthMiddleware, LoginController.verifyOTP);
-// resend otp
 
-// forgot password
-
-// login user
-
-// logout user
-
-// refresh token
-
-// get user with token
+// TODO: Implement the following endpoints:
+// router.post('/google-auth', LoginController.googleAuth);
+// router.post('/resend-otp', AuthMiddleware, LoginController.resendOTP);
+// router.post('/forgot-password', LoginController.forgotPassword);
+// router.post('/login', LoginController.login);
+// router.post('/logout', AuthMiddleware, LoginController.logout);
+// router.post('/refresh-token', LoginController.refreshToken);
+// router.get('/profile', AuthMiddleware, LoginController.getProfile);
 
 export default router;

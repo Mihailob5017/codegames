@@ -1,59 +1,148 @@
-import { PrismaClient } from '../generated/prisma/client';
+import { PrismaClient, Prisma } from '../generated/prisma/client';
+import { parseEnvVar, parseEnvBool } from '../utils/helpers';
 
-class PrismaService {
-	private static instance: PrismaService;
-	private prismaClient: PrismaClient;
+export interface DatabaseConfig {
+	url: string;
+	logLevel: Prisma.LogLevel[];
+	connectionTimeout: number;
+	queryTimeout: number;
+	enableLogging: boolean;
+}
+
+class DatabaseService {
+	private static instance: DatabaseService;
+	private client: PrismaClient;
+	private config: DatabaseConfig;
+	private isConnected: boolean = false;
+
 	private constructor() {
-		this.prismaClient = new PrismaClient();
+		this.config = this.loadConfiguration();
+		this.client = this.createClient();
+		this.setupEventHandlers();
 	}
 
-	/**
-	 * Retrieves the singleton instance of PrismaService.
-	 * If an instance does not exist, it creates a new one.
-	 *
-	 * @returns {PrismaService} The singleton instance of PrismaService.
-	 */
-
-	public static getInstance(): PrismaService {
-		return (
-			PrismaService.instance ?? (PrismaService.instance = new PrismaService())
-		);
+	public static getInstance(): DatabaseService {
+		if (!DatabaseService.instance) {
+			DatabaseService.instance = new DatabaseService();
+		}
+		return DatabaseService.instance;
 	}
 
-	/**
-	 * Retrieves the PrismaClient instance used by the service.
-	 *
-	 * @returns The PrismaClient instance.
-	 */
 	public getClient(): PrismaClient {
-		return this.prismaClient;
+		return this.client;
 	}
 
-	/**
-	 * Establishes a connection to the Prisma database.
-	 *
-	 * This asynchronous method attempts to connect to the database using PrismaClient.
-	 * If successful, it logs a confirmation message. If the connection fails, it logs
-	 * the error and rethrows it for further handling.
-	 *
-	 * @throws Will throw an error if the connection to the database fails.
-	 */
+	public getConfig(): DatabaseConfig {
+		return this.config;
+	}
+
+	public isConnectedToDatabase(): boolean {
+		return this.isConnected;
+	}
 
 	public async connect(): Promise<void> {
 		try {
-			await this.prismaClient.$connect();
-			console.log('Prisma connected successfully');
+			await this.client.$connect();
+			this.isConnected = true;
+			console.log('📊 Database connected successfully');
+			
+			// Verify connection with a simple query
+			await this.healthCheck();
 		} catch (error) {
-			console.error('Error connecting to Prisma:', error);
-			throw error; // Rethrow to allow calling code to handle errors
+			this.isConnected = false;
+			console.error('❌ Database connection failed:', error);
+			throw error;
 		}
 	}
 
-	// Optional: Disconnect from the database
 	public async disconnect(): Promise<void> {
-		await this.prismaClient.$disconnect();
-		console.log('Prisma disconnected');
+		try {
+			await this.client.$disconnect();
+			this.isConnected = false;
+			console.log('📊 Database disconnected successfully');
+		} catch (error) {
+			console.error('❌ Database disconnection failed:', error);
+			throw error;
+		}
+	}
+
+	public async healthCheck(): Promise<{ status: 'healthy' | 'unhealthy'; details: any }> {
+		try {
+			const result = await this.client.$queryRaw`SELECT 1 as health_check`;
+			return {
+				status: 'healthy',
+				details: {
+					connected: this.isConnected,
+					result,
+					timestamp: new Date().toISOString(),
+				},
+			};
+		} catch (error) {
+			return {
+				status: 'unhealthy',
+				details: {
+					connected: this.isConnected,
+					error: error instanceof Error ? error.message : 'Unknown error',
+					timestamp: new Date().toISOString(),
+				},
+			};
+		}
+	}
+
+	public async executeTransaction<T>(
+		operations: (client: Prisma.TransactionClient) => Promise<T>,
+		options?: {
+			maxWait?: number;
+			timeout?: number;
+			isolationLevel?: Prisma.TransactionIsolationLevel;
+		}
+	): Promise<T> {
+		return this.client.$transaction(operations, {
+			maxWait: options?.maxWait || 5000,
+			timeout: options?.timeout || 10000,
+			isolationLevel: options?.isolationLevel,
+		});
+	}
+
+	private loadConfiguration(): DatabaseConfig {
+		const logLevelStr = process.env.DATABASE_LOG_LEVEL || 'warn';
+		const logLevels = logLevelStr.split(',').map(level => 
+			level.trim() as Prisma.LogLevel
+		);
+
+		return {
+			url: parseEnvVar('DATABASE_URL'),
+			logLevel: logLevels,
+			connectionTimeout: parseInt(process.env.DATABASE_CONNECTION_TIMEOUT || '10000'),
+			queryTimeout: parseInt(process.env.DATABASE_QUERY_TIMEOUT || '10000'),
+			enableLogging: parseEnvBool('DATABASE_ENABLE_LOGGING', false),
+		};
+	}
+
+	private createClient(): PrismaClient {
+		return new PrismaClient({
+			datasources: {
+				db: {
+					url: this.config.url,
+				},
+			},
+			log: this.config.enableLogging ? this.config.logLevel : [],
+			errorFormat: 'pretty',
+		});
+	}
+
+	private setupEventHandlers(): void {
+		// Graceful shutdown handling
+		process.on('SIGINT', async () => {
+			console.log('🛑 Received SIGINT, disconnecting from database...');
+			await this.disconnect();
+		});
+
+		process.on('SIGTERM', async () => {
+			console.log('🛑 Received SIGTERM, disconnecting from database...');
+			await this.disconnect();
+		});
 	}
 }
 
-export const PrismaServiceInstance = PrismaService.getInstance();
+export const PrismaServiceInstance = DatabaseService.getInstance();

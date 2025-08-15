@@ -1,72 +1,151 @@
 import * as z from 'zod';
-import { ZodParams } from '../utils/constants';
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// model User {
-//   // Main information
-//   id String @id @unique
-//   username String @unique @db.VarChar(20)
-//   email String @unique @db.VarChar(20)
-//   phoneNumb String @unique @db.VarChar(20)
-//   // Login-metadata
-//   isGoogleLogin Boolean @default(false)
-//   passwordHash String?
-//   googleId String?
-//   verifyToken Int
-//   verifyTokenExpiry DateTime
-//   verified Boolean @default(false)
-//   role Role @default(user)
-//   // User info
-//   firstName String
-//   lastName String
-//   country String
-//   isAvatarSelected Boolean @default(false)
-//   avatar String?
-//   isProfileDeleted Boolean @default(false)
-//   // Leaderboard & Challenges
-//   currency Int @default(0)
-//   pointsScored Int @default(0)
-//   isProfileOpen Boolean @default(true)
-//   // ChallangesUnlocked etc
-//   // History etc
-//   // Timestamps
-//   createdAt DateTime @default(now())
-//   updatedAt DateTime @default(now()) @updatedAt
-// }
+import { 
+	VALIDATION_RULES, 
+	VALIDATION_ERRORS, 
+	USER_DEFAULTS, 
+	USER_ROLES 
+} from '../utils/constants';
 
 export const CreateUserInputSchema = z.object({
-	id: z.uuidv4(),
+	id: z.string().uuid(),
 	username: z
 		.string()
-		.min(ZodParams.username.min, ZodParams.errors.username.min)
-		.max(ZodParams.username.max, ZodParams.errors.username.max),
+		.min(VALIDATION_RULES.USERNAME.MIN, VALIDATION_ERRORS.USERNAME.MIN)
+		.max(VALIDATION_RULES.USERNAME.MAX, VALIDATION_ERRORS.USERNAME.MAX)
+		.regex(/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores'),
 	email: z
-		.email(ZodParams.errors.email.type)
-		.min(ZodParams.email.min, ZodParams.errors.email.min)
-		.max(ZodParams.email.max, ZodParams.errors.email.max),
+		.string()
+		.email(VALIDATION_ERRORS.EMAIL.INVALID)
+		.min(VALIDATION_RULES.EMAIL.MIN, VALIDATION_ERRORS.EMAIL.MIN)
+		.max(VALIDATION_RULES.EMAIL.MAX, VALIDATION_ERRORS.EMAIL.MAX)
+		.toLowerCase(),
 	phoneNumb: z
 		.string()
-		.min(ZodParams.phoneNum.min, ZodParams.errors.phoneNum.min)
-		.startsWith(ZodParams.phoneNum.prefix, ZodParams.errors.phoneNum.prefix),
-	isGoogleLogin: z.boolean().default(ZodParams.defaults.isGoogleLogin),
-	passwordHash: z.string().nullable().optional(),
+		.min(VALIDATION_RULES.PHONE.MIN, VALIDATION_ERRORS.PHONE.MIN)
+		.startsWith(VALIDATION_RULES.PHONE.PREFIX, VALIDATION_ERRORS.PHONE.PREFIX)
+		.regex(/^\+[1-9]\d{9,14}$/, 'Invalid phone number format'),
+	isGoogleLogin: z.boolean().default(USER_DEFAULTS.IS_GOOGLE_LOGIN),
+	passwordHash: z.string().optional(),
 	googleId: z.string().optional(),
-	verifyToken: z.number(),
-	verifyTokenExpiry: z.date(),
-	verified: z.boolean().default(ZodParams.defaults.verified),
-	role: z.enum(ZodParams.role.types).default(ZodParams.role.default),
-	firstName: z.string(),
-	lastName: z.string(),
-	country: z.string(),
-	isAvatarSelected: z.boolean().default(ZodParams.defaults.isAvatarSelected),
-	avatar: z.string().or(z.null()).optional(),
-	isProfileDeleted: z.boolean().default(ZodParams.defaults.isProfileDeleted),
-	currency: z.number().default(ZodParams.defaults.currency),
-	pointsScored: z.number().default(ZodParams.defaults.pointsScored),
-	isProfileOpen: z.boolean().default(ZodParams.defaults.isProfileOpen),
-	createdAt: z.date().default(ZodParams.defaults.createdAt),
-	updatedAt: z.date().default(ZodParams.defaults.updatedAt),
+	verifyToken: z.number().int().positive().optional(),
+	verifyTokenExpiry: z.date().optional(),
+	verified: z.boolean().default(USER_DEFAULTS.VERIFIED),
+	role: z.enum(USER_ROLES).default(USER_DEFAULTS.ROLE),
+	firstName: z
+		.string()
+		.min(1, 'First name is required')
+		.max(50, 'First name must be at most 50 characters')
+		.regex(/^[a-zA-Z\s'-]+$/, 'First name can only contain letters, spaces, hyphens, and apostrophes'),
+	lastName: z
+		.string()
+		.min(1, 'Last name is required')
+		.max(50, 'Last name must be at most 50 characters')
+		.regex(/^[a-zA-Z\s'-]+$/, 'Last name can only contain letters, spaces, hyphens, and apostrophes'),
+	country: z
+		.string()
+		.min(2, 'Country code must be at least 2 characters')
+		.max(3, 'Country code must be at most 3 characters')
+		.toUpperCase(),
+	isAvatarSelected: z.boolean().default(USER_DEFAULTS.IS_AVATAR_SELECTED),
+	avatar: z.string().url('Avatar must be a valid URL').optional(),
+	isProfileDeleted: z.boolean().default(USER_DEFAULTS.IS_PROFILE_DELETED),
+	currency: z.number().int().min(0, 'Currency cannot be negative').default(USER_DEFAULTS.CURRENCY),
+	pointsScored: z.number().int().min(0, 'Points cannot be negative').default(USER_DEFAULTS.POINTS_SCORED),
+	isProfileOpen: z.boolean().default(USER_DEFAULTS.IS_PROFILE_OPEN),
+	createdAt: z.date().default(() => new Date()),
+	updatedAt: z.date().default(() => new Date()),
+});
+
+export const UserSignupSchema = z.object({
+	username: z
+		.string()
+		.min(VALIDATION_RULES.USERNAME.MIN, VALIDATION_ERRORS.USERNAME.MIN)
+		.max(VALIDATION_RULES.USERNAME.MAX, VALIDATION_ERRORS.USERNAME.MAX)
+		.regex(/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores'),
+	email: z
+		.string()
+		.email(VALIDATION_ERRORS.EMAIL.INVALID)
+		.min(VALIDATION_RULES.EMAIL.MIN, VALIDATION_ERRORS.EMAIL.MIN)
+		.max(VALIDATION_RULES.EMAIL.MAX, VALIDATION_ERRORS.EMAIL.MAX)
+		.toLowerCase(),
+	phoneNumb: z
+		.string()
+		.min(VALIDATION_RULES.PHONE.MIN, VALIDATION_ERRORS.PHONE.MIN)
+		.startsWith(VALIDATION_RULES.PHONE.PREFIX, VALIDATION_ERRORS.PHONE.PREFIX)
+		.regex(/^\+[1-9]\d{9,14}$/, 'Invalid phone number format'),
+	password: z
+		.string()
+		.min(VALIDATION_RULES.PASSWORD.MIN, VALIDATION_ERRORS.PASSWORD.MIN)
+		.max(VALIDATION_RULES.PASSWORD.MAX, VALIDATION_ERRORS.PASSWORD.MAX),
+	firstName: z
+		.string()
+		.min(1, 'First name is required')
+		.max(50, 'First name must be at most 50 characters')
+		.regex(/^[a-zA-Z\s'-]+$/, 'First name can only contain letters, spaces, hyphens, and apostrophes'),
+	lastName: z
+		.string()
+		.min(1, 'Last name is required')
+		.max(50, 'Last name must be at most 50 characters')
+		.regex(/^[a-zA-Z\s'-]+$/, 'Last name can only contain letters, spaces, hyphens, and apostrophes'),
+	country: z
+		.string()
+		.min(2, 'Country code must be at least 2 characters')
+		.max(3, 'Country code must be at most 3 characters')
+		.toUpperCase(),
+	isGoogleLogin: z.boolean().default(false),
+	googleId: z.string().optional(),
+});
+
+export const UserLoginSchema = z.object({
+	email: z
+		.string()
+		.email(VALIDATION_ERRORS.EMAIL.INVALID)
+		.toLowerCase(),
+	password: z.string().min(1, 'Password is required'),
+});
+
+export const UserUpdateSchema = z.object({
+	firstName: z
+		.string()
+		.min(1, 'First name is required')
+		.max(50, 'First name must be at most 50 characters')
+		.regex(/^[a-zA-Z\s'-]+$/, 'First name can only contain letters, spaces, hyphens, and apostrophes')
+		.optional(),
+	lastName: z
+		.string()
+		.min(1, 'Last name is required')
+		.max(50, 'Last name must be at most 50 characters')
+		.regex(/^[a-zA-Z\s'-]+$/, 'Last name can only contain letters, spaces, hyphens, and apostrophes')
+		.optional(),
+	country: z
+		.string()
+		.min(2, 'Country code must be at least 2 characters')
+		.max(3, 'Country code must be at most 3 characters')
+		.toUpperCase()
+		.optional(),
+	avatar: z.string().url('Avatar must be a valid URL').optional(),
+	isProfileOpen: z.boolean().optional(),
+});
+
+export const OTPVerificationSchema = z.object({
+	otp: z.number().int().min(100000, 'OTP must be 6 digits').max(999999, 'OTP must be 6 digits'),
+});
+
+export const PasswordResetSchema = z.object({
+	email: z
+		.string()
+		.email(VALIDATION_ERRORS.EMAIL.INVALID)
+		.toLowerCase(),
+	token: z.string().min(1, 'Reset token is required'),
+	newPassword: z
+		.string()
+		.min(VALIDATION_RULES.PASSWORD.MIN, VALIDATION_ERRORS.PASSWORD.MIN)
+		.max(VALIDATION_RULES.PASSWORD.MAX, VALIDATION_ERRORS.PASSWORD.MAX),
 });
 
 export type CreateUserInput = z.infer<typeof CreateUserInputSchema>;
+export type UserSignupInput = z.infer<typeof UserSignupSchema>;
+export type UserLoginInput = z.infer<typeof UserLoginSchema>;
+export type UserUpdateInput = z.infer<typeof UserUpdateSchema>;
+export type OTPVerificationInput = z.infer<typeof OTPVerificationSchema>;
+export type PasswordResetInput = z.infer<typeof PasswordResetSchema>;

@@ -1,4 +1,4 @@
-import AdminService from '../../services/admin/admin-service';
+import { AdminService, IAdminService } from '../../services/admin/admin-service';
 import {
 	ControllerFn,
 	ResponseObject,
@@ -13,19 +13,23 @@ export class AdminController {
 			next(error);
 		}
 	};
+
 	static getAllUsers: ControllerFn = async (req, res, next) => {
 		try {
-			const users = await AdminService.getAllUsers();
+			const adminService = new AdminService();
+			const users = await adminService.getAllUsers();
 			const responseObj = ResponseObject.success(200, 'All users', users);
 			responseObj.send(res);
 		} catch (error) {
 			next(error);
 		}
 	};
+
 	static getUser: ControllerFn = async (req, res, next) => {
 		try {
 			const { id } = req.params;
-			const user = await AdminService.getUser(id);
+			const adminService = new AdminService();
+			const user = await adminService.getUser(id);
 			const responseObj = ResponseObject.success(200, 'User found', user);
 			responseObj.send(res);
 		} catch (error) {
@@ -36,10 +40,11 @@ export class AdminController {
 	static deleteUser: ControllerFn = async (req, res, next) => {
 		try {
 			const { id } = req.params;
-			const user = await AdminService.deleteUser(id);
+			const adminService = new AdminService();
+			const user = await adminService.deleteUser(id);
 			const responseObj = ResponseObject.success(
 				200,
-				'User  successfully deleted',
+				'User successfully deleted',
 				user
 			);
 			responseObj.send(res);

@@ -1,7 +1,7 @@
-import dontenv from 'dotenv';
-dontenv.config();
+import dotenv from 'dotenv';
+dotenv.config();
 
-import { ExpressServiceInstance } from './config/express-config';
+import { ExpressServerInstance } from './config/express-config';
 
 import { PrismaServiceInstance } from './config/prisma-config';
 
@@ -13,7 +13,7 @@ const startServer = async () => {
 	}
 
 	PrismaServiceInstance.connect();
-	ExpressServiceInstance.start(Number(port));
+	ExpressServerInstance.start();
 };
 
 startServer().catch((error) => {

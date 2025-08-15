@@ -1,6 +1,6 @@
 import { PrismaServiceInstance } from '../config/prisma-config';
 
-import { User } from '../generated/prisma';
+import { User, Prisma } from '../generated/prisma';
 import { CreateUserInput } from '../models/user-model';
 import { UniqueInputTypes } from '../types/dto/user-types';
 
@@ -16,8 +16,23 @@ export class UserRepository implements IUserRepository {
 		uniqueParams: UniqueInputTypes
 	): Promise<User | null> {
 		try {
+			// Create a proper where clause based on available parameters
+			let whereClause: Prisma.UserWhereUniqueInput;
+			
+			if (uniqueParams.id) {
+				whereClause = { id: uniqueParams.id };
+			} else if (uniqueParams.username) {
+				whereClause = { username: uniqueParams.username };
+			} else if (uniqueParams.email) {
+				whereClause = { email: uniqueParams.email };
+			} else if (uniqueParams.phoneNumb) {
+				whereClause = { phoneNumb: uniqueParams.phoneNumb };
+			} else {
+				throw new Error('At least one unique field must be provided');
+			}
+			
 			return await PrismaServiceInstance.getClient().user.findUnique({
-				where: uniqueParams,
+				where: whereClause,
 			});
 		} catch (error) {
 			throw new Error(`Failed to check if user exists: ${error}`);
@@ -26,8 +41,15 @@ export class UserRepository implements IUserRepository {
 
 	async saveUser(user: CreateUserInput): Promise<User> {
 		try {
+			// Prepare user data with required defaults
+			const userData: Prisma.UserCreateInput = {
+				...user,
+				verifyToken: user.verifyToken || Math.floor(100000 + Math.random() * 900000),
+				verifyTokenExpiry: user.verifyTokenExpiry || new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
+			};
+			
 			return await PrismaServiceInstance.getClient().user.create({
-				data: user,
+				data: userData,
 			});
 		} catch (error) {
 			throw new Error(`Failed to save user: ${error}`);

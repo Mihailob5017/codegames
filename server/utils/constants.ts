@@ -1,97 +1,105 @@
-export const HTTP_RESPONSE_CODE = {
-	NOT_FOUND: 404,
-	CREATED: 201,
-	CONFLICT: 409,
-	BAD_REQUEST: 400,
-	SUCCESS: 200,
-	UNAUTHORIZED: 401,
-	SERVER_ERROR: 500,
-};
-export const enum HttpStatusCode {
-	NOT_FOUND = 404,
+export enum HttpStatusCode {
+	OK = 200,
 	CREATED = 201,
-	CONFLICT = 409,
 	BAD_REQUEST = 400,
-	SUCCESS = 200,
 	UNAUTHORIZED = 401,
+	NOT_FOUND = 404,
+	CONFLICT = 409,
 	SERVER_ERROR = 500,
 }
 
-export const APP_ERROR_MESSAGE = {
-	serverError: 'Something went wrong, try again later',
-	createdUser: 'User created successfully',
-	eventCreated: 'Event created successfully',
-	reviewCreated: 'Review created successfully',
-	userAuthenticated: 'User Authenticated successfully',
-	userReturned: 'User Returned successfully',
-	usersReturned: 'Users Returned successfully',
-	eventsReturned: 'Events Returned successfully',
-	reviewsReturned: 'Reviews Returned successfully',
-	userDoesntExist: 'User does not exist',
-	eventDoesntExist: 'Event does not exist',
-	invalidCredentials: 'Invalid user email or password',
-	invalidEmail: 'Enter a valid email address',
-};
+export const API_MESSAGES = {
+	SERVER_ERROR: 'Something went wrong, try again later',
+	USER_CREATED: 'User created successfully',
+	USER_AUTHENTICATED: 'User authenticated successfully',
+	USER_RETURNED: 'User retrieved successfully',
+	USERS_RETURNED: 'Users retrieved successfully',
+	USER_DELETED: 'User deleted successfully',
+	USER_NOT_FOUND: 'User does not exist',
+	INVALID_CREDENTIALS: 'Invalid user email or password',
+	INVALID_EMAIL: 'Enter a valid email address',
+	EMAIL_VERIFIED: 'Email verified successfully. Your account is now active.',
+	VERIFICATION_EMAIL_SENT: 'User successfully created. A verification token has been sent to your email.',
+} as const;
 
-export const ZodParams = {
-	username: {
-		min: 3,
-		max: 15,
+export const VALIDATION_RULES = {
+	USERNAME: {
+		MIN: 3,
+		MAX: 15,
 	},
-	email: {
-		min: 6,
-		max: 45,
+	EMAIL: {
+		MIN: 6,
+		MAX: 45,
 	},
-	phoneNum: {
-		min: 10,
-		prefix: '+',
+	PASSWORD: {
+		MIN: 8,
+		MAX: 128,
 	},
-	role: {
-		types: ['user', 'admin'] as const,
-		default: 'user' as const,
-	},
-	defaults: {
-		isGoogleLogin: false,
-		verified: false,
-		isAvatarSelected: false,
-		isProfileDeleted: false,
-		isProfileOpen: true,
-		currency: 0,
-		pointsScored: 0,
-		createdAt: new Date(),
-		updatedAt: new Date(),
-	},
-	errors: {
-		username: {
-			min: 'Username must be at least 3 characters long',
-			max: 'Username must be at most 15 characters long',
-		},
-		email: {
-			type: 'Email must be a valid email address',
-			min: 'Email must be at least 6 characters long',
-			max: 'Email must be at most 45 characters long',
-		},
-		phoneNum: {
-			min: 'Phone number must be at least 10 characters long',
-			prefix: 'Phone number must start with +',
-		},
-		password: {
-			min: 'Password must be at least 6 characters long',
-			max: 'Password must be at most 45 characters long',
-		},
-		role: {
-			types: 'Role must be either user or admin',
-			default: 'Role must be either user or admin',
-		},
-		generic: {
-			string: 'Field must be a string',
-			number: 'Field must be a number',
-			boolean: 'Field must be a boolean',
-			date: 'Field must be a date',
-		},
+	PHONE: {
+		MIN: 10,
+		PREFIX: '+',
 	},
 } as const;
 
-export const bcryptSaltRounds = 10;
+export const USER_ROLES = ['user', 'admin'] as const;
+export type Role = typeof USER_ROLES[number];
 
-export type Role = (typeof ZodParams.role.types)[number];
+export const USER_DEFAULTS = {
+	IS_GOOGLE_LOGIN: false,
+	VERIFIED: false,
+	IS_AVATAR_SELECTED: false,
+	IS_PROFILE_DELETED: false,
+	IS_PROFILE_OPEN: true,
+	CURRENCY: 0,
+	POINTS_SCORED: 0,
+	ROLE: 'user' as Role,
+} as const;
+
+export const VALIDATION_ERRORS = {
+	USERNAME: {
+		MIN: `Username must be at least ${VALIDATION_RULES.USERNAME.MIN} characters long`,
+		MAX: `Username must be at most ${VALIDATION_RULES.USERNAME.MAX} characters long`,
+	},
+	EMAIL: {
+		INVALID: 'Email must be a valid email address',
+		MIN: `Email must be at least ${VALIDATION_RULES.EMAIL.MIN} characters long`,
+		MAX: `Email must be at most ${VALIDATION_RULES.EMAIL.MAX} characters long`,
+	},
+	PASSWORD: {
+		MIN: `Password must be at least ${VALIDATION_RULES.PASSWORD.MIN} characters long`,
+		MAX: `Password must be at most ${VALIDATION_RULES.PASSWORD.MAX} characters long`,
+	},
+	PHONE: {
+		MIN: `Phone number must be at least ${VALIDATION_RULES.PHONE.MIN} characters long`,
+		PREFIX: `Phone number must start with ${VALIDATION_RULES.PHONE.PREFIX}`,
+	},
+	ROLE: {
+		INVALID: `Role must be one of: ${USER_ROLES.join(', ')}`,
+	},
+	GENERIC: {
+		REQUIRED: 'This field is required',
+		STRING: 'Field must be a string',
+		NUMBER: 'Field must be a number',
+		BOOLEAN: 'Field must be a boolean',
+		DATE: 'Field must be a valid date',
+	},
+} as const;
+
+export const BCRYPT_SALT_ROUNDS = 10;
+export const TOKEN_EXPIRY_MINUTES = 15;
+export const JWT_EXPIRY = '24h';
+
+export const RATE_LIMITS = {
+	SIGNUP: {
+		MAX_REQUESTS: 5,
+		WINDOW_MS: 15 * 60 * 1000, // 15 minutes
+	},
+	LOGIN: {
+		MAX_REQUESTS: 10,
+		WINDOW_MS: 15 * 60 * 1000, // 15 minutes
+	},
+	OTP: {
+		MAX_REQUESTS: 3,
+		WINDOW_MS: 60 * 1000, // 1 minute
+	},
+} as const;
