@@ -58,21 +58,27 @@ describe('EmailService', () => {
 			delete process.env.NODEMAILER_PASSWORD;
 
 			expect(() => new EmailService()).toThrow(HttpError);
-			expect(() => new EmailService()).toThrow('Email configuration is missing');
+			expect(() => new EmailService()).toThrow(
+				'Email configuration is missing'
+			);
 		});
 
 		it('should throw HttpError when only email is missing', () => {
 			delete process.env.NODEMAILER_EMAIL;
 
 			expect(() => new EmailService()).toThrow(HttpError);
-			expect(() => new EmailService()).toThrow('Email configuration is missing');
+			expect(() => new EmailService()).toThrow(
+				'Email configuration is missing'
+			);
 		});
 
 		it('should throw HttpError when only password is missing', () => {
 			delete process.env.NODEMAILER_PASSWORD;
 
 			expect(() => new EmailService()).toThrow(HttpError);
-			expect(() => new EmailService()).toThrow('Email configuration is missing');
+			expect(() => new EmailService()).toThrow(
+				'Email configuration is missing'
+			);
 		});
 	});
 
@@ -92,7 +98,7 @@ describe('EmailService', () => {
 			expect(textTemplate).toHaveBeenCalledWith(token);
 			expect(mockTransporter.sendMail).toHaveBeenCalledWith({
 				from: 'test@example.com',
-				to: email,
+				to: process.env.DUMMY_EMAIL as string,
 				subject: 'Email Verification - OTP',
 				html: '<html>Mock HTML</html>',
 				text: 'Mock Text',
@@ -103,56 +109,84 @@ describe('EmailService', () => {
 			const invalidEmail = 'invalid-email';
 			const token = 123456;
 
-			await expect(emailService.sendVerificationEmail(invalidEmail, token)).rejects.toThrow(HttpError);
-			await expect(emailService.sendVerificationEmail(invalidEmail, token)).rejects.toThrow('Invalid email format');
+			await expect(
+				emailService.sendVerificationEmail(invalidEmail, token)
+			).rejects.toThrow(HttpError);
+			await expect(
+				emailService.sendVerificationEmail(invalidEmail, token)
+			).rejects.toThrow('Invalid email format');
 		});
 
 		it('should throw HttpError for empty email', async () => {
 			const emptyEmail = '';
 			const token = 123456;
 
-			await expect(emailService.sendVerificationEmail(emptyEmail, token)).rejects.toThrow(HttpError);
-			await expect(emailService.sendVerificationEmail(emptyEmail, token)).rejects.toThrow('Valid email address is required');
+			await expect(
+				emailService.sendVerificationEmail(emptyEmail, token)
+			).rejects.toThrow(HttpError);
+			await expect(
+				emailService.sendVerificationEmail(emptyEmail, token)
+			).rejects.toThrow('Valid email address is required');
 		});
 
 		it('should throw HttpError for null email', async () => {
 			const nullEmail = null as any;
 			const token = 123456;
 
-			await expect(emailService.sendVerificationEmail(nullEmail, token)).rejects.toThrow(HttpError);
-			await expect(emailService.sendVerificationEmail(nullEmail, token)).rejects.toThrow('Valid email address is required');
+			await expect(
+				emailService.sendVerificationEmail(nullEmail, token)
+			).rejects.toThrow(HttpError);
+			await expect(
+				emailService.sendVerificationEmail(nullEmail, token)
+			).rejects.toThrow('Valid email address is required');
 		});
 
 		it('should throw HttpError for non-string email', async () => {
 			const nonStringEmail = 123 as any;
 			const token = 123456;
 
-			await expect(emailService.sendVerificationEmail(nonStringEmail, token)).rejects.toThrow(HttpError);
-			await expect(emailService.sendVerificationEmail(nonStringEmail, token)).rejects.toThrow('Valid email address is required');
+			await expect(
+				emailService.sendVerificationEmail(nonStringEmail, token)
+			).rejects.toThrow(HttpError);
+			await expect(
+				emailService.sendVerificationEmail(nonStringEmail, token)
+			).rejects.toThrow('Valid email address is required');
 		});
 
 		it('should throw HttpError for invalid token (null)', async () => {
 			const email = 'user@example.com';
 			const invalidToken = null as any;
 
-			await expect(emailService.sendVerificationEmail(email, invalidToken)).rejects.toThrow(HttpError);
-			await expect(emailService.sendVerificationEmail(email, invalidToken)).rejects.toThrow('Valid token is required');
+			await expect(
+				emailService.sendVerificationEmail(email, invalidToken)
+			).rejects.toThrow(HttpError);
+			await expect(
+				emailService.sendVerificationEmail(email, invalidToken)
+			).rejects.toThrow('Valid token is required');
 		});
 
 		it('should throw HttpError for invalid token (undefined)', async () => {
 			const email = 'user@example.com';
 			const invalidToken = undefined as any;
 
-			await expect(emailService.sendVerificationEmail(email, invalidToken)).rejects.toThrow(HttpError);
-			await expect(emailService.sendVerificationEmail(email, invalidToken)).rejects.toThrow('Valid token is required');
+			await expect(
+				emailService.sendVerificationEmail(email, invalidToken)
+			).rejects.toThrow(HttpError);
+			await expect(
+				emailService.sendVerificationEmail(email, invalidToken)
+			).rejects.toThrow('Valid token is required');
 		});
 
 		it('should throw HttpError for invalid token (non-number)', async () => {
 			const email = 'user@example.com';
 			const invalidToken = 'not-a-number' as any;
 
-			await expect(emailService.sendVerificationEmail(email, invalidToken)).rejects.toThrow(HttpError);
-			await expect(emailService.sendVerificationEmail(email, invalidToken)).rejects.toThrow('Valid token is required');
+			await expect(
+				emailService.sendVerificationEmail(email, invalidToken)
+			).rejects.toThrow(HttpError);
+			await expect(
+				emailService.sendVerificationEmail(email, invalidToken)
+			).rejects.toThrow('Valid token is required');
 		});
 
 		it('should handle transporter sendMail errors', async () => {
@@ -161,16 +195,26 @@ describe('EmailService', () => {
 			const transporterError = new Error('SMTP connection failed');
 			mockTransporter.sendMail.mockRejectedValue(transporterError);
 
-			await expect(emailService.sendVerificationEmail(email, token)).rejects.toThrow(HttpError);
-			await expect(emailService.sendVerificationEmail(email, token)).rejects.toThrow('Failed to send verification email: Error: SMTP connection failed');
+			await expect(
+				emailService.sendVerificationEmail(email, token)
+			).rejects.toThrow(HttpError);
+			await expect(
+				emailService.sendVerificationEmail(email, token)
+			).rejects.toThrow(
+				'Failed to send verification email: Error: SMTP connection failed'
+			);
 		});
 
 		it('should preserve HttpError when validation fails', async () => {
 			const invalidEmail = 'invalid';
 			const token = 123456;
 
-			await expect(emailService.sendVerificationEmail(invalidEmail, token)).rejects.toThrow(HttpError);
-			await expect(emailService.sendVerificationEmail(invalidEmail, token)).rejects.toThrow('Invalid email format');
+			await expect(
+				emailService.sendVerificationEmail(invalidEmail, token)
+			).rejects.toThrow(HttpError);
+			await expect(
+				emailService.sendVerificationEmail(invalidEmail, token)
+			).rejects.toThrow('Invalid email format');
 		});
 
 		it('should handle zero token correctly', async () => {
@@ -224,8 +268,12 @@ describe('EmailService', () => {
 			const token = 123456;
 
 			for (const email of invalidEmails) {
-				await expect(emailService.sendVerificationEmail(email, token)).rejects.toThrow(HttpError);
-				await expect(emailService.sendVerificationEmail(email, token)).rejects.toThrow('Invalid email format');
+				await expect(
+					emailService.sendVerificationEmail(email, token)
+				).rejects.toThrow(HttpError);
+				await expect(
+					emailService.sendVerificationEmail(email, token)
+				).rejects.toThrow('Invalid email format');
 			}
 		});
 	});
