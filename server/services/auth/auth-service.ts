@@ -178,6 +178,27 @@ export class AuthService implements ISignupService {
 		}
 	}
 
+	public async resendOTP(token: string): Promise<void> {
+		try {
+			const userInfo = this.extractUserFromToken(token);
+			this.userInput = userInfo;
+			console.log(userInfo);
+			const genPrams = generateToken();
+
+			this.userInput.verifyToken = genPrams.token;
+			this.userInput.verifyTokenExpiry = genPrams.expiry;
+
+			await this.sendVerificationEmail();
+			await this.userRepository.updateUser({
+				id: userInfo.id as string,
+				verifyToken: this.userInput.verifyToken,
+				verifyTokenExpiry: this.userInput.verifyTokenExpiry,
+			});
+		} catch (error) {
+			throw error;
+		}
+	}
+
 	private async markUserAsVerified(userId: string): Promise<void> {
 		if (!userId) {
 			throw new HttpError(400, 'User ID is required');

@@ -154,12 +154,9 @@ class ExpressServer {
 		});
 
 		this.app.use(generalLimiter);
-		this.app.use(`/${this.config.apiPrefix}/auth/signup`, signupLimiter);
-		this.app.use(`/${this.config.apiPrefix}/auth/verify-otp`, otpLimiter);
 	}
 
 	private setupRoutes(): void {
-		// Use the main router for all routes
 		this.app.use('/', this.mainRouter.getRouter());
 	}
 

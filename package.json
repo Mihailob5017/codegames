@@ -10,6 +10,8 @@
 		"app:build": "docker-compose up --build",
 		"app:up": "docker-compose up",
 		"app:down": "docker-compose down",
-		"app:test": "docker-compose -f docker-compose.test.yml up --build"
+		"app:test": "docker-compose -f docker-compose.test.yml up --build",
+		"docker:cleanup": "./scripts/docker-cleanup.sh",
+		"docker:status": "docker system df && df -h | grep docker"
 	}
 }

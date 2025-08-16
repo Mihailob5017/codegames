@@ -55,4 +55,25 @@ export class LoginController {
 			next(error);
 		}
 	};
+
+	static resendOTP: ControllerFn = async (req, res, next) => {
+		try {
+			const token = extractTokenFromRequest(req);
+
+			if (!token) {
+				return next(new Error('Authorization token is required'));
+			}
+
+			const authService = new AuthService({});
+			await authService.resendOTP(token);
+			const responseObj = ResponseObject.success(
+				200,
+				'OTP has been resent to your email, next one can be used in 5 minutes'
+			);
+
+			responseObj.send(res);
+		} catch (error) {
+			next(error);
+		}
+	};
 }
