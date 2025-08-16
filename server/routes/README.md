@@ -40,6 +40,7 @@ this.router.use(`${apiPrefix}/users`, userRouter);
 - `/health` - Health check endpoint
 - `/api/v1/admin/*` - Admin routes
 - `/api/v1/auth/*` - Authentication routes
+- `/api/v1/code-execution/*` - Code execution routes
 
 ## Rate Limiting
 
