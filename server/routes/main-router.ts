@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { HttpError } from '../types/common/error-types';
 import { HttpStatusCode } from '../utils/constants';
 
-import { adminRouter, loginRouter } from './index';
+import { adminRouter, loginRouter, codeExecutionRouter } from './index';
 
 export interface RouterConfig {
 	apiPrefix: string;
@@ -39,6 +39,7 @@ class MainRouter {
 		// API routes
 		this.router.use(`${apiPrefix}/${this.config.adminRoute}`, adminRouter);
 		this.router.use(`${apiPrefix}/auth`, loginRouter);
+		this.router.use(`${apiPrefix}/code-execution`, codeExecutionRouter);
 
 		// 404 handler for undefined routes
 		this.router.all('/{*any}', (req: Request, _res: Response) => {
