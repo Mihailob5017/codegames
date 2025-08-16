@@ -17,6 +17,7 @@ describe('LoginController', () => {
 		mockAuthService = {
 			signup: jest.fn(),
 			verifyOTP: jest.fn(),
+			resendOTP: jest.fn(),
 		} as any;
 
 		(AuthService as jest.MockedClass<typeof AuthService>).mockImplementation(() => mockAuthService);
@@ -218,6 +219,82 @@ describe('LoginController', () => {
 				200,
 				'Email verified successfully. Your account is now active.'
 			);
+		});
+	});
+
+	describe('resendOTP', () => {
+		it('should resend OTP successfully', async () => {
+			(extractTokenFromRequest as jest.Mock).mockReturnValue('valid-jwt-token');
+			mockAuthService.resendOTP.mockResolvedValue();
+
+			await LoginController.resendOTP(req, res, next);
+
+			expect(extractTokenFromRequest).toHaveBeenCalledWith(req);
+			expect(AuthService).toHaveBeenCalledWith({});
+			expect(mockAuthService.resendOTP).toHaveBeenCalledWith('valid-jwt-token');
+			expect(ResponseObject.success).toHaveBeenCalledWith(
+				200,
+				'OTP has been resent to your email address'
+			);
+			expect(next).not.toHaveBeenCalled();
+		});
+
+		it('should handle missing authorization token', async () => {
+			(extractTokenFromRequest as jest.Mock).mockReturnValue(null);
+
+			await LoginController.resendOTP(req, res, next);
+
+			expect(next).toHaveBeenCalledWith(new Error('Authorization token is required'));
+			expect(mockAuthService.resendOTP).not.toHaveBeenCalled();
+		});
+
+		it('should handle empty authorization token', async () => {
+			(extractTokenFromRequest as jest.Mock).mockReturnValue('');
+
+			await LoginController.resendOTP(req, res, next);
+
+			expect(next).toHaveBeenCalledWith(new Error('Authorization token is required'));
+			expect(mockAuthService.resendOTP).not.toHaveBeenCalled();
+		});
+
+		it('should handle service errors during resend', async () => {
+			(extractTokenFromRequest as jest.Mock).mockReturnValue('valid-jwt-token');
+			const serviceError = new Error('User not found');
+			mockAuthService.resendOTP.mockRejectedValue(serviceError);
+
+			await LoginController.resendOTP(req, res, next);
+
+			expect(next).toHaveBeenCalledWith(serviceError);
+		});
+
+		it('should handle already verified account error', async () => {
+			(extractTokenFromRequest as jest.Mock).mockReturnValue('valid-jwt-token');
+			const verifiedError = new Error('Account is already verified');
+			mockAuthService.resendOTP.mockRejectedValue(verifiedError);
+
+			await LoginController.resendOTP(req, res, next);
+
+			expect(next).toHaveBeenCalledWith(verifiedError);
+		});
+
+		it('should handle invalid token error', async () => {
+			(extractTokenFromRequest as jest.Mock).mockReturnValue('invalid-token');
+			const tokenError = new Error('Invalid token');
+			mockAuthService.resendOTP.mockRejectedValue(tokenError);
+
+			await LoginController.resendOTP(req, res, next);
+
+			expect(next).toHaveBeenCalledWith(tokenError);
+		});
+
+		it('should handle email service errors', async () => {
+			(extractTokenFromRequest as jest.Mock).mockReturnValue('valid-jwt-token');
+			const emailError = new Error('Email service unavailable');
+			mockAuthService.resendOTP.mockRejectedValue(emailError);
+
+			await LoginController.resendOTP(req, res, next);
+
+			expect(next).toHaveBeenCalledWith(emailError);
 		});
 	});
 });

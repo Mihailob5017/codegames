@@ -7,7 +7,7 @@ const router = Router();
 
 router.post('/signup', LoginController.signup);
 router.post('/verify-otp', AuthMiddleware, LoginController.verifyOTP);
-router.get(
+router.post(
 	'/resend-otp',
 	AuthMiddleware,
 	RateLimit(5 * 60),

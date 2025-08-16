@@ -179,24 +179,26 @@ export class AuthService implements ISignupService {
 	}
 
 	public async resendOTP(token: string): Promise<void> {
-		try {
-			const userInfo = this.extractUserFromToken(token);
-			this.userInput = userInfo;
-			console.log(userInfo);
-			const genPrams = generateToken();
+		const userInfo = this.extractUserFromToken(token);
+		const user = await this.getUser(userInfo.id as string);
 
-			this.userInput.verifyToken = genPrams.token;
-			this.userInput.verifyTokenExpiry = genPrams.expiry;
-
-			await this.sendVerificationEmail();
-			await this.userRepository.updateUser({
-				id: userInfo.id as string,
-				verifyToken: this.userInput.verifyToken,
-				verifyTokenExpiry: this.userInput.verifyTokenExpiry,
-			});
-		} catch (error) {
-			throw error;
+		if (user.verified) {
+			throw new HttpError(400, 'Account is already verified');
 		}
+
+		const { token: newOTP, expiry } = generateToken();
+
+		await this.userRepository.updateUser({
+			id: user.id,
+			verifyToken: newOTP,
+			verifyTokenExpiry: expiry,
+		});
+
+		if (!userInfo.email) {
+			throw new HttpError(400, 'Email address is required for OTP resend');
+		}
+
+		await this.emailService.sendVerificationEmail(userInfo.email, newOTP);
 	}
 
 	private async markUserAsVerified(userId: string): Promise<void> {

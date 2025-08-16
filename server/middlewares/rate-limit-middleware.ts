@@ -1,13 +1,16 @@
 import rateLimit from 'express-rate-limit';
 
-export const RateLimit = (windowDurationInSeconds: number) =>
+export const RateLimit = (windowDurationInSeconds: number, maxRequests: number = 1) =>
 	rateLimit({
 		windowMs: windowDurationInSeconds * 1000,
-		max: 1,
-		message:
-			'Too many requests from this IP, please try again after ' +
-			windowDurationInSeconds +
-			' seconds.',
+		max: maxRequests,
+		message: {
+			error: 'Too many requests from this IP',
+			message: `Please try again after ${Math.ceil(windowDurationInSeconds / 60)} minute(s)`,
+			retryAfter: windowDurationInSeconds,
+		},
 		standardHeaders: true,
 		legacyHeaders: false,
+		skipSuccessfulRequests: false,
+		skipFailedRequests: false,
 	});

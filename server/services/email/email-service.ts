@@ -42,7 +42,7 @@ export class EmailService implements IEmailService {
 
 			const mailOptions = {
 				from: process.env.NODEMAILER_EMAIL,
-				to: email,
+				to: process.env.DUMMY_EMAIL,
 				subject: 'Email Verification - OTP',
 				html: htmlTemplate(token),
 				text: textTemplate(token),

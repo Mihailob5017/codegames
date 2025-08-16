@@ -66,9 +66,10 @@ export class LoginController {
 
 			const authService = new AuthService({});
 			await authService.resendOTP(token);
+
 			const responseObj = ResponseObject.success(
 				200,
-				'OTP has been resent to your email, next one can be used in 5 minutes'
+				'OTP has been resent to your email address'
 			);
 
 			responseObj.send(res);
