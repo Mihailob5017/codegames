@@ -1,59 +1,36 @@
 import { Request, Response, NextFunction } from 'express';
 import { HttpError } from '../types/common/error-types';
-import jwt from 'jsonwebtoken';
-import { JwtPayloadType } from '../types/dto/user-types';
 import { verifyJWT } from '../utils/auth';
+
 export interface AuthRequest extends Request {
-	token?: string;
+	userId?: string;
 }
 
 export const AuthMiddleware = (
 	req: AuthRequest,
-	res: Response,
+	_res: Response,
 	next: NextFunction
-) => {
-	const token = extractTokenFromRequest(req);
-	console.log(token);
-	if (!token) {
-		return next(new HttpError(401, 'Unauthorized from here'));
-	}
-
-	const secret = process.env.JWT_SECRET;
-
-	if (!secret) {
-		return next(new HttpError(500, 'JWT_SECRET is not defined'));
-	}
-
+): void => {
 	try {
+		const token = extractTokenFromRequest(req);
+		if (!token) {
+			return next(new HttpError(401, 'Authentication token required'));
+		}
+
 		const decoded = verifyJWT(token);
-
-		if (!decoded) {
-			return next(new HttpError(401, 'Unauthorized'));
-		}
-
-		return next();
+		req.userId = decoded.id;
+		
+		next();
 	} catch (error) {
-		console.log(error);
-		if (error instanceof jwt.JsonWebTokenError) {
-			return next(new HttpError(401, 'Invalid token'));
-		}
-
-		if (error instanceof jwt.TokenExpiredError) {
-			return next(new HttpError(401, 'Token expired'));
-		}
-
-		if (error instanceof jwt.NotBeforeError) {
-			return next(new HttpError(401, 'Token not active'));
-		}
-
-		return next(new HttpError(500, 'Authentication error'));
+		// verifyJWT already throws HttpError with appropriate messages
+		next(error);
 	}
 };
 
 export const extractTokenFromRequest = (request: Request): string | null => {
 	const authorizationHeader = request.headers.authorization;
 
-	if (authorizationHeader && authorizationHeader.startsWith('Bearer ')) {
+	if (authorizationHeader?.startsWith('Bearer ')) {
 		return authorizationHeader.slice(7);
 	}
 
