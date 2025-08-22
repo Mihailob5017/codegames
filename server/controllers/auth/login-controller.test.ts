@@ -2,10 +2,17 @@ import { LoginController } from './login-controller';
 import { AuthService } from '../../services/auth/auth-service';
 import { ResponseObject } from '../../types/common/controller-types';
 import { extractTokenFromRequest } from '../../middlewares/auth-middleware';
-import { createMockRequest, createMockResponse, createMockNext, createMockUser } from '../../__tests__/utils/test-helpers';
+import { verifyJWT } from '../../utils/auth';
+import {
+	createMockRequest,
+	createMockResponse,
+	createMockNext,
+	createMockUser,
+} from '../../__tests__/utils/test-helpers';
 
 jest.mock('../../services/auth/auth-service');
 jest.mock('../../middlewares/auth-middleware');
+jest.mock('../../utils/auth');
 
 describe('LoginController', () => {
 	let mockAuthService: jest.Mocked<AuthService>;
@@ -20,7 +27,9 @@ describe('LoginController', () => {
 			resendOTP: jest.fn(),
 		} as any;
 
-		(AuthService as jest.MockedClass<typeof AuthService>).mockImplementation(() => mockAuthService);
+		(AuthService as jest.MockedClass<typeof AuthService>).mockImplementation(
+			() => mockAuthService
+		);
 
 		req = createMockRequest();
 		res = createMockResponse();
@@ -31,6 +40,7 @@ describe('LoginController', () => {
 		} as any);
 
 		(extractTokenFromRequest as jest.Mock).mockReturnValue('valid-jwt-token');
+		(verifyJWT as jest.Mock).mockReturnValue({ id: 'test-user-id' });
 	});
 
 	afterEach(() => {
@@ -146,7 +156,10 @@ describe('LoginController', () => {
 
 			expect(extractTokenFromRequest).toHaveBeenCalledWith(req);
 			expect(AuthService).toHaveBeenCalledWith({});
-			expect(mockAuthService.verifyOTP).toHaveBeenCalledWith('valid-jwt-token', 123456);
+			expect(mockAuthService.verifyOTP).toHaveBeenCalledWith(
+				'valid-jwt-token',
+				123456
+			);
 			expect(ResponseObject.success).toHaveBeenCalledWith(
 				200,
 				'Email verified successfully. Your account is now active.'
@@ -167,7 +180,9 @@ describe('LoginController', () => {
 
 			await LoginController.verifyOTP(req, res, next);
 
-			expect(next).toHaveBeenCalledWith(new Error('Valid numeric OTP is required'));
+			expect(next).toHaveBeenCalledWith(
+				new Error('Valid numeric OTP is required')
+			);
 		});
 
 		it('should handle missing authorization token', async () => {
@@ -176,7 +191,9 @@ describe('LoginController', () => {
 
 			await LoginController.verifyOTP(req, res, next);
 
-			expect(next).toHaveBeenCalledWith(new Error('Authorization token is required'));
+			expect(next).toHaveBeenCalledWith(
+				new Error('Authorization token is required')
+			);
 		});
 
 		it('should handle service verification errors', async () => {
@@ -205,7 +222,10 @@ describe('LoginController', () => {
 
 			await LoginController.verifyOTP(req, res, next);
 
-			expect(mockAuthService.verifyOTP).toHaveBeenCalledWith('valid-jwt-token', 123456);
+			expect(mockAuthService.verifyOTP).toHaveBeenCalledWith(
+				'valid-jwt-token',
+				123456
+			);
 		});
 
 		it('should handle zero OTP', async () => {
@@ -214,7 +234,10 @@ describe('LoginController', () => {
 
 			await LoginController.verifyOTP(req, res, next);
 
-			expect(mockAuthService.verifyOTP).toHaveBeenCalledWith('valid-jwt-token', 0);
+			expect(mockAuthService.verifyOTP).toHaveBeenCalledWith(
+				'valid-jwt-token',
+				0
+			);
 			expect(ResponseObject.success).toHaveBeenCalledWith(
 				200,
 				'Email verified successfully. Your account is now active.'
@@ -244,7 +267,9 @@ describe('LoginController', () => {
 
 			await LoginController.resendOTP(req, res, next);
 
-			expect(next).toHaveBeenCalledWith(new Error('Authorization token is required'));
+			expect(next).toHaveBeenCalledWith(
+				new Error('Authorization token is required')
+			);
 			expect(mockAuthService.resendOTP).not.toHaveBeenCalled();
 		});
 
@@ -253,7 +278,9 @@ describe('LoginController', () => {
 
 			await LoginController.resendOTP(req, res, next);
 
-			expect(next).toHaveBeenCalledWith(new Error('Authorization token is required'));
+			expect(next).toHaveBeenCalledWith(
+				new Error('Authorization token is required')
+			);
 			expect(mockAuthService.resendOTP).not.toHaveBeenCalled();
 		});
 
