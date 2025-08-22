@@ -1,9 +1,11 @@
+import { RedisService, RedisServiceInstance } from '../../config/redis-config';
 import { extractTokenFromRequest } from '../../middlewares/auth-middleware';
 import { AuthService } from '../../services/auth/auth-service';
 import {
 	ControllerFn,
 	ResponseObject,
 } from '../../types/common/controller-types';
+import { verifyJWT } from '../../utils/auth';
 
 export class LoginController {
 	static signup: ControllerFn = async (req, res, next) => {
@@ -37,10 +39,10 @@ export class LoginController {
 			}
 
 			const token = extractTokenFromRequest(req);
-
 			if (!token) {
 				return next(new Error('Authorization token is required'));
 			}
+			const { id } = verifyJWT(token);
 
 			const authService = new AuthService({});
 			await authService.verifyOTP(token, otpNumber);
@@ -50,6 +52,9 @@ export class LoginController {
 				'Email verified successfully. Your account is now active.'
 			);
 
+			const redisService: RedisService = RedisServiceInstance;
+
+			await redisService.set(`user:verified:${id}`, 'true');
 			responseObj.send(res);
 		} catch (error) {
 			next(error);

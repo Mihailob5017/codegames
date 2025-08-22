@@ -19,7 +19,7 @@ export const AuthMiddleware = (
 
 		const decoded = verifyJWT(token);
 		req.userId = decoded.id;
-		
+
 		next();
 	} catch (error) {
 		// verifyJWT already throws HttpError with appropriate messages
