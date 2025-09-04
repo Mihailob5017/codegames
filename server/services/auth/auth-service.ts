@@ -9,7 +9,7 @@ import {
 	JwtPayloadDTO,
 	UserDTO,
 } from '../../types/dto/user-types';
-import { BCRYPT_SALT_ROUNDS, Role } from '../../utils/constants';
+import { Role } from '../../utils/constants';
 import {
 	comparePassword,
 	encryptPassword,
@@ -21,7 +21,6 @@ import {
 import { validateLogin, validateSignup } from '../../utils/request-validator';
 import { EmailService } from '../email/email-service';
 
-import bcrypt from 'bcryptjs';
 
 interface ISignupService {
 	signup(): Promise<AuthResponseDTO>;
@@ -60,31 +59,35 @@ export class AuthService implements ISignupService {
 		}
 	}
 
-	private validatePassword(hash: string): boolean {
-		return comparePassword(this.userInput.passwordHash as string, hash);
+	public async login(): Promise<AuthResponseDTO> {
+		// Validate input format first
+		this.validateLogin();
+
+		const user = await this.checkUserForLogin();
+		
+		await this.validateUserAuthentication(user);
+
+		this.userInput = { ...user!, passwordHash: this.userInput.passwordHash };
+		return await this.createResponse();
 	}
 
-	public async login(): Promise<AuthResponseDTO> {
-		try {
-			this.validateLogin();
+	private async validateUserAuthentication(user: UserDTO | null): Promise<void> {
+		const providedPassword = this.userInput.passwordHash as string;
+		
+		const isValidUser = user && user.passwordHash;
+		const isValidPassword = isValidUser && comparePassword(providedPassword, user.passwordHash!);
+		const isVerified = user?.verified;
 
-			const data = await this.checkUserForLogin();
-			if (!data) throw new HttpError(404, 'User not found');
+		if (!isValidUser) {
+			comparePassword(providedPassword, '$2b$12$dummy.hash.to.prevent.timing.attacks.here');
+		}
 
-			if (!data.passwordHash)
-				throw new HttpError(404, 'User password not found');
+		if (!isValidUser || !isValidPassword) {
+			throw new HttpError(401, 'Invalid email or password');
+		}
 
-			const isPasswordValid = this.validatePassword(data.passwordHash);
-			if (!isPasswordValid) throw new HttpError(400, 'Invalid password');
-
-			if (!data.verified) {
-				throw new HttpError(403, 'Account verification required');
-			}
-
-			this.userInput = data;
-			return await this.createResponse();
-		} catch (error) {
-			throw error;
+		if (!isVerified) {
+			throw new HttpError(403, 'Account verification required');
 		}
 	}
 	public async verifyOTP(token: string, otp: number): Promise<void> {
@@ -152,7 +155,7 @@ export class AuthService implements ISignupService {
 		}
 	}
 
-	private async checkUserForLogin(): Promise<UserDTO> {
+	private async checkUserForLogin(): Promise<UserDTO | null> {
 		const uniqueParams = {
 			email: this.userInput.email as string,
 		};
@@ -162,11 +165,7 @@ export class AuthService implements ISignupService {
 			'login'
 		);
 
-		if (!result.exists || !result.user) {
-			throw new HttpError(404, 'User not found');
-		}
-
-		return result.user;
+		return result.exists ? result.user || null : null;
 	}
 
 	private async saveUser(): Promise<void> {
@@ -277,7 +276,6 @@ export class AuthService implements ISignupService {
 			phoneNumb: this.userInput.phoneNumb as string,
 			role: this.userInput.role as Role,
 		};
-		console.log(jwtPayload);
 		return generateJWT(jwtPayload);
 	}
 
