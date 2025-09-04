@@ -2,10 +2,11 @@ import { PrismaServiceInstance } from '../config/prisma-config';
 
 import { User, Prisma } from '../generated/prisma';
 import { CreateUserInput } from '../models/user-model';
-import { UniqueInputTypes } from '../types/dto/user-types';
+import { UniqueUserFieldsDTO, UserOperationType, UserExistenceCheckResult } from '../types/dto/user-types';
 
 export interface IUserRepository {
-	checkIfUserExists(uniqueParams: UniqueInputTypes): Promise<User | null>;
+	checkIfUserExists(uniqueParams: UniqueUserFieldsDTO): Promise<User | null>;
+	checkUserExistence(uniqueParams: UniqueUserFieldsDTO, operation: UserOperationType): Promise<UserExistenceCheckResult>;
 	saveUser(user: CreateUserInput): Promise<User>;
 	getUser(id: string): Promise<User | null>;
 	updateUser(user: Partial<CreateUserInput>): Promise<User>;
@@ -13,7 +14,7 @@ export interface IUserRepository {
 
 export class UserRepository implements IUserRepository {
 	async checkIfUserExists(
-		uniqueParams: UniqueInputTypes
+		uniqueParams: UniqueUserFieldsDTO
 	): Promise<User | null> {
 		try {
 			// Create a proper where clause based on available parameters
@@ -36,6 +37,64 @@ export class UserRepository implements IUserRepository {
 			});
 		} catch (error) {
 			throw new Error(`Failed to check if user exists: ${error}`);
+		}
+	}
+
+	async checkUserExistence(
+		uniqueParams: UniqueUserFieldsDTO,
+		operation: UserOperationType
+	): Promise<UserExistenceCheckResult> {
+		try {
+			const user = await this.checkIfUserExists(uniqueParams);
+			
+			if (operation === 'signup') {
+				if (user) {
+					// For signup, user should NOT exist
+					let message = 'User already exists with ';
+					const conflicts = [];
+					
+					if (uniqueParams.email && user.email === uniqueParams.email) {
+						conflicts.push('email');
+					}
+					if (uniqueParams.username && user.username === uniqueParams.username) {
+						conflicts.push('username');
+					}
+					if (uniqueParams.phoneNumb && user.phoneNumb === uniqueParams.phoneNumb) {
+						conflicts.push('phone number');
+					}
+					
+					message += conflicts.join(' and ');
+					
+					return {
+						exists: true,
+						user: user as any, // Type assertion for User to UserDTO
+						message
+					};
+				} else {
+					return {
+						exists: false,
+						message: 'User does not exist, can proceed with signup'
+					};
+				}
+			} else if (operation === 'login') {
+				if (user) {
+					// For login, user SHOULD exist
+					return {
+						exists: true,
+						user: user as any, // Type assertion for User to UserDTO
+						message: 'User found, can proceed with login'
+					};
+				} else {
+					return {
+						exists: false,
+						message: 'User does not exist with provided credentials'
+					};
+				}
+			} else {
+				throw new Error(`Invalid operation type: ${operation}`);
+			}
+		} catch (error) {
+			throw new Error(`Failed to check user existence: ${error}`);
 		}
 	}
 

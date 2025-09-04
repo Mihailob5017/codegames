@@ -1,5 +1,8 @@
 import { Role } from '../../utils/constants';
 
+/**
+ * Complete user data transfer object containing all user fields
+ */
 export interface UserDTO {
 	id: string;
 	username: string;
@@ -25,6 +28,10 @@ export interface UserDTO {
 	updatedAt: Date;
 }
 
+/**
+ * Public user data transfer object for displaying user information publicly
+ * Contains only safe-to-expose user fields
+ */
 export interface PublicUserDTO {
 	id: string;
 	username: string;
@@ -41,11 +48,17 @@ export interface PublicUserDTO {
 	createdAt: Date;
 }
 
+/**
+ * User login data transfer object
+ */
 export interface UserLoginDTO {
 	email: string;
 	password: string;
 }
 
+/**
+ * User signup data transfer object
+ */
 export interface UserSignupDTO {
 	username: string;
 	email: string;
@@ -58,6 +71,9 @@ export interface UserSignupDTO {
 	googleId?: string;
 }
 
+/**
+ * User update data transfer object for partial user updates
+ */
 export interface UserUpdateDTO {
 	firstName?: string;
 	lastName?: string;
@@ -66,6 +82,9 @@ export interface UserUpdateDTO {
 	isProfileOpen?: boolean;
 }
 
+/**
+ * Unique user fields data transfer object for user existence checks
+ */
 export interface UniqueUserFieldsDTO {
 	id?: string;
 	username?: string;
@@ -73,6 +92,9 @@ export interface UniqueUserFieldsDTO {
 	phoneNumb?: string;
 }
 
+/**
+ * JWT payload data transfer object
+ */
 export interface JwtPayloadDTO {
 	id: string;
 	username: string;
@@ -86,25 +108,40 @@ export interface JwtPayloadDTO {
 	aud?: string;
 }
 
+/**
+ * Authentication response data transfer object
+ */
 export interface AuthResponseDTO {
 	jwt: string;
-	user: UserType;
+	user: UserDTO;
 }
 
+/**
+ * OTP verification data transfer object
+ */
 export interface OTPVerificationDTO {
 	otp: number;
 }
 
+/**
+ * Password reset data transfer object
+ */
 export interface PasswordResetDTO {
 	email: string;
 	token: string;
 	newPassword: string;
 }
 
+/**
+ * Refresh token data transfer object
+ */
 export interface RefreshTokenDTO {
 	refreshToken: string;
 }
 
+/**
+ * User search data transfer object for filtering and pagination
+ */
 export interface UserSearchDTO {
 	query?: string;
 	role?: Role;
@@ -116,6 +153,9 @@ export interface UserSearchDTO {
 	sortOrder?: 'asc' | 'desc';
 }
 
+/**
+ * User statistics data transfer object
+ */
 export interface UserStatsDTO {
 	totalUsers: number;
 	verifiedUsers: number;
@@ -125,15 +165,17 @@ export interface UserStatsDTO {
 	deletedUsers: number;
 }
 
-// Legacy types for backward compatibility - to be removed in next major version
-/** @deprecated Use UserDTO instead */
-export type UserType = UserDTO;
+/**
+ * Operation types for user existence checks
+ */
+export type UserOperationType = 'signup' | 'login';
 
-/** @deprecated Use UniqueUserFieldsDTO instead */
-export type UniqueInputTypes = UniqueUserFieldsDTO;
+/**
+ * Enhanced user existence check result
+ */
+export interface UserExistenceCheckResult {
+	exists: boolean;
+	user?: UserDTO;
+	message: string;
+}
 
-/** @deprecated Use JwtPayloadDTO instead */
-export type JwtPayloadType = JwtPayloadDTO;
-
-/** @deprecated Use AuthResponseDTO instead */
-export type CreateUserResponseType = AuthResponseDTO;

@@ -5,23 +5,26 @@ import {
 } from '../../repositories/login-repositories';
 import { HttpError } from '../../types/common/error-types';
 import {
-	CreateUserResponseType,
-	JwtPayloadType,
-	UserType,
+	AuthResponseDTO,
+	JwtPayloadDTO,
+	UserDTO,
 } from '../../types/dto/user-types';
-import { Role } from '../../utils/constants';
+import { BCRYPT_SALT_ROUNDS, Role } from '../../utils/constants';
 import {
+	comparePassword,
 	encryptPassword,
 	generateId,
 	generateJWT,
 	generateToken,
 	verifyJWT,
 } from '../../utils/auth';
-import { validateSignup } from '../../utils/request-validator';
+import { validateLogin, validateSignup } from '../../utils/request-validator';
 import { EmailService } from '../email/email-service';
 
+import bcrypt from 'bcryptjs';
+
 interface ISignupService {
-	signup(): Promise<CreateUserResponseType>;
+	signup(): Promise<AuthResponseDTO>;
 	verifyOTP(token: string, otp: number): Promise<void>;
 }
 
@@ -40,7 +43,7 @@ export class AuthService implements ISignupService {
 		this.emailService = emailService || new EmailService();
 	}
 
-	public async signup(): Promise<CreateUserResponseType> {
+	public async signup(): Promise<AuthResponseDTO> {
 		try {
 			this.normalizeInput();
 			this.validateInput();
@@ -57,6 +60,33 @@ export class AuthService implements ISignupService {
 		}
 	}
 
+	private validatePassword(hash: string): boolean {
+		return comparePassword(this.userInput.passwordHash as string, hash);
+	}
+
+	public async login(): Promise<AuthResponseDTO> {
+		try {
+			this.validateLogin();
+
+			const data = await this.checkUserForLogin();
+			if (!data) throw new HttpError(404, 'User not found');
+
+			if (!data.passwordHash)
+				throw new HttpError(404, 'User password not found');
+
+			const isPasswordValid = this.validatePassword(data.passwordHash);
+			if (!isPasswordValid) throw new HttpError(400, 'Invalid password');
+
+			if (!data.verified) {
+				throw new HttpError(403, 'Account verification required');
+			}
+
+			this.userInput = data;
+			return await this.createResponse();
+		} catch (error) {
+			throw error;
+		}
+	}
 	public async verifyOTP(token: string, otp: number): Promise<void> {
 		try {
 			const userInfo = this.extractUserFromToken(token);
@@ -98,6 +128,12 @@ export class AuthService implements ISignupService {
 	private validateInput(): void {
 		validateSignup(this.userInput as CreateUserInput);
 	}
+	private validateLogin(): void {
+		validateLogin({
+			email: this.userInput.email as string,
+			password: this.userInput.passwordHash as string,
+		});
+	}
 
 	private async checkIfUserExists(): Promise<void> {
 		const uniqueParams = {
@@ -106,13 +142,31 @@ export class AuthService implements ISignupService {
 			phoneNumb: this.userInput.phoneNumb as string,
 		};
 
-		const existingUser = await this.userRepository.checkIfUserExists(
-			uniqueParams
+		const result = await this.userRepository.checkUserExistence(
+			uniqueParams,
+			'signup'
 		);
 
-		if (existingUser) {
-			throw new HttpError(400, 'User already exists');
+		if (result.exists) {
+			throw new HttpError(400, result.message);
 		}
+	}
+
+	private async checkUserForLogin(): Promise<UserDTO> {
+		const uniqueParams = {
+			email: this.userInput.email as string,
+		};
+
+		const result = await this.userRepository.checkUserExistence(
+			uniqueParams,
+			'login'
+		);
+
+		if (!result.exists || !result.user) {
+			throw new HttpError(404, 'User not found');
+		}
+
+		return result.user;
 	}
 
 	private async saveUser(): Promise<void> {
@@ -140,7 +194,7 @@ export class AuthService implements ISignupService {
 		return { id, email, username, phoneNumb };
 	}
 
-	private async getUser(userId: string): Promise<UserType> {
+	private async getUser(userId: string): Promise<UserDTO> {
 		if (!userId) {
 			throw new HttpError(400, 'User ID is required');
 		}
@@ -151,10 +205,10 @@ export class AuthService implements ISignupService {
 			throw new HttpError(404, 'User not found');
 		}
 
-		return user as UserType;
+		return user as UserDTO;
 	}
 
-	private validateOTP(user: UserType, otp: number): void {
+	private validateOTP(user: UserDTO, otp: number): void {
 		if (!user) {
 			throw new HttpError(400, 'User is required');
 		}
@@ -215,7 +269,7 @@ export class AuthService implements ISignupService {
 	}
 
 	private async generateUserJWT(): Promise<string> {
-		const jwtPayload: JwtPayloadType = {
+		const jwtPayload: JwtPayloadDTO = {
 			id: this.userInput.id as string,
 			username: this.userInput.username as string,
 			email: this.userInput.email as string,
@@ -223,16 +277,16 @@ export class AuthService implements ISignupService {
 			phoneNumb: this.userInput.phoneNumb as string,
 			role: this.userInput.role as Role,
 		};
-
+		console.log(jwtPayload);
 		return generateJWT(jwtPayload);
 	}
 
-	private async createResponse(): Promise<CreateUserResponseType> {
+	private async createResponse(): Promise<AuthResponseDTO> {
 		const jwt = await this.generateUserJWT();
 
 		return {
 			jwt,
-			user: this.userInput as UserType,
+			user: this.userInput as UserDTO,
 		};
 	}
 }

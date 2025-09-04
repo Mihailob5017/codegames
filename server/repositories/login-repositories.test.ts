@@ -1,7 +1,7 @@
 import { UserRepository } from './login-repositories';
 import { PrismaServiceInstance } from '../config/prisma-config';
 import { createMockUser, createMockCreateUserInput, mockPrismaClient, resetAllMocks } from '../__tests__/utils/test-helpers';
-import { UniqueInputTypes } from '../types/dto/user-types';
+import { UniqueUserFieldsDTO } from '../types/dto/user-types';
 
 jest.mock('../config/prisma-config', () => ({
 	PrismaServiceInstance: {
@@ -20,7 +20,7 @@ describe('UserRepository', () => {
 	describe('checkIfUserExists', () => {
 		it('should find user by id', async () => {
 			const mockUser = createMockUser();
-			const uniqueParams: UniqueInputTypes = { id: 'test-user-id' };
+			const uniqueParams: UniqueUserFieldsDTO = { id: 'test-user-id' };
 			mockPrismaClient.user.findUnique.mockResolvedValue(mockUser);
 
 			const result = await userRepository.checkIfUserExists(uniqueParams);
@@ -33,7 +33,7 @@ describe('UserRepository', () => {
 
 		it('should find user by username', async () => {
 			const mockUser = createMockUser();
-			const uniqueParams: UniqueInputTypes = { username: 'testuser' };
+			const uniqueParams: UniqueUserFieldsDTO = { username: 'testuser' };
 			mockPrismaClient.user.findUnique.mockResolvedValue(mockUser);
 
 			const result = await userRepository.checkIfUserExists(uniqueParams);
@@ -46,7 +46,7 @@ describe('UserRepository', () => {
 
 		it('should find user by email', async () => {
 			const mockUser = createMockUser();
-			const uniqueParams: UniqueInputTypes = { email: 'test@example.com' };
+			const uniqueParams: UniqueUserFieldsDTO = { email: 'test@example.com' };
 			mockPrismaClient.user.findUnique.mockResolvedValue(mockUser);
 
 			const result = await userRepository.checkIfUserExists(uniqueParams);
@@ -59,7 +59,7 @@ describe('UserRepository', () => {
 
 		it('should find user by phone number', async () => {
 			const mockUser = createMockUser();
-			const uniqueParams: UniqueInputTypes = { phoneNumb: '+1234567890' };
+			const uniqueParams: UniqueUserFieldsDTO = { phoneNumb: '+1234567890' };
 			mockPrismaClient.user.findUnique.mockResolvedValue(mockUser);
 
 			const result = await userRepository.checkIfUserExists(uniqueParams);
@@ -71,7 +71,7 @@ describe('UserRepository', () => {
 		});
 
 		it('should return null when user not found', async () => {
-			const uniqueParams: UniqueInputTypes = { email: 'notfound@example.com' };
+			const uniqueParams: UniqueUserFieldsDTO = { email: 'notfound@example.com' };
 			mockPrismaClient.user.findUnique.mockResolvedValue(null);
 
 			const result = await userRepository.checkIfUserExists(uniqueParams);
@@ -80,7 +80,7 @@ describe('UserRepository', () => {
 		});
 
 		it('should throw error when no unique field provided', async () => {
-			const uniqueParams: UniqueInputTypes = {};
+			const uniqueParams: UniqueUserFieldsDTO = {};
 
 			await expect(userRepository.checkIfUserExists(uniqueParams)).rejects.toThrow(
 				'Failed to check if user exists: Error: At least one unique field must be provided'
@@ -88,7 +88,7 @@ describe('UserRepository', () => {
 		});
 
 		it('should handle database errors', async () => {
-			const uniqueParams: UniqueInputTypes = { email: 'test@example.com' };
+			const uniqueParams: UniqueUserFieldsDTO = { email: 'test@example.com' };
 			const dbError = new Error('Database connection failed');
 			mockPrismaClient.user.findUnique.mockRejectedValue(dbError);
 

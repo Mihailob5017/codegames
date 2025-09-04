@@ -18,6 +18,7 @@ describe('AuthService', () => {
 	beforeEach(() => {
 		mockUserRepository = {
 			checkIfUserExists: jest.fn(),
+			checkUserExistence: jest.fn(),
 			saveUser: jest.fn(),
 			getUser: jest.fn(),
 			updateUser: jest.fn(),
@@ -51,7 +52,10 @@ describe('AuthService', () => {
 	describe('signup', () => {
 		it('should create user successfully', async () => {
 			const mockUser = createMockUser();
-			mockUserRepository.checkIfUserExists.mockResolvedValue(null);
+			mockUserRepository.checkUserExistence.mockResolvedValue({
+				exists: false,
+				message: 'User does not exist, can proceed with signup'
+			});
 			mockUserRepository.saveUser.mockResolvedValue(mockUser);
 			mockEmailService.sendVerificationEmail.mockResolvedValue(undefined);
 
@@ -66,21 +70,35 @@ describe('AuthService', () => {
 				}),
 			});
 
-			expect(mockUserRepository.checkIfUserExists).toHaveBeenCalled();
+			expect(mockUserRepository.checkUserExistence).toHaveBeenCalledWith(
+				expect.objectContaining({
+					email: mockUserInput.email,
+					username: mockUserInput.username,
+					phoneNumb: mockUserInput.phoneNumb
+				}),
+				'signup'
+			);
 			expect(mockUserRepository.saveUser).toHaveBeenCalled();
 			expect(mockEmailService.sendVerificationEmail).toHaveBeenCalled();
 		});
 
 		it('should throw error when user already exists by email', async () => {
 			const existingUser = createMockUser();
-			mockUserRepository.checkIfUserExists.mockResolvedValue(existingUser);
+			mockUserRepository.checkUserExistence.mockResolvedValue({
+				exists: true,
+				user: existingUser as any,
+				message: 'User already exists with email'
+			});
 
 			await expect(authService.signup()).rejects.toThrow(HttpError);
 		});
 
 		it('should handle email service errors', async () => {
 			const mockUser = createMockUser();
-			mockUserRepository.checkIfUserExists.mockResolvedValue(null);
+			mockUserRepository.checkUserExistence.mockResolvedValue({
+				exists: false,
+				message: 'User does not exist, can proceed with signup'
+			});
 			mockUserRepository.saveUser.mockResolvedValue(mockUser);
 			mockEmailService.sendVerificationEmail.mockRejectedValue(
 				new Error('Email service unavailable')
@@ -90,7 +108,10 @@ describe('AuthService', () => {
 		});
 
 		it('should handle repository save errors', async () => {
-			mockUserRepository.checkIfUserExists.mockResolvedValue(null);
+			mockUserRepository.checkUserExistence.mockResolvedValue({
+				exists: false,
+				message: 'User does not exist, can proceed with signup'
+			});
 			mockUserRepository.saveUser.mockRejectedValue(
 				new Error('Database constraint violation')
 			);

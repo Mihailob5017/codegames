@@ -25,6 +25,23 @@ export class LoginController {
 		}
 	};
 
+	static login: ControllerFn = async (req, res, next) => {
+		try {
+			const authService = new AuthService(req.body);
+			const response = await authService.login();
+
+			const responseObj = ResponseObject.success(
+				200,
+				'Login successful',
+				response
+			);
+
+			responseObj.send(res);
+		} catch (error) {
+			next(error);
+		}
+	};
+
 	static verifyOTP: ControllerFn = async (req, res, next) => {
 		try {
 			const { otp } = req.body;
