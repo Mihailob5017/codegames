@@ -2,49 +2,223 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-provider      = "prisma-client-js"
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "darwin-arm64", "linux-musl-arm64-openssl-3.0.x"]
   output        = "../generated/prisma"
 }
 
 datasource db {
-  provider =  "postgresql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
 enum Role {
   user
   admin
 }
 
+enum Difficulty {
+  easy
+  medium
+  hard
+}
+
+enum ProblemType {
+  array_and_string
+  two_pointers
+  sliding_window
+  stack
+  binary_search
+  linked_list
+  trees
+  tries
+  heap
+  backtracking
+  greedy
+  intervals
+}
+
+enum AccessLevel {
+  free
+  locked
+}
+
+enum SubmissionStatus {
+  pending
+  accepted
+  wrong_answer
+  time_limit_exceeded
+  memory_limit_exceeded
+  runtime_error
+  compile_error
+}
+
 model User {
   // Main information
-  id String @id @unique
-  username String @unique @db.VarChar(20)
-  email String @unique @db.VarChar(20)
+  id        String @id @unique
+  username  String @unique @db.VarChar(20)
+  email     String @unique @db.VarChar(20)
   phoneNumb String @unique @db.VarChar(20)
+  
   // Login-metadata
-  isGoogleLogin Boolean @default(false)
-  passwordHash String?
-  googleId String?
-  verifyToken Int
+  isGoogleLogin     Boolean   @default(false)
+  passwordHash      String?
+  googleId          String?
+  verifyToken       Int
   verifyTokenExpiry DateTime
-  verified Boolean @default(false)
-  role Role @default(user)
+  verified          Boolean   @default(false)
+  role              Role      @default(user)
+  
   // User info
-  firstName String
-  lastName String
-  country String
+  firstName        String
+  lastName         String
+  country          String
   isAvatarSelected Boolean @default(false)
-  avatar String?
+  avatar           String?
   isProfileDeleted Boolean @default(false)
-  // Leaderboard & Challenges
-  currency Int @default(0)
-  pointsScored Int @default(0)
+  
+  // Gaming & Economics - renamed currency to credits for clarity
+  credits       Int     @default(100)
+  pointsScored  Int     @default(0)
   isProfileOpen Boolean @default(true)
-  // ChallangesUnlocked etc
-  // History etc
+  
+  // Relationships
+  unlockedProblems UserProblemUnlock[]
+  submissions      Submission[]
+  searchHistory    SearchHistory[]
+  
   // Timestamps
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
+
+  @@map("users")
 }
 
+model Problem {
+  id            String      @id @unique @default(cuid())
+  title         String      @db.VarChar(200)
+  description   String      @db.Text
+  hints         String[]
+  explanation   String      @db.Text
+  examples      String[]
+  difficulty    Difficulty
+  type          ProblemType
+  accessLevel   AccessLevel @default(free)
+  unlockCost    Int         @default(0)
+  rewardCredits Int         @default(10)
+  
+  // Test cases - one-to-many relationship
+  testCases TestCase[]
+  
+  // Search optimization for Trie-based search
+  searchTokens String[]
+  
+  // Relationships
+  unlockedBy  UserProblemUnlock[]
+  submissions Submission[]
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@map("problems")
+  @@index([difficulty])
+  @@index([type])
+  @@index([accessLevel])
+}
+
+model TestCase {
+  id             String  @id @unique @default(cuid())
+  problemId      String
+  input          Json
+  expectedOutput Json
+  isExample      Boolean @default(false)
+  isHidden       Boolean @default(true)
+  timeLimit      Int     @default(1000) // milliseconds
+  memoryLimit    Int     @default(256)  // MB
+  
+  // Relationship to Problem
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  
+  @@map("test_cases")
+  @@index([problemId])
+  @@index([isExample])
+}
+
+model UserProblemUnlock {
+  id         String   @id @unique @default(cuid())
+  userId     String
+  problemId  String
+  unlockedAt DateTime @default(now())
+  creditsPaid Int     @default(0)
+  
+  // Relationships
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, problemId])
+  @@map("user_problem_unlocks")
+}
+
+model Submission {
+  id               String           @id @unique @default(cuid())
+  userId           String
+  problemId        String
+  code             String           @db.Text
+  language         String           @db.VarChar(20)
+  status           SubmissionStatus @default(pending)
+  executionTime    Int?             // milliseconds
+  memoryUsed       Int?             // MB
+  score            Int              @default(0)
+  testCasesPassed  Int              @default(0)
+  totalTestCases   Int              @default(0)
+  errorMessage     String?
+  creditsEarned    Int              @default(0)
+  
+  // Relationships
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  
+  // Timestamps
+  submittedAt DateTime @default(now())
+  
+  @@map("submissions")
+  @@index([userId])
+  @@index([problemId])
+  @@index([status])
+}
+
+// Trie data structure for efficient search with autocomplete
+model TrieNode {
+  id            String  @id @unique @default(cuid())
+  character     String  @db.VarChar(1)
+  isEndOfWord   Boolean @default(false)
+  parentId      String?
+  
+  // Self-referential relationship for trie tree structure
+  parent   TrieNode?  @relation("TrieNodeChildren", fields: [parentId], references: [id])
+  children TrieNode[] @relation("TrieNodeChildren")
+  
+  // Problem associations for fast autocomplete lookup
+  problemSuggestions String[] // Array of problem IDs
+  
+  @@map("trie_nodes")
+  @@index([parentId])
+  @@index([character])
+  @@index([isEndOfWord])
+}
+
+model SearchHistory {
+  id           String   @id @unique @default(cuid())
+  userId       String
+  query        String   @db.VarChar(200)
+  resultsCount Int      @default(0)
+  searchedAt   DateTime @default(now())
+  
+  // Relationship
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("search_history")
+  @@index([userId])
+  @@index([searchedAt])
+}

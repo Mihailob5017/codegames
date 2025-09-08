@@ -21,7 +21,7 @@ export interface UserDTO {
 	isAvatarSelected: boolean;
 	avatar?: string;
 	isProfileDeleted: boolean;
-	currency: number;
+	credits: number;
 	pointsScored: number;
 	isProfileOpen: boolean;
 	createdAt: Date;
@@ -40,7 +40,7 @@ export interface PublicUserDTO {
 	lastName: string;
 	country: string;
 	avatar?: string;
-	currency: number;
+	credits: number;
 	pointsScored: number;
 	isProfileOpen: boolean;
 	role: Role;

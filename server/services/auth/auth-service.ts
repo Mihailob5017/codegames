@@ -116,7 +116,7 @@ export class AuthService implements ISignupService {
 			googleId: this.userInput.isGoogleLogin ? this.userInput.googleId : '',
 			isProfileDeleted: false,
 			isProfileOpen: true,
-			currency: 0,
+			credits: 100,
 			pointsScored: 0,
 			role: 'user',
 			verifyToken: token,

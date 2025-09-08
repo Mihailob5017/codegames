@@ -49,7 +49,7 @@ export const CreateUserInputSchema = z.object({
 	isAvatarSelected: z.boolean().default(USER_DEFAULTS.IS_AVATAR_SELECTED),
 	avatar: z.string().url('Avatar must be a valid URL').optional(),
 	isProfileDeleted: z.boolean().default(USER_DEFAULTS.IS_PROFILE_DELETED),
-	currency: z.number().int().min(0, 'Currency cannot be negative').default(USER_DEFAULTS.CURRENCY),
+	credits: z.number().int().min(0, 'Credits cannot be negative').default(USER_DEFAULTS.CREDITS),
 	pointsScored: z.number().int().min(0, 'Points cannot be negative').default(USER_DEFAULTS.POINTS_SCORED),
 	isProfileOpen: z.boolean().default(USER_DEFAULTS.IS_PROFILE_OPEN),
 	createdAt: z.date().default(() => new Date()),

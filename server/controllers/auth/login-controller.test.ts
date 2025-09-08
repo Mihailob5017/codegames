@@ -69,7 +69,7 @@ describe('LoginController', () => {
 					isAvatarSelected: false,
 					avatar: undefined,
 					isProfileDeleted: false,
-					currency: 0,
+					credits: 100,
 					pointsScored: 0,
 					isProfileOpen: true,
 					createdAt: new Date(),

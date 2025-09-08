@@ -50,7 +50,7 @@ export const USER_DEFAULTS = {
 	IS_AVATAR_SELECTED: false,
 	IS_PROFILE_DELETED: false,
 	IS_PROFILE_OPEN: true,
-	CURRENCY: 0,
+	CREDITS: 100,
 	POINTS_SCORED: 0,
 	ROLE: 'user' as Role,
 } as const;
