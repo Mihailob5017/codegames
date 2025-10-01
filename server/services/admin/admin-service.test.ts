@@ -11,6 +11,12 @@ describe('AdminService', () => {
 			getAllUsers: jest.fn(),
 			getUser: jest.fn(),
 			deleteUser: jest.fn(),
+			addProblem: jest.fn(),
+			addTestcase: jest.fn(),
+			getProblems: jest.fn(),
+			getProblem: jest.fn(),
+			getTestCases: jest.fn(),
+			getTestCase: jest.fn(),
 		};
 		adminService = new AdminService(mockAdminRepository);
 	});

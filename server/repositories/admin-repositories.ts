@@ -1,10 +1,17 @@
 import { PrismaServiceInstance } from '../config/prisma-config';
-import { User } from '../generated/prisma';
+import { Prisma, Problem, TestCase, User } from '../generated/prisma';
+import { ProblemDTO, TestCaseDTO } from '../types/dto/problem-types';
 
 export interface IAdminRepository {
 	getAllUsers(): Promise<User[]>;
 	getUser(id: string): Promise<User | null>;
 	deleteUser(id: string): Promise<User>;
+	addTestcase(testcase: TestCaseDTO, problemId: string): Promise<TestCase>;
+	addProblem(problem: ProblemDTO): Promise<Problem>;
+	getProblems(): Promise<Problem[]>;
+	getProblem(id: string): Promise<Problem | null>;
+	getTestCases(id: string): Promise<TestCase[]>;
+	getTestCase(id: string): Promise<TestCase | null>;
 }
 
 export class AdminRepository implements IAdminRepository {
@@ -41,6 +48,76 @@ export class AdminRepository implements IAdminRepository {
 			});
 		} catch (error) {
 			throw new Error(`Failed to delete user: ${error}`);
+		}
+	}
+
+	async addProblem(problem: ProblemDTO): Promise<Problem> {
+		try {
+			return await PrismaServiceInstance.getClient().problem.create({
+				data: problem,
+			});
+		} catch (error) {
+			throw new Error(`Failed to add problem: ${error}`);
+		}
+	}
+
+	async addTestcase(testcase: TestCaseDTO, problemId: string): Promise<any> {
+		try {
+			return await PrismaServiceInstance.getClient().testCase.create({
+				data: {
+					input: testcase.input,
+					expectedOutput: testcase.expectedOutput,
+					isExample: testcase.isExample,
+					isHidden: testcase.isHidden,
+					timeLimit: testcase.timeLimit,
+					memoryLimit: testcase.memoryLimit,
+					problem: {
+						connect: {
+							id: problemId,
+						},
+					},
+				},
+			});
+		} catch (error) {
+			throw new Error(`Failed to add testcase: ${error}`);
+		}
+	}
+
+	async getProblems(): Promise<Problem[]> {
+		try {
+			return await PrismaServiceInstance.getClient().problem.findMany();
+		} catch (error) {
+			throw new Error(`Failed to get problems: ${error}`);
+		}
+	}
+
+	async getProblem(id: string): Promise<Problem | null> {
+		try {
+			return await PrismaServiceInstance.getClient().problem.findUnique({
+				where: { id },
+			});
+		} catch (error) {
+			throw new Error(`Failed to get problem: ${error}`);
+		}
+	}
+	async getTestCases(id: string): Promise<TestCase[]> {
+		try {
+			return await PrismaServiceInstance.getClient().testCase.findMany({
+				where: {
+					problemId: id,
+				},
+			});
+		} catch (error) {
+			throw new Error(`Failed to get testcases: ${error}`);
+		}
+	}
+	async getTestCase(id: string): Promise<TestCase | null> {
+		try {
+			return await PrismaServiceInstance.getClient().testCase.findUnique({
+				where: { id },
+			});
+		} catch (error) {
+			throw new Error(`Failed to get testcase: ${error}`);
 		}
 	}
 }

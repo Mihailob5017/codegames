@@ -28,6 +28,7 @@ class MainRouter {
 	private setupRoutes(): void {
 		const apiPrefix = `/${this.config.apiPrefix}`;
 
+		this.config.adminRoute = process.env.ADMIN_ROUTE || 'admin';
 		// Health check endpoint
 		this.router.get('/health', async (_req: Request, res: Response) => {
 			const redisHealthy = RedisServiceInstance.isHealthy();
