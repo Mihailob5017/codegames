@@ -12,6 +12,11 @@ export interface IAdminRepository {
 	getProblem(id: string): Promise<Problem | null>;
 	getTestCases(id: string): Promise<TestCase[]>;
 	getTestCase(id: string): Promise<TestCase | null>;
+	updateTestCase(param: Partial<TestCase>, id: string): Promise<TestCase>;
+	updateProblem(param: Partial<Problem>, id: string): Promise<Problem>;
+	deleteProblem(id: string): Promise<boolean>;
+	deleteTestCase(id: string): Promise<boolean>;
+	deleteTestCases(problemId: string): Promise<boolean>;
 }
 
 export class AdminRepository implements IAdminRepository {
@@ -118,6 +123,64 @@ export class AdminRepository implements IAdminRepository {
 			});
 		} catch (error) {
 			throw new Error(`Failed to get testcase: ${error}`);
+		}
+	}
+
+	async updateTestCase(
+		param: Partial<TestCase>,
+		id: string
+	): Promise<TestCase> {
+		try {
+			return await PrismaServiceInstance.getClient().testCase.update({
+				where: { id },
+				data: param as Prisma.TestCaseUpdateInput,
+			});
+		} catch (error) {
+			throw new Error(`Failed to update testcase: ${error}`);
+		}
+	}
+
+	async updateProblem(param: Partial<Problem>, id: string): Promise<Problem> {
+		try {
+			return await PrismaServiceInstance.getClient().problem.update({
+				where: { id },
+				data: param as Prisma.ProblemUpdateInput,
+			});
+		} catch (error) {
+			throw new Error(`Failed to update problem: ${error}`);
+		}
+	}
+
+	async deleteProblem(id: string): Promise<boolean> {
+		try {
+			await PrismaServiceInstance.getClient().problem.delete({
+				where: { id },
+			});
+			return true;
+		} catch (error) {
+			throw new Error(`Failed to delete problem: ${error}`);
+		}
+	}
+
+	async deleteTestCase(id: string): Promise<boolean> {
+		try {
+			await PrismaServiceInstance.getClient().testCase.delete({
+				where: { id },
+			});
+			return true;
+		} catch (error) {
+			throw new Error(`Failed to delete testcase: ${error}`);
+		}
+	}
+
+	async deleteTestCases(problemId: string): Promise<boolean> {
+		try {
+			await PrismaServiceInstance.getClient().testCase.deleteMany({
+				where: { problemId },
+			});
+			return true;
+		} catch (error) {
+			throw new Error(`Failed to delete all testcases: ${error}`);
 		}
 	}
 }

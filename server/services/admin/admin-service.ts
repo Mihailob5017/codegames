@@ -16,6 +16,11 @@ export interface IAdminService {
 	getProblem(id: string): Promise<Problem | null>;
 	getTestCases(problemId: string): Promise<TestCase[]>;
 	getTestCase(id: string): Promise<TestCase | null>;
+	updateTestCase(param: Partial<TestCase>, id: string): Promise<TestCase>;
+	updateProblem(param: Partial<Problem>, id: string): Promise<Problem>;
+	deleteProblem(id: string): Promise<boolean>;
+	deleteTestCase(id: string): Promise<boolean>;
+	deleteTestCases(problemId: string): Promise<boolean>;
 }
 export class AdminService implements IAdminService {
 	private adminRepository: IAdminRepository;
@@ -123,6 +128,49 @@ export class AdminService implements IAdminService {
 			return await this.adminRepository.getTestCase(id);
 		} catch (error) {
 			throw new Error(`Failed to get testcase: ${error}`);
+		}
+	}
+
+	async updateTestCase(
+		param: Partial<TestCase>,
+		id: string
+	): Promise<TestCase> {
+		try {
+			return await this.adminRepository.updateTestCase(param, id);
+		} catch (error) {
+			throw new Error(`Failed to update testcase: ${error}`);
+		}
+	}
+
+	async updateProblem(param: Partial<Problem>, id: string): Promise<Problem> {
+		try {
+			return await this.adminRepository.updateProblem(param, id);
+		} catch (error) {
+			throw new Error(`Failed to update problem: ${error}`);
+		}
+	}
+
+	async deleteProblem(id: string): Promise<boolean> {
+		try {
+			return await this.adminRepository.deleteProblem(id);
+		} catch (error) {
+			throw new Error(`Failed to delete problem: ${error}`);
+		}
+	}
+
+	async deleteTestCase(id: string): Promise<boolean> {
+		try {
+			return await this.adminRepository.deleteTestCase(id);
+		} catch (error) {
+			throw new Error(`Failed to delete testcase: ${error}`);
+		}
+	}
+
+	async deleteTestCases(problemId: string): Promise<boolean> {
+		try {
+			return await this.adminRepository.deleteTestCases(problemId);
+		} catch (error) {
+			throw new Error(`Failed to delete all testcases: ${error}`);
 		}
 	}
 }

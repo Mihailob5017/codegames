@@ -1,3 +1,4 @@
+import { success } from 'zod';
 import {
 	AdminService,
 	IAdminService,
@@ -68,7 +69,7 @@ export class AdminController {
 		try {
 			const { id } = req.params;
 			AdminController.validateId(id, 'User ID');
-			
+
 			const adminService = AdminController.getAdminService();
 			const user = await adminService.getUser(id);
 			const responseObj = ResponseObject.success(200, 'User found', user);
@@ -82,7 +83,7 @@ export class AdminController {
 		try {
 			const { id } = req.params;
 			AdminController.validateId(id, 'User ID');
-			
+
 			const adminService = AdminController.getAdminService();
 			const user = await adminService.deleteUser(id);
 			const responseObj = ResponseObject.success(
@@ -99,7 +100,7 @@ export class AdminController {
 	static addProblem: ControllerFn = async (req, res, next) => {
 		try {
 			AdminController.validateProblemData(req.body);
-			
+
 			const adminService = AdminController.getAdminService();
 			const result = await adminService.addProblem(req.body);
 			const responseObj = ResponseObject.success(
@@ -117,7 +118,7 @@ export class AdminController {
 		try {
 			AdminController.validateTestCaseData(req.body);
 			AdminController.validateId(req.params.problemId, 'Problem ID');
-			
+
 			const adminService = AdminController.getAdminService();
 			const result = await adminService.addTestcase(
 				req.body,
@@ -152,7 +153,7 @@ export class AdminController {
 	static getProblem: ControllerFn = async (req, res, next) => {
 		try {
 			AdminController.validateId(req.params.id, 'Problem ID');
-			
+
 			const adminService = AdminController.getAdminService();
 			const result = await adminService.getProblem(req.params.id);
 			const responseObj = ResponseObject.success(
@@ -169,7 +170,7 @@ export class AdminController {
 	static getAllTestCases: ControllerFn = async (req, res, next) => {
 		try {
 			AdminController.validateId(req.params.problemId, 'Problem ID');
-			
+
 			const adminService = AdminController.getAdminService();
 			const result = await adminService.getTestCases(req.params.problemId);
 			const responseObj = ResponseObject.success(
@@ -185,13 +186,96 @@ export class AdminController {
 	static getTestCase: ControllerFn = async (req, res, next) => {
 		try {
 			AdminController.validateId(req.params.id, 'Test case ID');
-			
+
 			const adminService = AdminController.getAdminService();
 			const result = await adminService.getTestCase(req.params.id);
 			const responseObj = ResponseObject.success(
 				200,
 				'Testcase fetched successfully',
 				result
+			);
+			responseObj.send(res);
+		} catch (error) {
+			next(error);
+		}
+	};
+
+	static updateTestCase: ControllerFn = async (req, res, next) => {
+		try {
+			AdminController.validateId(req.params.id, 'Test case ID');
+
+			const adminService = AdminController.getAdminService();
+			const result = await adminService.updateTestCase(req.body, req.params.id);
+			const responseObj = ResponseObject.success(
+				200,
+				'Testcase updated successfully',
+				result
+			);
+			responseObj.send(res);
+		} catch (error) {
+			next(error);
+		}
+	};
+
+	static updateProblem: ControllerFn = async (req, res, next) => {
+		try {
+			AdminController.validateId(req.params.id, 'Problem ID');
+
+			const adminService = AdminController.getAdminService();
+			const result = await adminService.updateProblem(req.body, req.params.id);
+			const responseObj = ResponseObject.success(
+				200,
+				'Problem updated successfully',
+				result
+			);
+			responseObj.send(res);
+		} catch (error) {
+			next(error);
+		}
+	};
+
+	static deleteProblem: ControllerFn = async (req, res, next) => {
+		try {
+			AdminController.validateId(req.params.id, 'Problem ID');
+
+			const adminService = AdminController.getAdminService();
+			const result = await adminService.deleteProblem(req.params.id);
+			const responseObj = ResponseObject.success(
+				200,
+				'Problem deleted successfully',
+				{ success: result }
+			);
+			responseObj.send(res);
+		} catch (error) {
+			next(error);
+		}
+	};
+
+	static deleteTestCase: ControllerFn = async (req, res, next) => {
+		try {
+			AdminController.validateId(req.params.id, 'Test case ID');
+
+			const adminService = AdminController.getAdminService();
+			const result = await adminService.deleteTestCase(req.params.id);
+			const responseObj = ResponseObject.success(
+				200,
+				'Testcase deleted successfully',
+				{ success: result }
+			);
+			responseObj.send(res);
+		} catch (error) {
+			next(error);
+		}
+	};
+
+	static deleteAllTestCases: ControllerFn = async (req, res, next) => {
+		try {
+			const adminService = AdminController.getAdminService();
+			const result = await adminService.deleteTestCases(req.params.problemId);
+			const responseObj = ResponseObject.success(
+				200,
+				'Testcases deleted successfully',
+				{ success: result }
 			);
 			responseObj.send(res);
 		} catch (error) {

@@ -17,6 +17,11 @@ describe('AdminService', () => {
 			getProblem: jest.fn(),
 			getTestCases: jest.fn(),
 			getTestCase: jest.fn(),
+			updateProblem: jest.fn(),
+			updateTestCase: jest.fn(),
+			deleteProblem: jest.fn(),
+			deleteTestCase: jest.fn(),
+			deleteTestCases: jest.fn(),
 		};
 		adminService = new AdminService(mockAdminRepository);
 	});
@@ -43,7 +48,9 @@ describe('AdminService', () => {
 		it('should throw HttpError when no users exist', async () => {
 			mockAdminRepository.getAllUsers.mockResolvedValue([]);
 
-			await expect(adminService.getAllUsers()).rejects.toThrow('No users found');
+			await expect(adminService.getAllUsers()).rejects.toThrow(
+				'No users found'
+			);
 		});
 
 		it('should handle repository errors', async () => {
@@ -78,7 +85,9 @@ describe('AdminService', () => {
 		it('should throw HttpError when user not found', async () => {
 			mockAdminRepository.getUser.mockResolvedValue(null);
 
-			await expect(adminService.getUser('nonexistent-id')).rejects.toThrow('User not found');
+			await expect(adminService.getUser('nonexistent-id')).rejects.toThrow(
+				'User not found'
+			);
 		});
 
 		it('should handle repository errors', async () => {
@@ -91,7 +100,9 @@ describe('AdminService', () => {
 		});
 
 		it('should throw HttpError for empty string id', async () => {
-			await expect(adminService.getUser('')).rejects.toThrow('User ID is required');
+			await expect(adminService.getUser('')).rejects.toThrow(
+				'User ID is required'
+			);
 		});
 	});
 
@@ -105,13 +116,17 @@ describe('AdminService', () => {
 
 			expect(result).toEqual(mockUser);
 			expect(mockAdminRepository.getUser).toHaveBeenCalledWith('test-user-id');
-			expect(mockAdminRepository.deleteUser).toHaveBeenCalledWith('test-user-id');
+			expect(mockAdminRepository.deleteUser).toHaveBeenCalledWith(
+				'test-user-id'
+			);
 		});
 
 		it('should throw HttpError when user not found', async () => {
 			mockAdminRepository.getUser.mockResolvedValue(null);
 
-			await expect(adminService.deleteUser('nonexistent-id')).rejects.toThrow('User not found');
+			await expect(adminService.deleteUser('nonexistent-id')).rejects.toThrow(
+				'User not found'
+			);
 		});
 
 		it('should handle repository errors during delete', async () => {
@@ -126,7 +141,9 @@ describe('AdminService', () => {
 		});
 
 		it('should throw HttpError for empty user id', async () => {
-			await expect(adminService.deleteUser('')).rejects.toThrow('User ID is required');
+			await expect(adminService.deleteUser('')).rejects.toThrow(
+				'User ID is required'
+			);
 		});
 	});
 
