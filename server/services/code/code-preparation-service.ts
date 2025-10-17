@@ -37,20 +37,29 @@ export class CodePreparationService implements ICodePreparationService {
 		request: CodePreparationRequest
 	): Promise<PreparedCodeData> {
 		const { problemId, userCode, language } = request;
+		console.log("CodePreparationService: Starting with problemId:", problemId);
 
 		const problem = await this.codeRepository.getProblem(problemId);
+		console.log("CodePreparationService: Problem found:", !!problem);
 		if (!problem) {
 			throw new HttpError(404, `Problem with ID ${problemId} not found`);
 		}
 
+		console.log("CodePreparationService: Getting test case...");
 		const testCase = await this.getSingleTestCase(problemId);
+		console.log("CodePreparationService: Test case found:", !!testCase, testCase?.id);
+		
+		console.log("CodePreparationService: Getting all test cases...");
 		const allTestCases = await this.getAllTestCases(problemId);
+		console.log("CodePreparationService: All test cases count:", allTestCases?.length);
 
+		console.log("CodePreparationService: Wrapping user code...");
 		const preparedCode = this.wrapUserCodeForExecution(
 			userCode,
 			testCase,
 			language
 		);
+		console.log("CodePreparationService: Code wrapped successfully");
 
 		return {
 			problem,
@@ -102,17 +111,20 @@ export class CodePreparationService implements ICodePreparationService {
 		input: any,
 		expectedOutput: any
 	): string {
+		// Parse input - it might be multiple parameters separated by newlines
+		const inputArgs = this.parseInputParameters(input);
+		const argsString = inputArgs.map(arg => JSON.stringify(arg)).join(', ');
+		
 		return `
 // User's solution
 ${userCode}
 
 // Test execution
 try {
-	const testInput = ${JSON.stringify(input)};
 	const expectedOutput = ${JSON.stringify(expectedOutput)};
 	
-	// Call user's function with the test input
-	const result = solution(testInput);
+	// Call user's function with the parsed arguments
+	const result = solution(${argsString});
 	
 	// Compare result with expected output
 	const passed = JSON.stringify(result) === JSON.stringify(expectedOutput);
@@ -140,6 +152,10 @@ try {
 		input: any,
 		expectedOutput: any
 	): string {
+		// Parse input - it might be multiple parameters separated by newlines
+		const inputArgs = this.parseInputParameters(input);
+		const argsString = inputArgs.map(arg => JSON.stringify(arg)).join(', ');
+		
 		return `
 import json
 
@@ -148,11 +164,10 @@ ${userCode}
 
 # Test execution
 try:
-	test_input = ${JSON.stringify(input)}
 	expected_output = ${JSON.stringify(expectedOutput)}
 	
-	# Call user's function with the test input
-	result = solution(test_input)
+	# Call user's function with the parsed arguments
+	result = solution(${argsString})
 	
 	# Compare result with expected output
 	passed = result == expected_output
@@ -196,5 +211,27 @@ except Exception as error:
 			}
 		}
 		return output;
+	}
+
+	private parseInputParameters(input: any): any[] {
+		if (typeof input === "string") {
+			// Split by newlines to handle multiple parameters
+			const lines = input.trim().split('\n');
+			return lines.map(line => {
+				try {
+					// Try to parse as JSON
+					return JSON.parse(line);
+				} catch {
+					// If parsing fails, return as string
+					return line;
+				}
+			});
+		} else if (Array.isArray(input)) {
+			// If it's already an array, return as is
+			return input;
+		} else {
+			// Single parameter
+			return [input];
+		}
 	}
 }

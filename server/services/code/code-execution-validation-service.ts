@@ -20,44 +20,67 @@ export interface ExecutionResult {
 }
 
 interface ICodeExecutionValidationService {
-	validateAndExecuteCode(request: CodeValidationRequest): Promise<ExecutionResult>;
+	validateAndExecuteCode(
+		request: CodeValidationRequest
+	): Promise<ExecutionResult>;
 	validateCodeSecurity(code: string, language: string): Promise<boolean>;
-	executeSecureCode(code: string, language: string, timeLimit?: number): Promise<Omit<ExecutionResult, 'securityPassed' | 'validationErrors'>>;
+	executeSecureCode(
+		code: string,
+		language: string,
+		timeLimit?: number
+	): Promise<Omit<ExecutionResult, "securityPassed" | "validationErrors">>;
 }
 
-export class CodeExecutionValidationService implements ICodeExecutionValidationService {
+export class CodeExecutionValidationService
+	implements ICodeExecutionValidationService
+{
 	private readonly supportedLanguages = ["javascript", "python"];
 	private readonly defaultTimeLimit = 5000; // 5 seconds
 	private readonly defaultMemoryLimit = 128; // 128MB
 
-	async validateAndExecuteCode(request: CodeValidationRequest): Promise<ExecutionResult> {
+	async validateAndExecuteCode(
+		request: CodeValidationRequest
+	): Promise<ExecutionResult> {
 		const startTime = Date.now();
 		const validationErrors: string[] = [];
 
 		try {
+			console.log("CodeExecutionValidationService: Starting validation for language:", request.language);
+			
 			// 1. Validate language support
 			this.validateLanguage(request.language);
+			console.log("CodeExecutionValidationService: Language validation passed");
 
 			// 2. Validate code security
-			const securityPassed = await this.validateCodeSecurity(request.code, request.language);
+			console.log("CodeExecutionValidationService: Starting security validation...");
+			const securityPassed = await this.validateCodeSecurity(
+				request.code,
+				request.language
+			);
+			console.log("CodeExecutionValidationService: Security validation result:", securityPassed);
+			
 			if (!securityPassed) {
 				validationErrors.push("Code failed security validation");
 			}
 
 			// 3. Execute code if validation passed
 			if (securityPassed && validationErrors.length === 0) {
+				console.log("CodeExecutionValidationService: Starting code execution...");
 				const executionResult = await this.executeSecureCode(
 					request.code,
 					request.language,
 					request.timeLimit
 				);
+				console.log("CodeExecutionValidationService: Execution completed:", executionResult);
 
 				return {
 					...executionResult,
 					securityPassed,
-					validationErrors: validationErrors.length > 0 ? validationErrors : undefined,
+					validationErrors:
+						validationErrors.length > 0 ? validationErrors : undefined,
 				};
 			} else {
+				console.log("CodeExecutionValidationService: Validation failed, errors:", validationErrors);
 				return {
 					success: false,
 					error: "Code validation failed",
@@ -67,17 +90,24 @@ export class CodeExecutionValidationService implements ICodeExecutionValidationS
 				};
 			}
 		} catch (error) {
+			console.error("CodeExecutionValidationService: Error occurred:", error);
 			return {
 				success: false,
-				error: error instanceof Error ? error.message : "Unknown execution error",
+				error:
+					error instanceof Error ? error.message : "Unknown execution error",
 				executionTime: Date.now() - startTime,
 				securityPassed: false,
-				validationErrors: [error instanceof Error ? error.message : "Unknown error"],
+				validationErrors: [
+					error instanceof Error ? error.message : "Unknown error",
+				],
 			};
 		}
 	}
 
-	async validateCodeSecurity(code: string, language: string): Promise<boolean> {
+	async validateCodeSecurity(
+		code: string,
+		language: "javascript" | "python"
+	): Promise<boolean> {
 		try {
 			// Use existing security validator
 			CodeSecurityValidator.validateCodeSecurity({
@@ -99,7 +129,7 @@ export class CodeExecutionValidationService implements ICodeExecutionValidationS
 		code: string,
 		language: string,
 		timeLimit = this.defaultTimeLimit
-	): Promise<Omit<ExecutionResult, 'securityPassed' | 'validationErrors'>> {
+	): Promise<Omit<ExecutionResult, "securityPassed" | "validationErrors">> {
 		const startTime = Date.now();
 
 		return new Promise((resolve) => {
@@ -108,7 +138,7 @@ export class CodeExecutionValidationService implements ICodeExecutionValidationS
 			const process = spawn(command, args, {
 				timeout: timeLimit,
 				killSignal: "SIGKILL",
-				stdio: ['pipe', 'pipe', 'pipe'],
+				stdio: ["pipe", "pipe", "pipe"],
 			});
 
 			let stdout = "";
@@ -127,7 +157,10 @@ export class CodeExecutionValidationService implements ICodeExecutionValidationS
 				resolve({
 					success: code === 0,
 					output: stdout || undefined,
-					error: code !== 0 ? (stderr || `Process exited with code ${code}`) : undefined,
+					error:
+						code !== 0
+							? stderr || `Process exited with code ${code}`
+							: undefined,
 					executionTime,
 				});
 			});
@@ -161,7 +194,10 @@ export class CodeExecutionValidationService implements ICodeExecutionValidationS
 		}
 	}
 
-	private performLanguageSpecificSecurityChecks(code: string, language: string): void {
+	private performLanguageSpecificSecurityChecks(
+		code: string,
+		language: string
+	): void {
 		switch (language) {
 			case "javascript":
 				this.validateJavaScriptSecurity(code);
@@ -188,12 +224,18 @@ export class CodeExecutionValidationService implements ICodeExecutionValidationS
 
 		for (const pattern of dangerousPatterns) {
 			if (pattern.test(code)) {
-				throw new Error(`Potentially dangerous JavaScript pattern detected: ${pattern.source}`);
+				throw new Error(
+					`Potentially dangerous JavaScript pattern detected: ${pattern.source}`
+				);
 			}
 		}
 
 		// Check for function definition - must have a solution function
-		if (!code.includes('function solution') && !code.includes('const solution') && !code.includes('let solution')) {
+		if (
+			!code.includes("function solution") &&
+			!code.includes("const solution") &&
+			!code.includes("let solution")
+		) {
 			throw new Error('Code must contain a function named "solution"');
 		}
 	}
@@ -216,17 +258,22 @@ export class CodeExecutionValidationService implements ICodeExecutionValidationS
 
 		for (const pattern of dangerousPatterns) {
 			if (pattern.test(code)) {
-				throw new Error(`Potentially dangerous Python pattern detected: ${pattern.source}`);
+				throw new Error(
+					`Potentially dangerous Python pattern detected: ${pattern.source}`
+				);
 			}
 		}
 
 		// Check for function definition - must have a solution function
-		if (!code.includes('def solution(')) {
+		if (!code.includes("def solution(")) {
 			throw new Error('Code must contain a function named "solution"');
 		}
 	}
 
-	private getExecutionCommand(code: string, language: string): { command: string; args: string[] } {
+	private getExecutionCommand(
+		code: string,
+		language: string
+	): { command: string; args: string[] } {
 		switch (language) {
 			case "javascript":
 				return {

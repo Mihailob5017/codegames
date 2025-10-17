@@ -1,8 +1,8 @@
 import { CodeRepository } from "../../repositories/code/code-respositories";
 import { CodePreparationService } from "./code-preparation-service";
-import { 
-	CodeExecutionValidationService, 
-	ExecutionResult 
+import {
+	CodeExecutionValidationService,
+	ExecutionResult,
 } from "./code-execution-validation-service";
 import { HttpError } from "../../types/common/error-types";
 
@@ -34,8 +34,12 @@ export interface CodeSubmissionResult {
 
 interface ICodeService {
 	runSingleTestCase(request: CodeSubmissionRequest): Promise<TestCaseResult>;
-	runAllTestCases(request: CodeSubmissionRequest): Promise<CodeSubmissionResult>;
-	submitCodeSolution(request: CodeSubmissionRequest): Promise<CodeSubmissionResult>;
+	runAllTestCases(
+		request: CodeSubmissionRequest
+	): Promise<CodeSubmissionResult>;
+	submitCodeSolution(
+		request: CodeSubmissionRequest
+	): Promise<CodeSubmissionResult>;
 }
 
 export class CodeService implements ICodeService {
@@ -49,40 +53,66 @@ export class CodeService implements ICodeService {
 		this.codeRepository = new CodeRepository();
 	}
 
-	async runSingleTestCase(request: CodeSubmissionRequest): Promise<TestCaseResult> {
+	async runSingleTestCase(
+		request: CodeSubmissionRequest
+	): Promise<TestCaseResult> {
 		try {
+			console.log("CodeService: Starting runSingleTestCase with:", request);
+
 			// Step 1: Prepare code and get test data
-			const preparedData = await this.codePreparationService.prepareCodeForExecution({
-				problemId: request.problemId,
-				userCode: request.userCode,
-				language: request.language,
-			});
+			console.log("CodeService: About to prepare code...");
+			const preparedData =
+				await this.codePreparationService.prepareCodeForExecution({
+					problemId: request.problemId,
+					userCode: request.userCode,
+					language: request.language,
+				});
+			console.log(
+				"CodeService: Code prepared successfully, test case:",
+				preparedData.testCase?.id
+			);
 
 			// Step 2: Execute the prepared code
-			const executionResult = await this.codeExecutionService.validateAndExecuteCode({
-				code: preparedData.preparedCode,
-				language: request.language,
-				timeLimit: preparedData.testCase.timeLimit,
-			});
+			console.log("CodeService: About to execute code...");
+			const executionResult =
+				await this.codeExecutionService.validateAndExecuteCode({
+					code: preparedData.preparedCode,
+					language: request.language,
+					timeLimit: preparedData.testCase.timeLimit,
+				});
+			console.log("CodeService: Code executed, result:", executionResult);
 
 			// Step 3: Parse and format result
-			return this.formatTestCaseResult(preparedData.testCase, executionResult);
-
+			const result = this.formatTestCaseResult(
+				preparedData.testCase,
+				executionResult
+			);
+			console.log("CodeService: Final result:", result);
+			return result;
 		} catch (error) {
-			throw new HttpError(500, `Failed to run test case: ${error instanceof Error ? error.message : 'Unknown error'}`);
+			console.error("CodeService error:", error);
+			throw new HttpError(
+				500,
+				`Failed to run test case: ${
+					error instanceof Error ? error.message : "Unknown error"
+				}`
+			);
 		}
 	}
 
-	async runAllTestCases(request: CodeSubmissionRequest): Promise<CodeSubmissionResult> {
+	async runAllTestCases(
+		request: CodeSubmissionRequest
+	): Promise<CodeSubmissionResult> {
 		const startTime = Date.now();
-		
+
 		try {
 			// Step 1: Prepare code and get all test data
-			const preparedData = await this.codePreparationService.prepareCodeForExecution({
-				problemId: request.problemId,
-				userCode: request.userCode,
-				language: request.language,
-			});
+			const preparedData =
+				await this.codePreparationService.prepareCodeForExecution({
+					problemId: request.problemId,
+					userCode: request.userCode,
+					language: request.language,
+				});
 
 			const testResults: TestCaseResult[] = [];
 			let passedTests = 0;
@@ -92,25 +122,28 @@ export class CodeService implements ICodeService {
 				try {
 					// Prepare code for this specific test case
 					const testSpecificCode = this.prepareCodeForSpecificTest(
-						request.userCode, 
-						testCase, 
+						request.userCode,
+						testCase,
 						request.language
 					);
 
 					// Execute the test
-					const executionResult = await this.codeExecutionService.validateAndExecuteCode({
-						code: testSpecificCode,
-						language: request.language,
-						timeLimit: testCase.timeLimit,
-					});
+					const executionResult =
+						await this.codeExecutionService.validateAndExecuteCode({
+							code: testSpecificCode,
+							language: request.language,
+							timeLimit: testCase.timeLimit,
+						});
 
-					const testResult = this.formatTestCaseResult(testCase, executionResult);
+					const testResult = this.formatTestCaseResult(
+						testCase,
+						executionResult
+					);
 					testResults.push(testResult);
 
 					if (testResult.passed) {
 						passedTests++;
 					}
-
 				} catch (error) {
 					testResults.push({
 						testCaseId: testCase.id,
@@ -118,7 +151,7 @@ export class CodeService implements ICodeService {
 						input: testCase.input,
 						expectedOutput: testCase.expectedOutput,
 						executionTime: 0,
-						error: error instanceof Error ? error.message : 'Unknown error',
+						error: error instanceof Error ? error.message : "Unknown error",
 					});
 				}
 			}
@@ -130,13 +163,19 @@ export class CodeService implements ICodeService {
 				testResults,
 				overallExecutionTime: Date.now() - startTime,
 			};
-
 		} catch (error) {
-			throw new HttpError(500, `Failed to run all test cases: ${error instanceof Error ? error.message : 'Unknown error'}`);
+			throw new HttpError(
+				500,
+				`Failed to run all test cases: ${
+					error instanceof Error ? error.message : "Unknown error"
+				}`
+			);
 		}
 	}
 
-	async submitCodeSolution(request: CodeSubmissionRequest): Promise<CodeSubmissionResult> {
+	async submitCodeSolution(
+		request: CodeSubmissionRequest
+	): Promise<CodeSubmissionResult> {
 		try {
 			// Run all test cases first
 			const result = await this.runAllTestCases(request);
@@ -144,22 +183,34 @@ export class CodeService implements ICodeService {
 			// If all tests pass, submit the code
 			if (result.success) {
 				const submissionResult = await this.codeRepository.submitCode(
-					request.userCode, 
+					request.userCode,
 					request.problemId
 				);
 				result.submissionId = submissionResult.executionId;
 			}
 
 			return result;
-
 		} catch (error) {
-			throw new HttpError(500, `Failed to submit code: ${error instanceof Error ? error.message : 'Unknown error'}`);
+			throw new HttpError(
+				500,
+				`Failed to submit code: ${
+					error instanceof Error ? error.message : "Unknown error"
+				}`
+			);
 		}
 	}
 
-	private prepareCodeForSpecificTest(userCode: string, testCase: any, language: string): string {
+	private prepareCodeForSpecificTest(
+		userCode: string,
+		testCase: any,
+		language: string
+	): string {
 		const input = this.formatInput(testCase.input);
 		const expectedOutput = this.formatOutput(testCase.expectedOutput);
+		
+		// Parse input parameters
+		const inputArgs = this.parseInputParameters(input);
+		const argsString = inputArgs.map((arg: any) => JSON.stringify(arg)).join(', ');
 
 		switch (language) {
 			case "javascript":
@@ -169,11 +220,10 @@ ${userCode}
 
 // Test execution
 try {
-	const testInput = ${JSON.stringify(input)};
 	const expectedOutput = ${JSON.stringify(expectedOutput)};
 	
-	// Call user function with test input
-	const result = solution(testInput);
+	// Call user function with parsed arguments
+	const result = solution(${argsString});
 	
 	// Compare result with expected output
 	const passed = JSON.stringify(result) === JSON.stringify(expectedOutput);
@@ -203,11 +253,10 @@ ${userCode}
 
 # Test execution
 try:
-	test_input = ${JSON.stringify(input)}
 	expected_output = ${JSON.stringify(expectedOutput)}
 	
-	# Call user function with test input
-	result = solution(test_input)
+	# Call user function with parsed arguments
+	result = solution(${argsString})
 	
 	# Compare result with expected output
 	passed = result == expected_output
@@ -234,7 +283,10 @@ except Exception as error:
 		}
 	}
 
-	private formatTestCaseResult(testCase: any, executionResult: ExecutionResult): TestCaseResult {
+	private formatTestCaseResult(
+		testCase: any,
+		executionResult: ExecutionResult
+	): TestCaseResult {
 		let passed = false;
 		let actualOutput: any = undefined;
 		let error: string | undefined = undefined;
@@ -266,7 +318,7 @@ except Exception as error:
 	}
 
 	private formatInput(input: any): any {
-		if (typeof input === 'string') {
+		if (typeof input === "string") {
 			try {
 				return JSON.parse(input);
 			} catch {
@@ -277,7 +329,7 @@ except Exception as error:
 	}
 
 	private formatOutput(output: any): any {
-		if (typeof output === 'string') {
+		if (typeof output === "string") {
 			try {
 				return JSON.parse(output);
 			} catch {
@@ -285,5 +337,27 @@ except Exception as error:
 			}
 		}
 		return output;
+	}
+
+	private parseInputParameters(input: any): any[] {
+		if (typeof input === "string") {
+			// Split by newlines to handle multiple parameters
+			const lines = input.trim().split('\n');
+			return lines.map(line => {
+				try {
+					// Try to parse as JSON
+					return JSON.parse(line);
+				} catch {
+					// If parsing fails, return as string
+					return line;
+				}
+			});
+		} else if (Array.isArray(input)) {
+			// If it's already an array, return as is
+			return input;
+		} else {
+			// Single parameter
+			return [input];
+		}
 	}
 }

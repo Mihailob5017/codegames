@@ -11,9 +11,10 @@ interface ICodeRepository {
 export class CodeRepository implements ICodeRepository {
 	async getProblem(id: string): Promise<Problem | null> {
 		try {
-			const problem = await PrismaServiceInstance.getClient().problem.findUnique({
-				where: { id },
-			});
+			const problem =
+				await PrismaServiceInstance.getClient().problem.findUnique({
+					where: { id },
+				});
 			return problem;
 		} catch (error) {
 			throw new Error(`Failed to get problem: ${error}`);

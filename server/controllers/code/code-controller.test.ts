@@ -1,10 +1,10 @@
-import { Request, Response, NextFunction } from 'express';
-import { CodeExecutionController } from './code-execution-controller';
-import { CodeExecutionService } from '../../services/code-execution/code-execution-service';
+import { Request, Response, NextFunction } from "express";
+import { CodeExecutionController } from "./code-controller";
+import { CodeExecutionService } from "../../services/code-execution/code-execution-service";
 
-jest.mock('../../services/code-execution/code-execution-service');
+jest.mock("../../services/code-execution/code-execution-service");
 
-describe('CodeExecutionController', () => {
+describe("CodeExecutionController", () => {
 	let mockRequest: Partial<Request>;
 	let mockResponse: Partial<Response>;
 	let mockNext: NextFunction;
@@ -24,11 +24,11 @@ describe('CodeExecutionController', () => {
 		jest.clearAllMocks();
 	});
 
-	describe('getSupportedLanguages', () => {
-		it('should get supported languages successfully', async () => {
+	describe("getSupportedLanguages", () => {
+		it("should get supported languages successfully", async () => {
 			const mockLanguages = [
-				{ id: 'javascript', name: 'JavaScript (Node.js)', extension: '.js' },
-				{ id: 'python', name: 'Python 3', extension: '.py' },
+				{ id: "javascript", name: "JavaScript (Node.js)", extension: ".js" },
+				{ id: "python", name: "Python 3", extension: ".py" },
 			];
 
 			const mockCodeExecutionService = {
@@ -50,13 +50,13 @@ describe('CodeExecutionController', () => {
 			expect(mockCodeExecutionService.getLanguages).toHaveBeenCalled();
 			expect(mockStatus).toHaveBeenCalledWith(200);
 			expect(mockSend).toHaveBeenCalledWith({
-				message: 'Supported languages retrieved successfully',
+				message: "Supported languages retrieved successfully",
 				data: mockLanguages,
 			});
 		});
 
-		it('should handle errors correctly', async () => {
-			const error = new Error('Service error');
+		it("should handle errors correctly", async () => {
+			const error = new Error("Service error");
 			const mockCodeExecutionService = {
 				getLanguages: jest.fn().mockRejectedValue(error),
 			};
@@ -77,16 +77,16 @@ describe('CodeExecutionController', () => {
 		});
 	});
 
-	describe('executeCode', () => {
-		it('should execute code successfully', async () => {
+	describe("executeCode", () => {
+		it("should execute code successfully", async () => {
 			const mockSubmission = {
 				source_code: 'print("Hello World")',
-				language: 'python',
+				language: "python",
 			};
 
 			const mockResult = {
 				success: true,
-				stdout: 'Hello World\n',
+				stdout: "Hello World\n",
 				execution_time_ms: 150,
 			};
 
@@ -115,16 +115,16 @@ describe('CodeExecutionController', () => {
 			});
 			expect(mockStatus).toHaveBeenCalledWith(200);
 			expect(mockSend).toHaveBeenCalledWith({
-				message: 'Code executed successfully',
+				message: "Code executed successfully",
 				data: mockResult,
 			});
 		});
 
-		it('should handle validation errors', async () => {
+		it("should handle validation errors", async () => {
 			mockRequest = {
 				body: {
-					source_code: '',
-					language: 'invalid',
+					source_code: "",
+					language: "invalid",
 				},
 			};
 
@@ -137,7 +137,7 @@ describe('CodeExecutionController', () => {
 			expect(mockNext).toHaveBeenCalledWith(
 				expect.objectContaining({
 					status: 400,
-					message: 'Validation error',
+					message: "Validation error",
 				})
 			);
 		});
