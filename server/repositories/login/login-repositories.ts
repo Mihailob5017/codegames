@@ -1,12 +1,19 @@
-import { PrismaServiceInstance } from '../config/prisma-config';
+import { PrismaServiceInstance } from "../../config/prisma-config";
 
-import { User, Prisma } from '../generated/prisma';
-import { CreateUserInput } from '../models/user-model';
-import { UniqueUserFieldsDTO, UserOperationType, UserExistenceCheckResult } from '../types/dto/user-types';
+import { User, Prisma } from "../../generated/prisma";
+import { CreateUserInput } from "../../models/user-model";
+import {
+	UniqueUserFieldsDTO,
+	UserOperationType,
+	UserExistenceCheckResult,
+} from "../../types/dto/user-types";
 
 export interface IUserRepository {
 	checkIfUserExists(uniqueParams: UniqueUserFieldsDTO): Promise<User | null>;
-	checkUserExistence(uniqueParams: UniqueUserFieldsDTO, operation: UserOperationType): Promise<UserExistenceCheckResult>;
+	checkUserExistence(
+		uniqueParams: UniqueUserFieldsDTO,
+		operation: UserOperationType
+	): Promise<UserExistenceCheckResult>;
 	saveUser(user: CreateUserInput): Promise<User>;
 	getUser(id: string): Promise<User | null>;
 	updateUser(user: Partial<CreateUserInput>): Promise<User>;
@@ -19,7 +26,7 @@ export class UserRepository implements IUserRepository {
 		try {
 			// Create a proper where clause based on available parameters
 			let whereClause: Prisma.UserWhereUniqueInput;
-			
+
 			if (uniqueParams.id) {
 				whereClause = { id: uniqueParams.id };
 			} else if (uniqueParams.username) {
@@ -29,9 +36,9 @@ export class UserRepository implements IUserRepository {
 			} else if (uniqueParams.phoneNumb) {
 				whereClause = { phoneNumb: uniqueParams.phoneNumb };
 			} else {
-				throw new Error('At least one unique field must be provided');
+				throw new Error("At least one unique field must be provided");
 			}
-			
+
 			return await PrismaServiceInstance.getClient().user.findUnique({
 				where: whereClause,
 			});
@@ -46,48 +53,54 @@ export class UserRepository implements IUserRepository {
 	): Promise<UserExistenceCheckResult> {
 		try {
 			const user = await this.checkIfUserExists(uniqueParams);
-			
-			if (operation === 'signup') {
+
+			if (operation === "signup") {
 				if (user) {
 					// For signup, user should NOT exist
-					let message = 'User already exists with ';
+					let message = "User already exists with ";
 					const conflicts = [];
-					
+
 					if (uniqueParams.email && user.email === uniqueParams.email) {
-						conflicts.push('email');
+						conflicts.push("email");
 					}
-					if (uniqueParams.username && user.username === uniqueParams.username) {
-						conflicts.push('username');
+					if (
+						uniqueParams.username &&
+						user.username === uniqueParams.username
+					) {
+						conflicts.push("username");
 					}
-					if (uniqueParams.phoneNumb && user.phoneNumb === uniqueParams.phoneNumb) {
-						conflicts.push('phone number');
+					if (
+						uniqueParams.phoneNumb &&
+						user.phoneNumb === uniqueParams.phoneNumb
+					) {
+						conflicts.push("phone number");
 					}
-					
-					message += conflicts.join(' and ');
-					
+
+					message += conflicts.join(" and ");
+
 					return {
 						exists: true,
 						user: user as any, // Type assertion for User to UserDTO
-						message
+						message,
 					};
 				} else {
 					return {
 						exists: false,
-						message: 'User does not exist, can proceed with signup'
+						message: "User does not exist, can proceed with signup",
 					};
 				}
-			} else if (operation === 'login') {
+			} else if (operation === "login") {
 				if (user) {
 					// For login, user SHOULD exist
 					return {
 						exists: true,
 						user: user as any, // Type assertion for User to UserDTO
-						message: 'User found, can proceed with login'
+						message: "User found, can proceed with login",
 					};
 				} else {
 					return {
 						exists: false,
-						message: 'User does not exist with provided credentials'
+						message: "User does not exist with provided credentials",
 					};
 				}
 			} else {
@@ -103,10 +116,12 @@ export class UserRepository implements IUserRepository {
 			// Prepare user data with required defaults
 			const userData: Prisma.UserCreateInput = {
 				...user,
-				verifyToken: user.verifyToken || Math.floor(100000 + Math.random() * 900000),
-				verifyTokenExpiry: user.verifyTokenExpiry || new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
+				verifyToken:
+					user.verifyToken || Math.floor(100000 + Math.random() * 900000),
+				verifyTokenExpiry:
+					user.verifyTokenExpiry || new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
 			};
-			
+
 			return await PrismaServiceInstance.getClient().user.create({
 				data: userData,
 			});

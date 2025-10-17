@@ -1,8 +1,8 @@
 import { AdminRepository } from './admin-repositories';
-import { PrismaServiceInstance } from '../config/prisma-config';
-import { createMockUser, mockPrismaClient, resetAllMocks } from '../__tests__/utils/test-helpers';
+import { PrismaServiceInstance } from '../../config/prisma-config';
+import { createMockUser, mockPrismaClient, resetAllMocks } from '../../__tests__/utils/test-helpers';
 
-jest.mock('../config/prisma-config', () => ({
+jest.mock('../../config/prisma-config', () => ({
 	PrismaServiceInstance: {
 		getClient: () => mockPrismaClient,
 	},

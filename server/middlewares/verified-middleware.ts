@@ -1,6 +1,6 @@
 import { Response, NextFunction } from 'express';
 import { AuthRequest } from './auth-middleware';
-import { UserRepository } from '../repositories/login-repositories';
+import { UserRepository } from '../repositories/login/login-repositories';
 import { HttpError } from '../types/common/error-types';
 import { RedisService, RedisServiceInstance } from '../config/redis-config';
 

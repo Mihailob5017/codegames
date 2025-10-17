@@ -1,6 +1,6 @@
-import { PrismaServiceInstance } from '../config/prisma-config';
-import { Prisma, Problem, TestCase, User } from '../generated/prisma';
-import { ProblemDTO, TestCaseDTO } from '../types/dto/problem-types';
+import { PrismaServiceInstance } from '../../config/prisma-config';
+import { Prisma, Problem, TestCase, User } from '../../generated/prisma';
+import { ProblemDTO, TestCaseDTO } from '../../types/dto/problem-types';
 
 export interface IAdminRepository {
 	getAllUsers(): Promise<User[]>;

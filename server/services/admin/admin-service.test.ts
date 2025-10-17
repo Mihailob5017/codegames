@@ -1,5 +1,5 @@
 import { AdminService } from './admin-service';
-import { IAdminRepository } from '../../repositories/admin-repositories';
+import { IAdminRepository } from '../../repositories/admin/admin-repositories';
 import { createMockUser } from '../../__tests__/utils/test-helpers';
 
 describe('AdminService', () => {

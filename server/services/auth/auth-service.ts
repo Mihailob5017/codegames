@@ -2,7 +2,7 @@ import { CreateUserInput } from '../../models/user-model';
 import {
 	UserRepository,
 	IUserRepository,
-} from '../../repositories/login-repositories';
+} from '../../repositories/login/login-repositories';
 import { HttpError } from '../../types/common/error-types';
 import {
 	AuthResponseDTO,

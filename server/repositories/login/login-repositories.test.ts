@@ -1,9 +1,9 @@
 import { UserRepository } from './login-repositories';
-import { PrismaServiceInstance } from '../config/prisma-config';
-import { createMockUser, createMockCreateUserInput, mockPrismaClient, resetAllMocks } from '../__tests__/utils/test-helpers';
-import { UniqueUserFieldsDTO } from '../types/dto/user-types';
+import { PrismaServiceInstance } from '../../config/prisma-config';
+import { createMockUser, createMockCreateUserInput, mockPrismaClient, resetAllMocks } from '../../__tests__/utils/test-helpers';
+import { UniqueUserFieldsDTO } from '../../types/dto/user-types';
 
-jest.mock('../config/prisma-config', () => ({
+jest.mock('../../config/prisma-config', () => ({
 	PrismaServiceInstance: {
 		getClient: () => mockPrismaClient,
 	},

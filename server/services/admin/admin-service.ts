@@ -2,7 +2,7 @@ import { User, Problem, TestCase } from '../../generated/prisma';
 import {
 	AdminRepository,
 	IAdminRepository,
-} from '../../repositories/admin-repositories';
+} from '../../repositories/admin/admin-repositories';
 import { HttpError } from '../../types/common/error-types';
 import { ProblemDTO, TestCaseDTO } from '../../types/dto/problem-types';
 
