@@ -1,6 +1,6 @@
 export interface CodeSubmission {
 	source_code: string;
-	language: 'javascript' | 'python';
+	language: "javascript" | "python";
 	stdin?: string;
 }
 

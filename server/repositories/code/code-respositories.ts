@@ -1,22 +1,59 @@
-import Test from "supertest/lib/test";
 import { Problem, TestCase } from "../../generated/prisma";
+import { PrismaServiceInstance } from "../../config/prisma-config";
 
 interface ICodeRepository {
 	getProblem(id: string): Promise<Problem | null>;
-	getTestcase(id: string): Promise<TestCase[] | null>;
+	getTestCase(id: string): Promise<TestCase | null>;
+	getAllTestCases(id: string): Promise<TestCase[] | null>;
 	submitCode(code: string, problemId: string): Promise<any>;
 }
 
 export class CodeRepository implements ICodeRepository {
-	getProblem(id: string): Promise<Problem | null> {
-		throw new Error("Method not implemented.");
+	async getProblem(id: string): Promise<Problem | null> {
+		try {
+			const problem = await PrismaServiceInstance.getClient().problem.findUnique({
+				where: { id },
+			});
+			return problem;
+		} catch (error) {
+			throw new Error(`Failed to get problem: ${error}`);
+		}
 	}
 
-	getTestcase(id: string): Promise<TestCase[] | null> {
-		throw new Error("Method not implemented.");
+	async getTestCase(id: string): Promise<TestCase | null> {
+		try {
+			const testCase =
+				await PrismaServiceInstance.getClient().testCase.findFirst({
+					where: { problemId: id, isExample: true },
+				});
+			return testCase;
+		} catch (error) {
+			throw new Error(`Failed to get testcase: ${error}`);
+		}
+	}
+	async getAllTestCases(id: string): Promise<TestCase[] | null> {
+		try {
+			const testcases =
+				await PrismaServiceInstance.getClient().testCase.findMany({
+					where: { problemId: id },
+				});
+			return testcases;
+		} catch (error) {
+			throw new Error(`Failed to get testcase: ${error}`);
+		}
 	}
 
-	submitCode(code: string, problemId: string): Promise<any> {
-		throw new Error("Method not implemented.");
+	async submitCode(code: string, problemId: string): Promise<any> {
+		try {
+			return {
+				success: true,
+				executionId: `exec_${Date.now()}`,
+				code,
+				problemId,
+				submittedAt: new Date(),
+			};
+		} catch (error) {
+			throw new Error(`Failed to submit code: ${error}`);
+		}
 	}
 }
