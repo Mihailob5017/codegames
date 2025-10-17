@@ -37,29 +37,20 @@ export class CodePreparationService implements ICodePreparationService {
 		request: CodePreparationRequest
 	): Promise<PreparedCodeData> {
 		const { problemId, userCode, language } = request;
-		console.log("CodePreparationService: Starting with problemId:", problemId);
 
 		const problem = await this.codeRepository.getProblem(problemId);
-		console.log("CodePreparationService: Problem found:", !!problem);
 		if (!problem) {
 			throw new HttpError(404, `Problem with ID ${problemId} not found`);
 		}
 
-		console.log("CodePreparationService: Getting test case...");
 		const testCase = await this.getSingleTestCase(problemId);
-		console.log("CodePreparationService: Test case found:", !!testCase, testCase?.id);
-		
-		console.log("CodePreparationService: Getting all test cases...");
 		const allTestCases = await this.getAllTestCases(problemId);
-		console.log("CodePreparationService: All test cases count:", allTestCases?.length);
 
-		console.log("CodePreparationService: Wrapping user code...");
 		const preparedCode = this.wrapUserCodeForExecution(
 			userCode,
 			testCase,
 			language
 		);
-		console.log("CodePreparationService: Code wrapped successfully");
 
 		return {
 			problem,

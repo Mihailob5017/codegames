@@ -17,20 +17,14 @@ const testCaseExecutionSchema = z.object({
 export class CodeController {
 	static runExampleTestCase: ControllerFn = async (req, res, next) => {
 		try {
-			console.log("Request body:", req.body);
 			const validatedData = testCaseExecutionSchema.parse(req.body);
-			console.log("Validated data:", validatedData);
 
 			const codeService = new CodeService();
-			console.log("About to call runSingleTestCase...");
-			
 			const result = await codeService.runSingleTestCase({
 				problemId: validatedData.problemId,
 				userCode: validatedData.userCode,
 				language: validatedData.language,
 			});
-			
-			console.log("Result:", result);
 
 			const responseObj = ResponseObject.success(
 				200,
@@ -39,7 +33,6 @@ export class CodeController {
 			);
 			responseObj.send(res);
 		} catch (error) {
-			console.error("Controller error:", error);
 			if (error instanceof z.ZodError) {
 				next(new HttpError(400, "Validation error", error.issues));
 				return;

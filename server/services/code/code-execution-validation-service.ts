@@ -45,19 +45,14 @@ export class CodeExecutionValidationService
 		const validationErrors: string[] = [];
 
 		try {
-			console.log("CodeExecutionValidationService: Starting validation for language:", request.language);
-			
 			// 1. Validate language support
 			this.validateLanguage(request.language);
-			console.log("CodeExecutionValidationService: Language validation passed");
 
 			// 2. Validate code security
-			console.log("CodeExecutionValidationService: Starting security validation...");
 			const securityPassed = await this.validateCodeSecurity(
 				request.code,
 				request.language
 			);
-			console.log("CodeExecutionValidationService: Security validation result:", securityPassed);
 			
 			if (!securityPassed) {
 				validationErrors.push("Code failed security validation");
@@ -65,13 +60,11 @@ export class CodeExecutionValidationService
 
 			// 3. Execute code if validation passed
 			if (securityPassed && validationErrors.length === 0) {
-				console.log("CodeExecutionValidationService: Starting code execution...");
 				const executionResult = await this.executeSecureCode(
 					request.code,
 					request.language,
 					request.timeLimit
 				);
-				console.log("CodeExecutionValidationService: Execution completed:", executionResult);
 
 				return {
 					...executionResult,
@@ -80,7 +73,6 @@ export class CodeExecutionValidationService
 						validationErrors.length > 0 ? validationErrors : undefined,
 				};
 			} else {
-				console.log("CodeExecutionValidationService: Validation failed, errors:", validationErrors);
 				return {
 					success: false,
 					error: "Code validation failed",
@@ -90,7 +82,6 @@ export class CodeExecutionValidationService
 				};
 			}
 		} catch (error) {
-			console.error("CodeExecutionValidationService: Error occurred:", error);
 			return {
 				success: false,
 				error:

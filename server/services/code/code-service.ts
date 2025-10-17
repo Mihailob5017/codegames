@@ -57,40 +57,28 @@ export class CodeService implements ICodeService {
 		request: CodeSubmissionRequest
 	): Promise<TestCaseResult> {
 		try {
-			console.log("CodeService: Starting runSingleTestCase with:", request);
-
 			// Step 1: Prepare code and get test data
-			console.log("CodeService: About to prepare code...");
 			const preparedData =
 				await this.codePreparationService.prepareCodeForExecution({
 					problemId: request.problemId,
 					userCode: request.userCode,
 					language: request.language,
 				});
-			console.log(
-				"CodeService: Code prepared successfully, test case:",
-				preparedData.testCase?.id
-			);
 
 			// Step 2: Execute the prepared code
-			console.log("CodeService: About to execute code...");
 			const executionResult =
 				await this.codeExecutionService.validateAndExecuteCode({
 					code: preparedData.preparedCode,
 					language: request.language,
 					timeLimit: preparedData.testCase.timeLimit,
 				});
-			console.log("CodeService: Code executed, result:", executionResult);
 
 			// Step 3: Parse and format result
-			const result = this.formatTestCaseResult(
+			return this.formatTestCaseResult(
 				preparedData.testCase,
 				executionResult
 			);
-			console.log("CodeService: Final result:", result);
-			return result;
 		} catch (error) {
-			console.error("CodeService error:", error);
 			throw new HttpError(
 				500,
 				`Failed to run test case: ${
