@@ -113,6 +113,7 @@ export interface JwtPayloadDTO {
  */
 export interface AuthResponseDTO {
 	jwt: string;
+	refreshToken: string;
 	user: UserDTO;
 }
 
@@ -133,10 +134,34 @@ export interface PasswordResetDTO {
 }
 
 /**
- * Refresh token data transfer object
+ * Refresh token request data transfer object
+ */
+export interface RefreshTokenRequestDTO {
+	refreshToken: string;
+}
+
+/**
+ * Refresh token response data transfer object
+ */
+export interface RefreshTokenResponseDTO {
+	jwt: string;
+	refreshToken: string;
+}
+
+/**
+ * Refresh token database model
  */
 export interface RefreshTokenDTO {
-	refreshToken: string;
+	id: string;
+	userId: string;
+	token: string;
+	expiresAt: Date;
+	isRevoked: boolean;
+	replacedBy?: string;
+	userAgent?: string;
+	ipAddress?: string;
+	createdAt: Date;
+	updatedAt: Date;
 }
 
 /**

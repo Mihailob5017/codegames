@@ -1,7 +1,8 @@
 import { v4 as uuid4 } from 'uuid';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { BCRYPT_SALT_ROUNDS, TOKEN_EXPIRY_MINUTES, JWT_EXPIRY } from './constants';
+import crypto from 'crypto';
+import { BCRYPT_SALT_ROUNDS, TOKEN_EXPIRY_MINUTES, JWT_EXPIRY, REFRESH_TOKEN_EXPIRY, REFRESH_TOKEN_EXPIRY_MS } from './constants';
 import { JwtPayloadDTO } from '../types/dto/user-types';
 import { HttpError } from '../types/common/error-types';
 
@@ -79,4 +80,27 @@ export const verifyJWT = (token: string): JwtPayloadDTO => {
 		}
 		throw new HttpError(401, 'Token verification failed');
 	}
+};
+
+/**
+ * Generate a secure refresh token
+ * @returns An object containing the token string and expiry date
+ */
+export const generateRefreshToken = (): { token: string; expiresAt: Date } => {
+	// Generate a cryptographically secure random token
+	const token = crypto.randomBytes(64).toString('hex');
+	const expiresAt = new Date(Date.now() + REFRESH_TOKEN_EXPIRY_MS);
+
+	return { token, expiresAt };
+};
+
+/**
+ * Generate a JWT from a refresh token payload
+ * Used when exchanging a refresh token for a new access token
+ * @param userId - The user's ID
+ * @param payload - The JWT payload containing user information
+ * @returns A new JWT access token
+ */
+export const generateAccessTokenFromRefresh = (payload: JwtPayloadDTO): string => {
+	return generateJWT(payload);
 };

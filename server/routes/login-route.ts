@@ -16,11 +16,13 @@ router.post(
 	LoginController.resendOTP
 );
 
+// Refresh token endpoint - exchange refresh token for new access token
+router.post('/refresh-token', LoginController.refreshToken);
+
 // TODO: Implement the following endpoints:
 // router.post('/google-auth', LoginController.googleAuth);
 // router.post('/forgot-password', LoginController.forgotPassword);
 // router.post('/logout', AuthMiddleware, LoginController.logout);
-// router.post('/refresh-token', LoginController.refreshToken);
 // router.get('/profile', AuthMiddleware, LoginController.getProfile);
 
 export default router;

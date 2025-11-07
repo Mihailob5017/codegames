@@ -1,15 +1,15 @@
-import { CreateUserInput } from '../../models/user-model';
+import { CreateUserInput } from "../../models/user-model";
 import {
 	UserRepository,
 	IUserRepository,
-} from '../../repositories/login/login-repositories';
-import { HttpError } from '../../types/common/error-types';
+} from "../../repositories/login/login-repositories";
+import { HttpError } from "../../types/common/error-types";
 import {
 	AuthResponseDTO,
 	JwtPayloadDTO,
 	UserDTO,
-} from '../../types/dto/user-types';
-import { Role } from '../../utils/constants';
+} from "../../types/dto/user-types";
+import { Role } from "../../utils/constants";
 import {
 	comparePassword,
 	encryptPassword,
@@ -17,10 +17,13 @@ import {
 	generateJWT,
 	generateToken,
 	verifyJWT,
-} from '../../utils/auth';
-import { validateLogin, validateSignup } from '../../utils/request-validator';
-import { EmailService } from '../email/email-service';
-
+} from "../../utils/auth";
+import { validateLogin, validateSignup } from "../../utils/request-validator";
+import { EmailService } from "../email/email-service";
+import {
+	RefreshTokenService,
+	RefreshTokenMetadata,
+} from "./refresh-token-service";
 
 interface ISignupService {
 	signup(): Promise<AuthResponseDTO>;
@@ -31,15 +34,21 @@ export class AuthService implements ISignupService {
 	private userInput: Partial<CreateUserInput>;
 	private emailService: EmailService;
 	private userRepository: IUserRepository;
+	private refreshTokenService: RefreshTokenService;
+	private metadata?: RefreshTokenMetadata;
 
 	constructor(
 		userInput: Partial<CreateUserInput>,
 		userRepository?: IUserRepository,
-		emailService?: EmailService
+		emailService?: EmailService,
+		refreshTokenService?: RefreshTokenService,
+		metadata?: RefreshTokenMetadata
 	) {
 		this.userInput = { ...userInput };
 		this.userRepository = userRepository || new UserRepository();
 		this.emailService = emailService || new EmailService();
+		this.refreshTokenService = refreshTokenService || new RefreshTokenService();
+		this.metadata = metadata;
 	}
 
 	public async signup(): Promise<AuthResponseDTO> {
@@ -60,34 +69,39 @@ export class AuthService implements ISignupService {
 	}
 
 	public async login(): Promise<AuthResponseDTO> {
-		// Validate input format first
 		this.validateLogin();
 
 		const user = await this.checkUserForLogin();
-		
+
 		await this.validateUserAuthentication(user);
 
 		this.userInput = { ...user!, passwordHash: this.userInput.passwordHash };
 		return await this.createResponse();
 	}
 
-	private async validateUserAuthentication(user: UserDTO | null): Promise<void> {
+	private async validateUserAuthentication(
+		user: UserDTO | null
+	): Promise<void> {
 		const providedPassword = this.userInput.passwordHash as string;
-		
+
 		const isValidUser = user && user.passwordHash;
-		const isValidPassword = isValidUser && comparePassword(providedPassword, user.passwordHash!);
+		const isValidPassword =
+			isValidUser && comparePassword(providedPassword, user.passwordHash!);
 		const isVerified = user?.verified;
 
 		if (!isValidUser) {
-			comparePassword(providedPassword, '$2b$12$dummy.hash.to.prevent.timing.attacks.here');
+			comparePassword(
+				providedPassword,
+				"$2b$12$dummy.hash.to.prevent.timing.attacks.here"
+			);
 		}
 
 		if (!isValidUser || !isValidPassword) {
-			throw new HttpError(401, 'Invalid email or password');
+			throw new HttpError(401, "Invalid email or password");
 		}
 
 		if (!isVerified) {
-			throw new HttpError(403, 'Account verification required');
+			throw new HttpError(403, "Account verification required");
 		}
 	}
 	public async verifyOTP(token: string, otp: number): Promise<void> {
@@ -113,12 +127,12 @@ export class AuthService implements ISignupService {
 			id: generateId(),
 			createdAt: new Date(),
 			updatedAt: new Date(),
-			googleId: this.userInput.isGoogleLogin ? this.userInput.googleId : '',
+			googleId: this.userInput.isGoogleLogin ? this.userInput.googleId : "",
 			isProfileDeleted: false,
 			isProfileOpen: true,
 			credits: 100,
 			pointsScored: 0,
-			role: 'user',
+			role: "user",
 			verifyToken: token,
 			verifyTokenExpiry: expiry,
 			verified: false,
@@ -147,7 +161,7 @@ export class AuthService implements ISignupService {
 
 		const result = await this.userRepository.checkUserExistence(
 			uniqueParams,
-			'signup'
+			"signup"
 		);
 
 		if (result.exists) {
@@ -162,7 +176,7 @@ export class AuthService implements ISignupService {
 
 		const result = await this.userRepository.checkUserExistence(
 			uniqueParams,
-			'login'
+			"login"
 		);
 
 		return result.exists ? result.user || null : null;
@@ -170,7 +184,7 @@ export class AuthService implements ISignupService {
 
 	private async saveUser(): Promise<void> {
 		if (!this.userInput.id) {
-			throw new HttpError(400, 'User ID is required');
+			throw new HttpError(400, "User ID is required");
 		}
 
 		await this.userRepository.saveUser(this.userInput as CreateUserInput);
@@ -178,7 +192,7 @@ export class AuthService implements ISignupService {
 
 	private async sendVerificationEmail(): Promise<void> {
 		if (!this.userInput.email || !this.userInput.verifyToken) {
-			throw new HttpError(400, 'Email and verification token are required');
+			throw new HttpError(400, "Email and verification token are required");
 		}
 
 		await this.emailService.sendVerificationEmail(
@@ -195,13 +209,13 @@ export class AuthService implements ISignupService {
 
 	private async getUser(userId: string): Promise<UserDTO> {
 		if (!userId) {
-			throw new HttpError(400, 'User ID is required');
+			throw new HttpError(400, "User ID is required");
 		}
 
 		const user = await this.userRepository.getUser(userId);
 
 		if (!user) {
-			throw new HttpError(404, 'User not found');
+			throw new HttpError(404, "User not found");
 		}
 
 		return user as UserDTO;
@@ -209,25 +223,25 @@ export class AuthService implements ISignupService {
 
 	private validateOTP(user: UserDTO, otp: number): void {
 		if (!user) {
-			throw new HttpError(400, 'User is required');
+			throw new HttpError(400, "User is required");
 		}
 
 		if (otp === null || otp === undefined) {
-			throw new HttpError(400, 'OTP is required');
+			throw new HttpError(400, "OTP is required");
 		}
 
 		const { verifyToken, verifyTokenExpiry } = user;
 
 		if (!verifyToken) {
-			throw new HttpError(400, 'No verification token found');
+			throw new HttpError(400, "No verification token found");
 		}
 
 		if (String(verifyToken) !== String(otp)) {
-			throw new HttpError(400, 'Invalid OTP');
+			throw new HttpError(400, "Invalid OTP");
 		}
 
 		if (verifyTokenExpiry && verifyTokenExpiry < new Date()) {
-			throw new HttpError(400, 'OTP has expired');
+			throw new HttpError(400, "OTP has expired");
 		}
 	}
 
@@ -236,7 +250,7 @@ export class AuthService implements ISignupService {
 		const user = await this.getUser(userInfo.id as string);
 
 		if (user.verified) {
-			throw new HttpError(400, 'Account is already verified');
+			throw new HttpError(400, "Account is already verified");
 		}
 
 		const { token: newOTP, expiry } = generateToken();
@@ -248,7 +262,7 @@ export class AuthService implements ISignupService {
 		});
 
 		if (!userInfo.email) {
-			throw new HttpError(400, 'Email address is required for OTP resend');
+			throw new HttpError(400, "Email address is required for OTP resend");
 		}
 
 		await this.emailService.sendVerificationEmail(userInfo.email, newOTP);
@@ -256,7 +270,7 @@ export class AuthService implements ISignupService {
 
 	private async markUserAsVerified(userId: string): Promise<void> {
 		if (!userId) {
-			throw new HttpError(400, 'User ID is required');
+			throw new HttpError(400, "User ID is required");
 		}
 
 		await this.userRepository.updateUser({
@@ -282,8 +296,14 @@ export class AuthService implements ISignupService {
 	private async createResponse(): Promise<AuthResponseDTO> {
 		const jwt = await this.generateUserJWT();
 
+		const refreshToken = await this.refreshTokenService.createRefreshToken(
+			this.userInput.id as string,
+			this.metadata
+		);
+
 		return {
 			jwt,
+			refreshToken,
 			user: this.userInput as UserDTO,
 		};
 	}

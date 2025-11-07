@@ -86,6 +86,7 @@ model User {
   unlockedProblems UserProblemUnlock[]
   submissions      Submission[]
   searchHistory    SearchHistory[]
+  refreshTokens    RefreshToken[]
   
   // Timestamps
   createdAt DateTime @default(now())
@@ -214,11 +215,35 @@ model SearchHistory {
   query        String   @db.VarChar(200)
   resultsCount Int      @default(0)
   searchedAt   DateTime @default(now())
-  
+
   // Relationship
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@map("search_history")
   @@index([userId])
   @@index([searchedAt])
+}
+
+model RefreshToken {
+  id           String   @id @unique @default(cuid())
+  userId       String
+  token        String   @unique @db.Text
+  expiresAt    DateTime
+  isRevoked    Boolean  @default(false)
+  replacedBy   String?  // Token rotation: stores the new token that replaced this one
+  userAgent    String?  @db.VarChar(500)
+  ipAddress    String?  @db.VarChar(50)
+
+  // Relationship
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@map("refresh_tokens")
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+  @@index([isRevoked])
 }
