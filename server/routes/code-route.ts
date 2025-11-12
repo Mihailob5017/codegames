@@ -6,10 +6,24 @@ import { VerifiedMiddleware } from "../middlewares/verified-middleware";
 const router = Router();
 
 router.post(
-	"/run-example-testcase",
+	"/run-testcase",
 	AuthMiddleware,
 	VerifiedMiddleware,
-	CodeController.runExampleTestCase
+	CodeController.runTestCase
+);
+
+router.post(
+	"/run-all-testcases",
+	AuthMiddleware,
+	VerifiedMiddleware,
+	CodeController.runAllTestCases
+);
+
+router.post(
+	"/submit-solution",
+	AuthMiddleware,
+	VerifiedMiddleware,
+	CodeController.submitSolution
 );
 
 export default router;

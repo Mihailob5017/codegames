@@ -5,12 +5,14 @@ import {
 	ExecutionResult,
 } from "./code-execution-validation-service";
 import { HttpError } from "../../types/common/error-types";
+import { UserRepository } from "../../repositories/login/login-repositories";
 
 export interface CodeSubmissionRequest {
 	problemId: string;
 	userCode: string;
 	language: "javascript" | "python";
 	runAllTests?: boolean;
+	userId?: string;
 }
 
 export interface TestCaseResult {
@@ -46,18 +48,19 @@ export class CodeService implements ICodeService {
 	private codePreparationService: CodePreparationService;
 	private codeExecutionService: CodeExecutionValidationService;
 	private codeRepository: CodeRepository;
+	private userRepository: UserRepository;
 
 	constructor() {
 		this.codePreparationService = new CodePreparationService();
 		this.codeExecutionService = new CodeExecutionValidationService();
 		this.codeRepository = new CodeRepository();
+		this.userRepository = new UserRepository();
 	}
 
 	async runSingleTestCase(
 		request: CodeSubmissionRequest
 	): Promise<TestCaseResult> {
 		try {
-			// Step 1: Prepare code and get test data
 			const preparedData =
 				await this.codePreparationService.prepareCodeForExecution({
 					problemId: request.problemId,
@@ -65,7 +68,6 @@ export class CodeService implements ICodeService {
 					language: request.language,
 				});
 
-			// Step 2: Execute the prepared code
 			const executionResult =
 				await this.codeExecutionService.validateAndExecuteCode({
 					code: preparedData.preparedCode,
@@ -73,11 +75,7 @@ export class CodeService implements ICodeService {
 					timeLimit: preparedData.testCase.timeLimit,
 				});
 
-			// Step 3: Parse and format result
-			return this.formatTestCaseResult(
-				preparedData.testCase,
-				executionResult
-			);
+			return this.formatTestCaseResult(preparedData.testCase, executionResult);
 		} catch (error) {
 			throw new HttpError(
 				500,
@@ -94,7 +92,6 @@ export class CodeService implements ICodeService {
 		const startTime = Date.now();
 
 		try {
-			// Step 1: Prepare code and get all test data
 			const preparedData =
 				await this.codePreparationService.prepareCodeForExecution({
 					problemId: request.problemId,
@@ -105,17 +102,14 @@ export class CodeService implements ICodeService {
 			const testResults: TestCaseResult[] = [];
 			let passedTests = 0;
 
-			// Step 2: Run each test case
 			for (const testCase of preparedData.allTestCases) {
 				try {
-					// Prepare code for this specific test case
 					const testSpecificCode = this.prepareCodeForSpecificTest(
 						request.userCode,
 						testCase,
 						request.language
 					);
 
-					// Execute the test
 					const executionResult =
 						await this.codeExecutionService.validateAndExecuteCode({
 							code: testSpecificCode,
@@ -165,16 +159,33 @@ export class CodeService implements ICodeService {
 		request: CodeSubmissionRequest
 	): Promise<CodeSubmissionResult> {
 		try {
-			// Run all test cases first
 			const result = await this.runAllTestCases(request);
+			const userId = request.userId;
 
-			// If all tests pass, submit the code
-			if (result.success) {
-				const submissionResult = await this.codeRepository.submitCode(
+			if (userId) {
+				const user = await this.userRepository.getUser(userId);
+				if (!user) {
+					throw new HttpError(404, "User not found");
+				}
+
+				const submissionResult = await this.codeRepository.updateUserSubmission(
+					userId,
+					request.problemId,
 					request.userCode,
-					request.problemId
+					request.language,
+					result
 				);
-				result.submissionId = submissionResult.executionId;
+
+				// Update user credits and points if the submission was successful
+				if (submissionResult.creditsEarned > 0) {
+					await this.userRepository.updateUser({
+						id: userId,
+						credits: user.credits + submissionResult.creditsEarned,
+						pointsScored: user.pointsScored + submissionResult.score,
+					});
+				}
+
+				result.submissionId = submissionResult.id;
 			}
 
 			return result;
@@ -195,10 +206,11 @@ export class CodeService implements ICodeService {
 	): string {
 		const input = this.formatInput(testCase.input);
 		const expectedOutput = this.formatOutput(testCase.expectedOutput);
-		
-		// Parse input parameters
+
 		const inputArgs = this.parseInputParameters(input);
-		const argsString = inputArgs.map((arg: any) => JSON.stringify(arg)).join(', ');
+		const argsString = inputArgs
+			.map((arg: any) => JSON.stringify(arg))
+			.join(", ");
 
 		switch (language) {
 			case "javascript":
@@ -206,16 +218,28 @@ export class CodeService implements ICodeService {
 // User's solution
 ${userCode}
 
+// Helper function to normalize output for comparison
+function normalizeOutput(value, expected) {
+	// Convert boolean to string if expected is string "true" or "false"
+	if (typeof value === 'boolean' && typeof expected === 'string') {
+		return value.toString();
+	}
+	return value;
+}
+
 // Test execution
 try {
 	const expectedOutput = ${JSON.stringify(expectedOutput)};
-	
+
 	// Call user function with parsed arguments
-	const result = solution(${argsString});
-	
+	let result = solution(${argsString});
+
+	// Normalize output for comparison
+	result = normalizeOutput(result, expectedOutput);
+
 	// Compare result with expected output
 	const passed = JSON.stringify(result) === JSON.stringify(expectedOutput);
-	
+
 	console.log(JSON.stringify({
 		success: true,
 		output: result,
@@ -239,16 +263,27 @@ import json
 # User's solution
 ${userCode}
 
+# Helper function to normalize output for comparison
+def normalize_output(value, expected):
+	"""Convert types for comparison compatibility"""
+	# Convert boolean to string if expected is string "true" or "false"
+	if isinstance(value, bool) and isinstance(expected, str):
+		return 'true' if value else 'false'
+	return value
+
 # Test execution
 try:
-	expected_output = ${JSON.stringify(expectedOutput)}
-	
+	expected_output = json.loads(${JSON.stringify(JSON.stringify(expectedOutput))})
+
 	# Call user function with parsed arguments
 	result = solution(${argsString})
-	
+
+	# Normalize output for comparison
+	result = normalize_output(result, expected_output)
+
 	# Compare result with expected output
 	passed = result == expected_output
-	
+
 	output = {
 		"success": True,
 		"output": result,
@@ -261,7 +296,7 @@ except Exception as error:
 		"success": False,
 		"error": str(error),
 		"output": None,
-		"expected": ${JSON.stringify(expectedOutput)},
+		"expected": json.loads(${JSON.stringify(JSON.stringify(expectedOutput))}),
 		"passed": False
 	}
 	print(json.dumps(output))
@@ -329,22 +364,20 @@ except Exception as error:
 
 	private parseInputParameters(input: any): any[] {
 		if (typeof input === "string") {
-			// Split by newlines to handle multiple parameters
-			const lines = input.trim().split('\n');
-			return lines.map(line => {
+			const lines = input.trim().split("\n");
+			return lines.map((line) => {
 				try {
-					// Try to parse as JSON
 					return JSON.parse(line);
 				} catch {
-					// If parsing fails, return as string
 					return line;
 				}
 			});
 		} else if (Array.isArray(input)) {
-			// If it's already an array, return as is
 			return input;
+		} else if (typeof input === "object" && input !== null) {
+			const keys = Object.keys(input).sort();
+			return keys.map((key) => input[key]);
 		} else {
-			// Single parameter
 			return [input];
 		}
 	}

@@ -105,21 +105,33 @@ export class CodePreparationService implements ICodePreparationService {
 		// Parse input - it might be multiple parameters separated by newlines
 		const inputArgs = this.parseInputParameters(input);
 		const argsString = inputArgs.map(arg => JSON.stringify(arg)).join(', ');
-		
+
 		return `
 // User's solution
 ${userCode}
 
+// Helper function to normalize output for comparison
+function normalizeOutput(value, expected) {
+	// Convert boolean to string if expected is string "true" or "false"
+	if (typeof value === 'boolean' && typeof expected === 'string') {
+		return value.toString();
+	}
+	return value;
+}
+
 // Test execution
 try {
 	const expectedOutput = ${JSON.stringify(expectedOutput)};
-	
+
 	// Call user's function with the parsed arguments
-	const result = solution(${argsString});
-	
+	let result = solution(${argsString});
+
+	// Normalize output for comparison
+	result = normalizeOutput(result, expectedOutput);
+
 	// Compare result with expected output
 	const passed = JSON.stringify(result) === JSON.stringify(expectedOutput);
-	
+
 	console.log(JSON.stringify({
 		success: true,
 		output: result,
@@ -146,23 +158,34 @@ try {
 		// Parse input - it might be multiple parameters separated by newlines
 		const inputArgs = this.parseInputParameters(input);
 		const argsString = inputArgs.map(arg => JSON.stringify(arg)).join(', ');
-		
+
 		return `
 import json
 
 # User's solution
 ${userCode}
 
+# Helper function to normalize output for comparison
+def normalize_output(value, expected):
+	"""Convert types for comparison compatibility"""
+	# Convert boolean to string if expected is string "true" or "false"
+	if isinstance(value, bool) and isinstance(expected, str):
+		return 'true' if value else 'false'
+	return value
+
 # Test execution
 try:
-	expected_output = ${JSON.stringify(expectedOutput)}
-	
+	expected_output = json.loads(${JSON.stringify(JSON.stringify(expectedOutput))})
+
 	# Call user's function with the parsed arguments
 	result = solution(${argsString})
-	
+
+	# Normalize output for comparison
+	result = normalize_output(result, expected_output)
+
 	# Compare result with expected output
 	passed = result == expected_output
-	
+
 	output = {
 		"success": True,
 		"output": result,
@@ -175,7 +198,7 @@ except Exception as error:
 		"success": False,
 		"error": str(error),
 		"output": None,
-		"expected": ${JSON.stringify(expectedOutput)},
+		"expected": json.loads(${JSON.stringify(JSON.stringify(expectedOutput))}),
 		"passed": False
 	}
 	print(json.dumps(output))
@@ -220,6 +243,13 @@ except Exception as error:
 		} else if (Array.isArray(input)) {
 			// If it's already an array, return as is
 			return input;
+		} else if (typeof input === "object" && input !== null) {
+			// Extract values from object in sorted key order for consistent parameter passing
+			// This allows users to write solution(s) instead of solution(input)
+			// Example: {"s": "test"} becomes ["test"]
+			// Example: {"nums": [1,2], "target": 3} becomes [[1,2], 3]
+			const keys = Object.keys(input).sort();
+			return keys.map((key) => input[key]);
 		} else {
 			// Single parameter
 			return [input];

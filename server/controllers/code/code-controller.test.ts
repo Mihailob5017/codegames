@@ -1,145 +1,456 @@
 import { Request, Response, NextFunction } from "express";
-import { CodeExecutionController } from "./code-controller";
-import { CodeExecutionService } from "../../services/code-execution/code-execution-service";
+import { CodeController } from "./code-controller";
+import { CodeService } from "../../services/code/code-service";
+import { AuthRequest } from "../../middlewares/auth-middleware";
+import { ResponseObject } from "../../types/common/controller-types";
+import {
+	createMockRequest,
+	createMockResponse,
+	createMockNext,
+} from "../../__tests__/utils/test-helpers";
+import { extractTokenFromRequest } from "../../middlewares/auth-middleware";
+import { verifyJWT } from "../../utils/auth";
 
-jest.mock("../../services/code-execution/code-execution-service");
+jest.mock("../../services/code/code-service");
+jest.mock("../../middlewares/auth-middleware");
+jest.mock("../../utils/auth");
 
-describe("CodeExecutionController", () => {
-	let mockRequest: Partial<Request>;
-	let mockResponse: Partial<Response>;
-	let mockNext: NextFunction;
-	let mockSend: jest.Mock;
-	let mockStatus: jest.Mock;
+describe("CodeController", () => {
+	let mockCodeService: jest.Mocked<CodeService>;
+	let req: any;
+	let res: any;
+	let next: any;
 
 	beforeEach(() => {
-		mockSend = jest.fn();
-		mockStatus = jest.fn().mockReturnValue({ json: mockSend });
-		mockResponse = {
-			status: mockStatus,
-		};
-		mockNext = jest.fn();
+		mockCodeService = {
+			runSingleTestCase: jest.fn(),
+			runAllTestCases: jest.fn(),
+			submitCodeSolution: jest.fn(),
+		} as any;
+
+		(CodeService as jest.MockedClass<typeof CodeService>).mockImplementation(
+			() => mockCodeService
+		);
+
+		req = createMockRequest();
+		res = createMockResponse();
+		next = createMockNext();
+
+		jest.spyOn(ResponseObject, "success").mockReturnValue({
+			send: jest.fn(),
+		} as any);
+
+		(extractTokenFromRequest as jest.Mock).mockReturnValue("valid-jwt-token");
+		(verifyJWT as jest.Mock).mockReturnValue({ id: "test-user-id" });
 	});
 
 	afterEach(() => {
-		jest.clearAllMocks();
+		jest.resetAllMocks();
 	});
 
-	describe("getSupportedLanguages", () => {
-		it("should get supported languages successfully", async () => {
-			const mockLanguages = [
-				{ id: "javascript", name: "JavaScript (Node.js)", extension: ".js" },
-				{ id: "python", name: "Python 3", extension: ".py" },
-			];
-
-			const mockCodeExecutionService = {
-				getLanguages: jest.fn().mockResolvedValue(mockLanguages),
+	describe("runTestCase", () => {
+		it("should run a single test case successfully", async () => {
+			const mockTestCase = {
+				testCaseId: "test-1",
+				passed: true,
+				input: { nums: [1, 2, 3] },
+				expectedOutput: 6,
+				actualOutput: 6,
+				executionTime: 150,
 			};
 
-			(
-				CodeExecutionService as jest.MockedClass<typeof CodeExecutionService>
-			).mockImplementation(() => mockCodeExecutionService as any);
+			mockCodeService.runSingleTestCase.mockResolvedValue(mockTestCase);
 
-			mockRequest = {};
+			req.body = {
+				problemId: "problem-1",
+				userCode:
+					"function solution(nums) { return nums.reduce((a, b) => a + b, 0); }",
+				language: "javascript",
+			};
 
-			await CodeExecutionController.getSupportedLanguages(
-				mockRequest as Request,
-				mockResponse as Response,
-				mockNext
-			);
+			await CodeController.runTestCase(req, res, next);
 
-			expect(mockCodeExecutionService.getLanguages).toHaveBeenCalled();
-			expect(mockStatus).toHaveBeenCalledWith(200);
-			expect(mockSend).toHaveBeenCalledWith({
-				message: "Supported languages retrieved successfully",
-				data: mockLanguages,
+			expect(CodeService).toHaveBeenCalled();
+			expect(mockCodeService.runSingleTestCase).toHaveBeenCalledWith({
+				problemId: "problem-1",
+				userCode:
+					"function solution(nums) { return nums.reduce((a, b) => a + b, 0); }",
+				language: "javascript",
 			});
+			expect(ResponseObject.success).toHaveBeenCalledWith(
+				200,
+				"Test case executed successfully",
+				mockTestCase
+			);
 		});
 
-		it("should handle errors correctly", async () => {
-			const error = new Error("Service error");
-			const mockCodeExecutionService = {
-				getLanguages: jest.fn().mockRejectedValue(error),
+		it("should handle validation errors for missing problemId", async () => {
+			req.body = {
+				problemId: "",
+				userCode: "function solution() {}",
+				language: "javascript",
 			};
 
-			(
-				CodeExecutionService as jest.MockedClass<typeof CodeExecutionService>
-			).mockImplementation(() => mockCodeExecutionService as any);
+			await CodeController.runTestCase(req, res, next);
 
-			mockRequest = {};
-
-			await CodeExecutionController.getSupportedLanguages(
-				mockRequest as Request,
-				mockResponse as Response,
-				mockNext
-			);
-
-			expect(mockNext).toHaveBeenCalledWith(error);
-		});
-	});
-
-	describe("executeCode", () => {
-		it("should execute code successfully", async () => {
-			const mockSubmission = {
-				source_code: 'print("Hello World")',
-				language: "python",
-			};
-
-			const mockResult = {
-				success: true,
-				stdout: "Hello World\n",
-				execution_time_ms: 150,
-			};
-
-			const mockCodeExecutionService = {
-				executeCode: jest.fn().mockResolvedValue(mockResult),
-			};
-
-			(
-				CodeExecutionService as jest.MockedClass<typeof CodeExecutionService>
-			).mockImplementation(() => mockCodeExecutionService as any);
-
-			mockRequest = {
-				body: mockSubmission,
-			};
-
-			await CodeExecutionController.executeCode(
-				mockRequest as Request,
-				mockResponse as Response,
-				mockNext
-			);
-
-			expect(mockCodeExecutionService.executeCode).toHaveBeenCalledWith({
-				source_code: mockSubmission.source_code,
-				language: mockSubmission.language,
-				stdin: undefined,
-			});
-			expect(mockStatus).toHaveBeenCalledWith(200);
-			expect(mockSend).toHaveBeenCalledWith({
-				message: "Code executed successfully",
-				data: mockResult,
-			});
-		});
-
-		it("should handle validation errors", async () => {
-			mockRequest = {
-				body: {
-					source_code: "",
-					language: "invalid",
-				},
-			};
-
-			await CodeExecutionController.executeCode(
-				mockRequest as Request,
-				mockResponse as Response,
-				mockNext
-			);
-
-			expect(mockNext).toHaveBeenCalledWith(
+			expect(next).toHaveBeenCalledWith(
 				expect.objectContaining({
 					status: 400,
 					message: "Validation error",
 				})
 			);
+		});
+
+		it("should handle validation errors for invalid language", async () => {
+			req.body = {
+				problemId: "problem-1",
+				userCode: "function solution() {}",
+				language: "invalid",
+			};
+
+			await CodeController.runTestCase(req, res, next);
+
+			expect(next).toHaveBeenCalledWith(
+				expect.objectContaining({
+					status: 400,
+					message: "Validation error",
+				})
+			);
+		});
+
+		it("should handle service errors", async () => {
+			const error = new Error("Service error");
+			mockCodeService.runSingleTestCase.mockRejectedValue(error);
+
+			req.body = {
+				problemId: "problem-1",
+				userCode: "function solution() {}",
+				language: "javascript",
+			};
+
+			await CodeController.runTestCase(req, res, next);
+
+			expect(next).toHaveBeenCalledWith(error);
+		});
+	});
+
+	describe("runAllTestCases", () => {
+		it("should run all test cases successfully", async () => {
+			const mockResult = {
+				success: true,
+				totalTests: 3,
+				passedTests: 3,
+				testResults: [
+					{
+						testCaseId: "test-1",
+						passed: true,
+						input: { nums: [1, 2, 3] },
+						expectedOutput: 6,
+						actualOutput: 6,
+						executionTime: 150,
+					},
+					{
+						testCaseId: "test-2",
+						passed: true,
+						input: { nums: [4, 5] },
+						expectedOutput: 9,
+						actualOutput: 9,
+						executionTime: 120,
+					},
+					{
+						testCaseId: "test-3",
+						passed: true,
+						input: { nums: [] },
+						expectedOutput: 0,
+						actualOutput: 0,
+						executionTime: 100,
+					},
+				],
+				overallExecutionTime: 450,
+			};
+
+			mockCodeService.runAllTestCases.mockResolvedValue(mockResult);
+
+			req.body = {
+				problemId: "problem-1",
+				userCode:
+					"function solution(nums) { return nums.reduce((a, b) => a + b, 0); }",
+				language: "javascript",
+			};
+
+			await CodeController.runAllTestCases(req, res, next);
+
+			expect(mockCodeService.runAllTestCases).toHaveBeenCalledWith({
+				problemId: "problem-1",
+				userCode:
+					"function solution(nums) { return nums.reduce((a, b) => a + b, 0); }",
+				language: "javascript",
+			});
+			expect(ResponseObject.success).toHaveBeenCalledWith(
+				200,
+				"All test cases executed successfully",
+				mockResult
+			);
+		});
+
+		it("should handle partial test case failures", async () => {
+			const mockResult = {
+				success: false,
+				totalTests: 3,
+				passedTests: 2,
+				testResults: [
+					{
+						testCaseId: "test-1",
+						passed: true,
+						input: { nums: [1, 2, 3] },
+						expectedOutput: 6,
+						actualOutput: 6,
+						executionTime: 150,
+					},
+					{
+						testCaseId: "test-2",
+						passed: true,
+						input: { nums: [4, 5] },
+						expectedOutput: 9,
+						actualOutput: 9,
+						executionTime: 120,
+					},
+					{
+						testCaseId: "test-3",
+						passed: false,
+						input: { nums: [] },
+						expectedOutput: 0,
+						actualOutput: undefined,
+						executionTime: 0,
+						error: "TypeError: Cannot read property",
+					},
+				],
+				overallExecutionTime: 350,
+			};
+
+			mockCodeService.runAllTestCases.mockResolvedValue(mockResult);
+
+			req.body = {
+				problemId: "problem-1",
+				userCode: "function solution(nums) { return nums[0] + nums[1]; }",
+				language: "javascript",
+			};
+
+			await CodeController.runAllTestCases(req, res, next);
+
+			expect(mockCodeService.runAllTestCases).toHaveBeenCalled();
+			expect(ResponseObject.success).toHaveBeenCalledWith(
+				200,
+				"All test cases executed successfully",
+				mockResult
+			);
+		});
+
+		it("should handle validation errors", async () => {
+			req.body = {
+				problemId: "",
+				userCode: "",
+				language: "invalid",
+			};
+
+			await CodeController.runAllTestCases(req, res, next);
+
+			expect(next).toHaveBeenCalledWith(
+				expect.objectContaining({
+					status: 400,
+					message: "Validation error",
+				})
+			);
+		});
+
+		it("should handle service errors", async () => {
+			const error = new Error("Failed to execute test cases");
+			mockCodeService.runAllTestCases.mockRejectedValue(error);
+
+			req.body = {
+				problemId: "problem-1",
+				userCode: "function solution() {}",
+				language: "javascript",
+			};
+
+			await CodeController.runAllTestCases(req, res, next);
+
+			expect(next).toHaveBeenCalledWith(error);
+		});
+	});
+
+	describe("submitSolution", () => {
+		it("should submit solution successfully with authentication", async () => {
+			const mockResult = {
+				success: true,
+				totalTests: 3,
+				passedTests: 3,
+				testResults: [
+					{
+						testCaseId: "test-1",
+						passed: true,
+						input: { nums: [1, 2, 3] },
+						expectedOutput: 6,
+						actualOutput: 6,
+						executionTime: 150,
+					},
+				],
+				overallExecutionTime: 450,
+				submissionId: "submission-1",
+			};
+
+			mockCodeService.submitCodeSolution.mockResolvedValue(mockResult);
+
+			req.body = {
+				problemId: "problem-1",
+				userCode:
+					"function solution(nums) { return nums.reduce((a, b) => a + b, 0); }",
+				language: "javascript",
+			};
+			req.userId = "user-1";
+
+			await CodeController.submitSolution(req as AuthRequest, res, next);
+
+			expect(mockCodeService.submitCodeSolution).toHaveBeenCalledWith({
+				problemId: "problem-1",
+				userCode:
+					"function solution(nums) { return nums.reduce((a, b) => a + b, 0); }",
+				language: "javascript",
+				userId: "user-1",
+			});
+			expect(ResponseObject.success).toHaveBeenCalledWith(
+				200,
+				"Solution submitted successfully",
+				mockResult
+			);
+		});
+
+		it("should handle submission with failed tests", async () => {
+			const mockResult = {
+				success: false,
+				totalTests: 3,
+				passedTests: 1,
+				testResults: [
+					{
+						testCaseId: "test-1",
+						passed: true,
+						input: { nums: [1, 2, 3] },
+						expectedOutput: 6,
+						actualOutput: 6,
+						executionTime: 150,
+					},
+					{
+						testCaseId: "test-2",
+						passed: false,
+						input: { nums: [4, 5] },
+						expectedOutput: 9,
+						actualOutput: 10,
+						executionTime: 120,
+					},
+				],
+				overallExecutionTime: 350,
+				submissionId: "submission-2",
+			};
+
+			mockCodeService.submitCodeSolution.mockResolvedValue(mockResult);
+
+			req.body = {
+				problemId: "problem-1",
+				userCode: "function solution(nums) { return nums[0] + nums[1] + 1; }",
+				language: "javascript",
+			};
+			req.userId = "user-1";
+
+			await CodeController.submitSolution(req as AuthRequest, res, next);
+
+			expect(mockCodeService.submitCodeSolution).toHaveBeenCalled();
+			expect(ResponseObject.success).toHaveBeenCalledWith(
+				200,
+				"Solution submitted successfully",
+				mockResult
+			);
+		});
+
+		it("should handle missing authentication token", async () => {
+			(extractTokenFromRequest as jest.Mock).mockReturnValue(null);
+
+			req.body = {
+				problemId: "problem-1",
+				userCode: "function solution() {}",
+				language: "javascript",
+			};
+
+			await CodeController.submitSolution(req as AuthRequest, res, next);
+
+			expect(next).toHaveBeenCalledWith(
+				expect.objectContaining({
+					status: 401,
+					message: "Authentication token required",
+				})
+			);
+		});
+
+		it("should handle validation errors", async () => {
+			req.body = {
+				problemId: "",
+				userCode: "",
+				language: "invalid",
+			};
+			req.userId = "user-1";
+
+			await CodeController.submitSolution(req as AuthRequest, res, next);
+
+			expect(next).toHaveBeenCalledWith(
+				expect.objectContaining({
+					status: 400,
+					message: "Validation error",
+				})
+			);
+		});
+
+		it("should handle service errors", async () => {
+			const error = new Error("Failed to submit solution");
+			mockCodeService.submitCodeSolution.mockRejectedValue(error);
+
+			req.body = {
+				problemId: "problem-1",
+				userCode: "function solution() {}",
+				language: "javascript",
+			};
+			req.userId = "user-1";
+
+			await CodeController.submitSolution(req as AuthRequest, res, next);
+
+			expect(next).toHaveBeenCalledWith(error);
+		});
+
+		it("should support Python language", async () => {
+			const mockResult = {
+				success: true,
+				totalTests: 2,
+				passedTests: 2,
+				testResults: [],
+				overallExecutionTime: 300,
+				submissionId: "submission-3",
+			};
+
+			mockCodeService.submitCodeSolution.mockResolvedValue(mockResult);
+
+			req.body = {
+				problemId: "problem-2",
+				userCode: "def solution(nums):\n    return sum(nums)",
+				language: "python",
+			};
+			req.userId = "user-1";
+
+			await CodeController.submitSolution(req as AuthRequest, res, next);
+
+			expect(mockCodeService.submitCodeSolution).toHaveBeenCalledWith({
+				problemId: "problem-2",
+				userCode: "def solution(nums):\n    return sum(nums)",
+				language: "python",
+				userId: "user-1",
+			});
 		});
 	});
 });
