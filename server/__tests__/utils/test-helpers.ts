@@ -59,6 +59,10 @@ export const createMockRequest = (overrides: any = {}) => ({
 	params: {},
 	query: {},
 	headers: {},
+	ip: '127.0.0.1',
+	socket: {
+		remoteAddress: '127.0.0.1',
+	},
 	...overrides,
 });
 

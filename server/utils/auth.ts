@@ -17,15 +17,15 @@ export const generateToken = (): { token: number; expiry: Date } => {
 	return { token, expiry };
 };
 
-export const encryptPassword = (password: string): string => {
+export const encryptPassword = async (password: string): Promise<string> => {
 	if (!password || typeof password !== 'string') {
 		throw new HttpError(400, 'Invalid password provided');
 	}
 
-	return bcrypt.hashSync(password, BCRYPT_SALT_ROUNDS);
+	return bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
 };
 
-export const comparePassword = (password: string, hash: string): boolean => {
+export const comparePassword = async (password: string, hash: string): Promise<boolean> => {
 	if (
 		!password ||
 		!hash ||
@@ -34,7 +34,7 @@ export const comparePassword = (password: string, hash: string): boolean => {
 	) {
 		return false;
 	}
-	return bcrypt.compareSync(password, hash);
+	return bcrypt.compare(password, hash);
 };
 
 export const generateJWT = (payload: JwtPayloadDTO): string => {

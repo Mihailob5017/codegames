@@ -1,3 +1,4 @@
+import { Response as ExpressResponse, NextFunction } from "express";
 import { CodeService } from "../../services/code/code-service";
 import {
 	ControllerFn,
@@ -5,11 +6,11 @@ import {
 } from "../../types/common/controller-types";
 import { z } from "zod";
 import { HttpError } from "../../types/common/error-types";
-import {
-	AuthRequest,
-	extractTokenFromRequest,
-} from "../../middlewares/auth-middleware";
-import { verifyJWT } from "../../utils/auth";
+import { AuthRequest } from "../../middlewares/auth-middleware";
+
+// ============================================================================
+// Validation Schema
+// ============================================================================
 
 const testCaseExecutionSchema = z.object({
 	problemId: z.string().min(1, "Problem ID is required"),
@@ -19,86 +20,107 @@ const testCaseExecutionSchema = z.object({
 	}),
 });
 
+type TestCaseExecutionRequest = z.infer<typeof testCaseExecutionSchema>;
+
+// ============================================================================
+// Controller Implementation
+// ============================================================================
+
 export class CodeController {
+	private static codeService = new CodeService();
+
+	// ========================================================================
+	// Public Controller Methods
+	// ========================================================================
+
 	static runTestCase: ControllerFn = async (req, res, next) => {
 		try {
-			const validatedData = testCaseExecutionSchema.parse(req.body);
+			const validatedData = CodeController.validateRequest(req.body);
+			const result = await CodeController.codeService.runSingleTestCase(
+				validatedData
+			);
 
-			const codeService = new CodeService();
-			const result = await codeService.runSingleTestCase({
-				problemId: validatedData.problemId,
-				userCode: validatedData.userCode,
-				language: validatedData.language,
-			});
-
-			const responseObj = ResponseObject.success(
+			CodeController.sendSuccessResponse(
+				res,
 				200,
 				"Test case executed successfully",
 				result
 			);
-			responseObj.send(res);
 		} catch (error) {
-			if (error instanceof z.ZodError) {
-				next(new HttpError(400, "Validation error", error.issues));
-				return;
-			}
-			next(error);
+			CodeController.handleError(error, next);
 		}
 	};
 
 	static runAllTestCases: ControllerFn = async (req, res, next) => {
 		try {
-			const validatedData = testCaseExecutionSchema.parse(req.body);
-			const codeService = new CodeService();
-			const result = await codeService.runAllTestCases({
-				problemId: validatedData.problemId,
-				userCode: validatedData.userCode,
-				language: validatedData.language,
-			});
-			const responseObj = ResponseObject.success(
+			const validatedData = CodeController.validateRequest(req.body);
+			const result = await CodeController.codeService.runAllTestCases(
+				validatedData
+			);
+
+			CodeController.sendSuccessResponse(
+				res,
 				200,
 				"All test cases executed successfully",
 				result
 			);
-			responseObj.send(res);
 		} catch (error) {
-			if (error instanceof z.ZodError) {
-				next(new HttpError(400, "Validation error", error.issues));
-				return;
-			}
-			next(error);
+			CodeController.handleError(error, next);
 		}
 	};
+
 	static submitSolution: ControllerFn = async (req: AuthRequest, res, next) => {
 		try {
-			const validatedData = testCaseExecutionSchema.parse(req.body);
-			const token = extractTokenFromRequest(req);
+			const validatedData = CodeController.validateRequest(req.body);
+			const userId = CodeController.extractUserId(req);
 
-			if (!token) {
-				return next(new HttpError(401, "Authentication token required"));
-			}
-
-			const decoded = verifyJWT(token);
-			req.userId = decoded.id;
-			const codeService = new CodeService();
-			const result = await codeService.submitCodeSolution({
-				problemId: validatedData.problemId,
-				userCode: validatedData.userCode,
-				language: validatedData.language,
-				userId: req.userId,
+			const result = await CodeController.codeService.submitCodeSolution({
+				...validatedData,
+				userId,
 			});
-			const responseObj = ResponseObject.success(
+
+			CodeController.sendSuccessResponse(
+				res,
 				200,
 				"Solution submitted successfully",
 				result
 			);
-			responseObj.send(res);
 		} catch (error) {
-			if (error instanceof z.ZodError) {
-				next(new HttpError(400, "Validation error", error.issues));
-				return;
-			}
-			next(error);
+			CodeController.handleError(error, next);
 		}
 	};
+
+	// ========================================================================
+	// Private Helper Methods
+	// ========================================================================
+
+	private static validateRequest(body: unknown): TestCaseExecutionRequest {
+		return testCaseExecutionSchema.parse(body);
+	}
+
+	private static extractUserId(req: AuthRequest): string {
+		if (!req.userId) {
+			throw new HttpError(401, "User not authenticated");
+		}
+
+		return req.userId;
+	}
+
+	private static sendSuccessResponse(
+		res: ExpressResponse,
+		status: 200 | 201,
+		message: string,
+		data: unknown
+	): void {
+		const responseObj = ResponseObject.success(status, message, data);
+		responseObj.send(res);
+	}
+
+	private static handleError(error: unknown, next: NextFunction): void {
+		if (error instanceof z.ZodError) {
+			next(new HttpError(400, "Validation error", error.issues));
+			return;
+		}
+		next(error);
+	}
 }

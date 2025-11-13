@@ -53,7 +53,7 @@ export class AuthService implements ISignupService {
 
 	public async signup(): Promise<AuthResponseDTO> {
 		try {
-			this.normalizeInput();
+			await this.normalizeInput();
 			this.validateInput();
 
 			await this.checkIfUserExists();
@@ -86,11 +86,11 @@ export class AuthService implements ISignupService {
 
 		const isValidUser = user && user.passwordHash;
 		const isValidPassword =
-			isValidUser && comparePassword(providedPassword, user.passwordHash!);
+			isValidUser && await comparePassword(providedPassword, user.passwordHash!);
 		const isVerified = user?.verified;
 
 		if (!isValidUser) {
-			comparePassword(
+			await comparePassword(
 				providedPassword,
 				"$2b$12$dummy.hash.to.prevent.timing.attacks.here"
 			);
@@ -119,7 +119,7 @@ export class AuthService implements ISignupService {
 		}
 	}
 
-	private normalizeInput(): void {
+	private async normalizeInput(): Promise<void> {
 		const { token, expiry } = generateToken();
 
 		this.userInput = {
@@ -137,7 +137,7 @@ export class AuthService implements ISignupService {
 			verifyTokenExpiry: expiry,
 			verified: false,
 			passwordHash: this.userInput.passwordHash
-				? encryptPassword(this.userInput.passwordHash)
+				? await encryptPassword(this.userInput.passwordHash)
 				: undefined,
 		};
 	}

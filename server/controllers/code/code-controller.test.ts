@@ -28,9 +28,12 @@ describe("CodeController", () => {
 			submitCodeSolution: jest.fn(),
 		} as any;
 
-		(CodeService as jest.MockedClass<typeof CodeService>).mockImplementation(
-			() => mockCodeService
-		);
+		// Mock the static codeService property directly
+		Object.defineProperty(CodeController, 'codeService', {
+			value: mockCodeService,
+			writable: true,
+			configurable: true
+		});
 
 		req = createMockRequest();
 		res = createMockResponse();
@@ -70,7 +73,6 @@ describe("CodeController", () => {
 
 			await CodeController.runTestCase(req, res, next);
 
-			expect(CodeService).toHaveBeenCalled();
 			expect(mockCodeService.runSingleTestCase).toHaveBeenCalledWith({
 				problemId: "problem-1",
 				userCode:
@@ -372,7 +374,8 @@ describe("CodeController", () => {
 		});
 
 		it("should handle missing authentication token", async () => {
-			(extractTokenFromRequest as jest.Mock).mockReturnValue(null);
+			// req.userId will be undefined, simulating missing authentication
+			req.userId = undefined;
 
 			req.body = {
 				problemId: "problem-1",
@@ -385,7 +388,7 @@ describe("CodeController", () => {
 			expect(next).toHaveBeenCalledWith(
 				expect.objectContaining({
 					status: 401,
-					message: "Authentication token required",
+					message: "User not authenticated",
 				})
 			);
 		});

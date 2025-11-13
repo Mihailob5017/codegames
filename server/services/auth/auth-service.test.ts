@@ -1,6 +1,7 @@
 import { AuthService } from './auth-service';
 import { IUserRepository } from '../../repositories/login/login-repositories';
 import { EmailService } from '../email/email-service';
+import { RefreshTokenService } from './refresh-token-service';
 import { createMockUser, createMockCreateUserInput } from '../../__tests__/utils/test-helpers';
 import { CreateUserInput } from '../../models/user-model';
 import { HttpError } from '../../types/common/error-types';
@@ -13,6 +14,7 @@ describe('AuthService', () => {
 	let authService: AuthService;
 	let mockUserRepository: jest.Mocked<IUserRepository>;
 	let mockEmailService: jest.Mocked<EmailService>;
+	let mockRefreshTokenService: jest.Mocked<RefreshTokenService>;
 	let mockUserInput: Partial<CreateUserInput>;
 
 	beforeEach(() => {
@@ -28,12 +30,20 @@ describe('AuthService', () => {
 			sendVerificationEmail: jest.fn(),
 		} as any;
 
+		mockRefreshTokenService = {
+			createRefreshToken: jest.fn().mockResolvedValue('refresh-token-value'),
+			refreshAccessToken: jest.fn(),
+			revokeToken: jest.fn(),
+			revokeAllUserTokens: jest.fn(),
+		} as any;
+
 		mockUserInput = createMockCreateUserInput();
 
 		authService = new AuthService(
 			mockUserInput,
 			mockUserRepository,
-			mockEmailService
+			mockEmailService,
+			mockRefreshTokenService
 		);
 
 		// Mock auth utility functions
@@ -43,6 +53,10 @@ describe('AuthService', () => {
 			expiry: new Date(Date.now() + 24 * 60 * 60 * 1000),
 		});
 		(authUtils.generateJWT as jest.Mock).mockReturnValue('jwt-token');
+		(authUtils.generateRefreshToken as jest.Mock).mockReturnValue({
+			token: 'refresh-token',
+			expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+		});
 	});
 
 	afterEach(() => {
@@ -63,6 +77,7 @@ describe('AuthService', () => {
 
 			expect(result).toEqual({
 				jwt: 'jwt-token',
+				refreshToken: 'refresh-token-value',
 				user: expect.objectContaining({
 					id: expect.any(String),
 					username: mockUserInput.username,

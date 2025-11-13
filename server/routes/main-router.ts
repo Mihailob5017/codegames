@@ -1,9 +1,8 @@
 import { Router, Request, Response } from 'express';
 import { HttpError } from '../types/common/error-types';
 import { HttpStatusCode } from '../utils/constants';
-import { RedisServiceInstance } from '../config/redis-config';
 
-import { adminRouter, loginRouter, codeExecutionRouter } from './index';
+import { adminRouter, loginRouter, codeExecutionRouter, healthRouter } from './index';
 
 export interface RouterConfig {
 	apiPrefix: string;
@@ -29,38 +28,9 @@ class MainRouter {
 		const apiPrefix = `/${this.config.apiPrefix}`;
 
 		this.config.adminRoute = process.env.ADMIN_ROUTE || 'admin';
-		// Health check endpoint
-		this.router.get('/health', async (_req: Request, res: Response) => {
-			const redisHealthy = RedisServiceInstance.isHealthy();
-			
-			// Test Redis connection with a simple operation
-			let redisTest = false;
-			try {
-				await RedisServiceInstance.set('health:check', 'ok', 10);
-				const result = await RedisServiceInstance.get('health:check');
-				redisTest = result === 'ok';
-			} catch (error) {
-				redisTest = false;
-			}
 
-			res.status(HttpStatusCode.OK).json({
-				status: 'healthy',
-				timestamp: new Date().toISOString(),
-				environment: this.config.nodeEnv,
-				services: {
-					database: 'connected', // Assume connected if we got here
-					redis: {
-						connected: redisHealthy,
-						operational: redisTest,
-						status: redisTest ? 'connected' : 'disconnected'
-					}
-				},
-				cache: {
-					enabled: redisTest,
-					fallback: redisTest ? 'disabled' : 'database'
-				}
-			});
-		});
+		// Health check routes (mounted at root level)
+		this.router.use('/', healthRouter);
 
 		// API routes
 		this.router.use(`${apiPrefix}/${this.config.adminRoute}`, adminRouter);

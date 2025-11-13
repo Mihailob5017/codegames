@@ -94,6 +94,7 @@ describe("CodeService", () => {
 					passed: true,
 				}),
 				executionTime: 150,
+				securityPassed: true,
 			};
 
 			mockCodePreparationService.prepareCodeForExecution.mockResolvedValue(
@@ -140,6 +141,7 @@ describe("CodeService", () => {
 					passed: false,
 				}),
 				executionTime: 120,
+				securityPassed: true,
 			};
 
 			mockCodePreparationService.prepareCodeForExecution.mockResolvedValue(
@@ -179,6 +181,7 @@ describe("CodeService", () => {
 				success: false,
 				error: "ReferenceError: nums is not defined",
 				executionTime: 50,
+				securityPassed: true,
 			};
 
 			mockCodePreparationService.prepareCodeForExecution.mockResolvedValue(
@@ -200,7 +203,7 @@ describe("CodeService", () => {
 
 		it("should throw HttpError when preparation fails", async () => {
 			mockCodePreparationService.prepareCodeForExecution.mockRejectedValue(
-				new Error("Problem not found")
+				new HttpError(404, "Problem not found")
 			);
 
 			await expect(
@@ -257,6 +260,7 @@ describe("CodeService", () => {
 						passed: true,
 					}),
 					executionTime: 150,
+					securityPassed: true,
 				})
 				.mockResolvedValueOnce({
 					success: true,
@@ -267,6 +271,7 @@ describe("CodeService", () => {
 						passed: true,
 					}),
 					executionTime: 120,
+					securityPassed: true,
 				});
 
 			const result = await codeService.runAllTestCases({
@@ -319,11 +324,13 @@ describe("CodeService", () => {
 						passed: true,
 					}),
 					executionTime: 150,
+					securityPassed: true,
 				})
 				.mockResolvedValueOnce({
 					success: false,
 					error: "TypeError: Cannot read property",
 					executionTime: 50,
+					securityPassed: true,
 				});
 
 			const result = await codeService.runAllTestCases({
@@ -425,6 +432,7 @@ describe("CodeService", () => {
 					passed: true,
 				}),
 				executionTime: 150,
+				securityPassed: true,
 			});
 
 			mockUserRepository.getUser.mockResolvedValue(mockUser);
@@ -503,6 +511,7 @@ describe("CodeService", () => {
 						passed: true,
 					}),
 					executionTime: 100,
+					securityPassed: true,
 				})
 				.mockResolvedValueOnce({
 					success: true,
@@ -513,6 +522,7 @@ describe("CodeService", () => {
 						passed: false,
 					}),
 					executionTime: 100,
+					securityPassed: true,
 				});
 
 			mockUserRepository.getUser.mockResolvedValue(mockUser);
@@ -561,6 +571,7 @@ describe("CodeService", () => {
 					passed: true,
 				}),
 				executionTime: 150,
+				securityPassed: true,
 			});
 
 			const result = await codeService.submitCodeSolution({
@@ -606,6 +617,7 @@ describe("CodeService", () => {
 					passed: true,
 				}),
 				executionTime: 150,
+				securityPassed: true,
 			});
 
 			mockUserRepository.getUser.mockResolvedValue(null);
@@ -669,6 +681,7 @@ describe("CodeService", () => {
 					passed: true,
 				}),
 				executionTime: 300,
+				securityPassed: true,
 			});
 
 			mockUserRepository.getUser.mockResolvedValue(mockUser);

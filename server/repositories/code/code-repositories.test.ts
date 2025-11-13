@@ -79,7 +79,7 @@ describe("CodeRepository", () => {
 			);
 
 			await expect(codeRepository.getProblem("problem-1")).rejects.toThrow(
-				"Failed to get problem"
+				"Failed to retrieve problem from database"
 			);
 		});
 	});
@@ -121,7 +121,7 @@ describe("CodeRepository", () => {
 			);
 
 			await expect(codeRepository.getTestCase("problem-1")).rejects.toThrow(
-				"Failed to get testcase"
+				"Failed to retrieve test case from database"
 			);
 		});
 	});
@@ -176,7 +176,7 @@ describe("CodeRepository", () => {
 
 			await expect(
 				codeRepository.getAllTestCases("problem-1")
-			).rejects.toThrow("Failed to get testcase");
+			).rejects.toThrow("Failed to retrieve test cases from database");
 		});
 	});
 

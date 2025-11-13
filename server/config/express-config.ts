@@ -3,8 +3,10 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { errorMiddleware } from '../middlewares/error-middleware';
+import { requestIdMiddleware, RequestWithId } from '../middlewares/request-id-middleware';
 import { parseEnvVar, parseEnvInt } from '../utils/helpers';
 import { RATE_LIMITS } from '../utils/constants';
+import logger from './logger-config';
 
 import { MainRouter } from '../routes';
 
@@ -53,23 +55,25 @@ class ExpressServer {
 
 	public start(): void {
 		const server = this.app.listen(this.config.port, () => {
-			console.log(`🚀 Server running on port ${this.config.port}`);
-			console.log(`📝 Environment: ${this.config.nodeEnv}`);
-			console.log(`🔗 API Base: /${this.config.apiPrefix}`);
+			logger.info('Server started successfully', {
+				port: this.config.port,
+				environment: this.config.nodeEnv,
+				apiBase: `/${this.config.apiPrefix}`,
+			});
 		});
 
 		process.on('SIGTERM', () => {
-			console.log('🛑 SIGTERM received. Shutting down gracefully...');
+			logger.info('SIGTERM received. Shutting down gracefully...');
 			server.close(() => {
-				console.log('✅ Process terminated');
+				logger.info('Process terminated');
 				process.exit(0);
 			});
 		});
 
 		process.on('SIGINT', () => {
-			console.log('🛑 SIGINT received. Shutting down gracefully...');
+			logger.info('SIGINT received. Shutting down gracefully...');
 			server.close(() => {
-				console.log('✅ Process terminated');
+				logger.info('Process terminated');
 				process.exit(0);
 			});
 		});
@@ -87,6 +91,38 @@ class ExpressServer {
 	}
 
 	private setupMiddleware(): void {
+		// Request ID middleware - should be first to track all requests
+		this.app.use(requestIdMiddleware);
+
+		// Request logging middleware with correlation ID
+		this.app.use((req: Request, res: Response, next) => {
+			const requestWithId = req as RequestWithId;
+			const startTime = Date.now();
+
+			// Log request
+			logger.info('Incoming request', {
+				requestId: requestWithId.id,
+				method: req.method,
+				path: req.path,
+				ip: req.ip,
+				userAgent: req.get('user-agent'),
+			});
+
+			// Log response
+			res.on('finish', () => {
+				const duration = Date.now() - startTime;
+				logger.info('Request completed', {
+					requestId: requestWithId.id,
+					method: req.method,
+					path: req.path,
+					statusCode: res.statusCode,
+					duration: `${duration}ms`,
+				});
+			});
+
+			next();
+		});
+
 		this.app.use(
 			helmet({
 				contentSecurityPolicy: {
@@ -117,13 +153,6 @@ class ExpressServer {
 		// Body parsing
 		this.app.use(express.json({ limit: '10mb' }));
 		this.app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-		if (this.config.nodeEnv === 'development') {
-			this.app.use((req: Request, res: Response, next) => {
-				console.log(`${req.method} ${req.path} - ${new Date().toISOString()}`);
-				next();
-			});
-		}
 	}
 
 	private setupRateLimiting(): void {
@@ -166,7 +195,7 @@ class ExpressServer {
 		process.on(
 			'unhandledRejection',
 			(reason: unknown, promise: Promise<unknown>) => {
-				console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+				logger.error('Unhandled Rejection', { reason, promise });
 				if (this.config.nodeEnv === 'production') {
 					process.exit(1);
 				}
@@ -174,7 +203,7 @@ class ExpressServer {
 		);
 
 		process.on('uncaughtException', (error: Error) => {
-			console.error('Uncaught Exception:', error);
+			logger.error('Uncaught Exception', { error: error.message, stack: error.stack });
 			if (this.config.nodeEnv === 'production') {
 				process.exit(1);
 			}

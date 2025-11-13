@@ -6,11 +6,18 @@ import {
 } from "./code-execution-validation-service";
 import { HttpError } from "../../types/common/error-types";
 import { UserRepository } from "../../repositories/login/login-repositories";
+import { TestCase } from "../../generated/prisma";
+
+// ============================================================================
+// Types and Interfaces
+// ============================================================================
+
+export type SupportedLanguage = "javascript" | "python";
 
 export interface CodeSubmissionRequest {
 	problemId: string;
 	userCode: string;
-	language: "javascript" | "python";
+	language: SupportedLanguage;
 	runAllTests?: boolean;
 	userId?: string;
 }
@@ -18,9 +25,9 @@ export interface CodeSubmissionRequest {
 export interface TestCaseResult {
 	testCaseId: string;
 	passed: boolean;
-	input: any;
-	expectedOutput: any;
-	actualOutput?: any;
+	input: unknown;
+	expectedOutput: unknown;
+	actualOutput?: unknown;
 	executionTime: number;
 	error?: string;
 }
@@ -36,19 +43,19 @@ export interface CodeSubmissionResult {
 
 interface ICodeService {
 	runSingleTestCase(request: CodeSubmissionRequest): Promise<TestCaseResult>;
-	runAllTestCases(
-		request: CodeSubmissionRequest
-	): Promise<CodeSubmissionResult>;
-	submitCodeSolution(
-		request: CodeSubmissionRequest
-	): Promise<CodeSubmissionResult>;
+	runAllTestCases(request: CodeSubmissionRequest): Promise<CodeSubmissionResult>;
+	submitCodeSolution(request: CodeSubmissionRequest): Promise<CodeSubmissionResult>;
 }
 
+// ============================================================================
+// Code Service Implementation
+// ============================================================================
+
 export class CodeService implements ICodeService {
-	private codePreparationService: CodePreparationService;
-	private codeExecutionService: CodeExecutionValidationService;
-	private codeRepository: CodeRepository;
-	private userRepository: UserRepository;
+	private readonly codePreparationService: CodePreparationService;
+	private readonly codeExecutionService: CodeExecutionValidationService;
+	private readonly codeRepository: CodeRepository;
+	private readonly userRepository: UserRepository;
 
 	constructor() {
 		this.codePreparationService = new CodePreparationService();
@@ -57,164 +64,185 @@ export class CodeService implements ICodeService {
 		this.userRepository = new UserRepository();
 	}
 
-	async runSingleTestCase(
-		request: CodeSubmissionRequest
-	): Promise<TestCaseResult> {
-		try {
-			const preparedData =
-				await this.codePreparationService.prepareCodeForExecution({
-					problemId: request.problemId,
-					userCode: request.userCode,
-					language: request.language,
-				});
+	// ========================================================================
+	// Public Methods
+	// ========================================================================
 
-			const executionResult =
-				await this.codeExecutionService.validateAndExecuteCode({
-					code: preparedData.preparedCode,
-					language: request.language,
-					timeLimit: preparedData.testCase.timeLimit,
-				});
+	async runSingleTestCase(request: CodeSubmissionRequest): Promise<TestCaseResult> {
+		const preparedData = await this.codePreparationService.prepareCodeForExecution({
+			problemId: request.problemId,
+			userCode: request.userCode,
+			language: request.language,
+		});
 
-			return this.formatTestCaseResult(preparedData.testCase, executionResult);
-		} catch (error) {
-			throw new HttpError(
-				500,
-				`Failed to run test case: ${
-					error instanceof Error ? error.message : "Unknown error"
-				}`
-			);
-		}
+		const executionResult = await this.codeExecutionService.validateAndExecuteCode({
+			code: preparedData.preparedCode,
+			language: request.language,
+			timeLimit: preparedData.testCase.timeLimit,
+		});
+
+		return this.formatTestCaseResult(preparedData.testCase, executionResult);
 	}
 
-	async runAllTestCases(
-		request: CodeSubmissionRequest
-	): Promise<CodeSubmissionResult> {
+	async runAllTestCases(request: CodeSubmissionRequest): Promise<CodeSubmissionResult> {
 		const startTime = Date.now();
 
-		try {
-			const preparedData =
-				await this.codePreparationService.prepareCodeForExecution({
-					problemId: request.problemId,
-					userCode: request.userCode,
-					language: request.language,
-				});
+		const preparedData = await this.codePreparationService.prepareCodeForExecution({
+			problemId: request.problemId,
+			userCode: request.userCode,
+			language: request.language,
+		});
 
-			const testResults: TestCaseResult[] = [];
-			let passedTests = 0;
+		const testResults = await this.executeAllTestCases(
+			request.userCode,
+			request.language,
+			preparedData.allTestCases
+		);
 
-			for (const testCase of preparedData.allTestCases) {
-				try {
-					const testSpecificCode = this.prepareCodeForSpecificTest(
-						request.userCode,
-						testCase,
-						request.language
-					);
+		const passedTests = testResults.filter((result) => result.passed).length;
 
-					const executionResult =
-						await this.codeExecutionService.validateAndExecuteCode({
-							code: testSpecificCode,
-							language: request.language,
-							timeLimit: testCase.timeLimit,
-						});
-
-					const testResult = this.formatTestCaseResult(
-						testCase,
-						executionResult
-					);
-					testResults.push(testResult);
-
-					if (testResult.passed) {
-						passedTests++;
-					}
-				} catch (error) {
-					testResults.push({
-						testCaseId: testCase.id,
-						passed: false,
-						input: testCase.input,
-						expectedOutput: testCase.expectedOutput,
-						executionTime: 0,
-						error: error instanceof Error ? error.message : "Unknown error",
-					});
-				}
-			}
-
-			return {
-				success: passedTests === preparedData.allTestCases.length,
-				totalTests: preparedData.allTestCases.length,
-				passedTests,
-				testResults,
-				overallExecutionTime: Date.now() - startTime,
-			};
-		} catch (error) {
-			throw new HttpError(
-				500,
-				`Failed to run all test cases: ${
-					error instanceof Error ? error.message : "Unknown error"
-				}`
-			);
-		}
+		return {
+			success: passedTests === preparedData.allTestCases.length,
+			totalTests: preparedData.allTestCases.length,
+			passedTests,
+			testResults,
+			overallExecutionTime: Date.now() - startTime,
+		};
 	}
 
-	async submitCodeSolution(
-		request: CodeSubmissionRequest
-	): Promise<CodeSubmissionResult> {
-		try {
-			const result = await this.runAllTestCases(request);
-			const userId = request.userId;
+	async submitCodeSolution(request: CodeSubmissionRequest): Promise<CodeSubmissionResult> {
+		const result = await this.runAllTestCases(request);
 
-			if (userId) {
-				const user = await this.userRepository.getUser(userId);
-				if (!user) {
-					throw new HttpError(404, "User not found");
-				}
-
-				const submissionResult = await this.codeRepository.updateUserSubmission(
-					userId,
-					request.problemId,
-					request.userCode,
-					request.language,
-					result
-				);
-
-				// Update user credits and points if the submission was successful
-				if (submissionResult.creditsEarned > 0) {
-					await this.userRepository.updateUser({
-						id: userId,
-						credits: user.credits + submissionResult.creditsEarned,
-						pointsScored: user.pointsScored + submissionResult.score,
-					});
-				}
-
-				result.submissionId = submissionResult.id;
-			}
-
-			return result;
-		} catch (error) {
-			throw new HttpError(
-				500,
-				`Failed to submit code: ${
-					error instanceof Error ? error.message : "Unknown error"
-				}`
-			);
+		if (request.userId) {
+			await this.processAuthenticatedSubmission(request, result);
 		}
+
+		return result;
 	}
+
+	// ========================================================================
+	// Private Helper Methods - Test Execution
+	// ========================================================================
+
+	private async executeAllTestCases(
+		userCode: string,
+		language: SupportedLanguage,
+		testCases: TestCase[]
+	): Promise<TestCaseResult[]> {
+		const testResults: TestCaseResult[] = [];
+
+		for (const testCase of testCases) {
+			try {
+				const testResult = await this.executeSingleTest(userCode, language, testCase);
+				testResults.push(testResult);
+			} catch (error) {
+				testResults.push(this.createFailedTestResult(testCase, error));
+			}
+		}
+
+		return testResults;
+	}
+
+	private async executeSingleTest(
+		userCode: string,
+		language: SupportedLanguage,
+		testCase: TestCase
+	): Promise<TestCaseResult> {
+		const testSpecificCode = this.prepareCodeForSpecificTest(
+			userCode,
+			testCase,
+			language
+		);
+
+		const executionResult = await this.codeExecutionService.validateAndExecuteCode({
+			code: testSpecificCode,
+			language,
+			timeLimit: testCase.timeLimit,
+		});
+
+		return this.formatTestCaseResult(testCase, executionResult);
+	}
+
+	private createFailedTestResult(testCase: TestCase, error: unknown): TestCaseResult {
+		return {
+			testCaseId: testCase.id,
+			passed: false,
+			input: testCase.input,
+			expectedOutput: testCase.expectedOutput,
+			executionTime: 0,
+			error: this.getErrorMessage(error),
+		};
+	}
+
+	// ========================================================================
+	// Private Helper Methods - Submission Processing
+	// ========================================================================
+
+	private async processAuthenticatedSubmission(
+		request: CodeSubmissionRequest,
+		result: CodeSubmissionResult
+	): Promise<void> {
+		const userId = request.userId!;
+
+		const user = await this.userRepository.getUser(userId);
+		if (!user) {
+			throw new HttpError(404, "User not found");
+		}
+
+		const submissionResult = await this.codeRepository.updateUserSubmission(
+			userId,
+			request.problemId,
+			request.userCode,
+			request.language,
+			result
+		);
+
+		// Update user credits and points if credits were earned
+		if (submissionResult.creditsEarned > 0) {
+			await this.updateUserRewards(userId, user.credits, user.pointsScored, submissionResult);
+		}
+
+		result.submissionId = submissionResult.id;
+	}
+
+	private async updateUserRewards(
+		userId: string,
+		currentCredits: number,
+		currentPoints: number,
+		submission: { creditsEarned: number; score: number }
+	): Promise<void> {
+		await this.userRepository.updateUser({
+			id: userId,
+			credits: currentCredits + submission.creditsEarned,
+			pointsScored: currentPoints + submission.score,
+		});
+	}
+
+	// ========================================================================
+	// Private Helper Methods - Code Preparation
+	// ========================================================================
 
 	private prepareCodeForSpecificTest(
 		userCode: string,
-		testCase: any,
-		language: string
+		testCase: TestCase,
+		language: SupportedLanguage
 	): string {
 		const input = this.formatInput(testCase.input);
 		const expectedOutput = this.formatOutput(testCase.expectedOutput);
-
 		const inputArgs = this.parseInputParameters(input);
-		const argsString = inputArgs
-			.map((arg: any) => JSON.stringify(arg))
-			.join(", ");
+		const argsString = inputArgs.map((arg) => JSON.stringify(arg)).join(", ");
 
-		switch (language) {
-			case "javascript":
-				return `
+		return language === "javascript"
+			? this.generateJavaScriptTestCode(userCode, argsString, expectedOutput)
+			: this.generatePythonTestCode(userCode, argsString, expectedOutput);
+	}
+
+	private generateJavaScriptTestCode(
+		userCode: string,
+		argsString: string,
+		expectedOutput: unknown
+	): string {
+		return `
 // User's solution
 ${userCode}
 
@@ -256,8 +284,14 @@ try {
 	}));
 }
 `;
-			case "python":
-				return `
+	}
+
+	private generatePythonTestCode(
+		userCode: string,
+		argsString: string,
+		expectedOutput: unknown
+	): string {
+		return `
 import json
 
 # User's solution
@@ -301,46 +335,57 @@ except Exception as error:
 	}
 	print(json.dumps(output))
 `;
-			default:
-				throw new Error(`Unsupported language: ${language}`);
-		}
 	}
+
+	// ========================================================================
+	// Private Helper Methods - Result Formatting
+	// ========================================================================
 
 	private formatTestCaseResult(
-		testCase: any,
+		testCase: TestCase,
 		executionResult: ExecutionResult
 	): TestCaseResult {
-		let passed = false;
-		let actualOutput: any = undefined;
-		let error: string | undefined = undefined;
-
-		if (executionResult.success && executionResult.output) {
-			try {
-				const result = JSON.parse(executionResult.output);
-				passed = result.passed;
-				actualOutput = result.output;
-				if (result.error) {
-					error = result.error;
-				}
-			} catch {
-				error = "Failed to parse execution result";
-			}
-		} else {
-			error = executionResult.error || "Execution failed";
+		if (!executionResult.success || !executionResult.output) {
+			return {
+				testCaseId: testCase.id,
+				passed: false,
+				input: testCase.input,
+				expectedOutput: testCase.expectedOutput,
+				actualOutput: undefined,
+				executionTime: executionResult.executionTime,
+				error: executionResult.error || "Execution failed",
+			};
 		}
 
-		return {
-			testCaseId: testCase.id,
-			passed,
-			input: testCase.input,
-			expectedOutput: testCase.expectedOutput,
-			actualOutput,
-			executionTime: executionResult.executionTime,
-			error,
-		};
+		try {
+			const result = JSON.parse(executionResult.output);
+			return {
+				testCaseId: testCase.id,
+				passed: result.passed,
+				input: testCase.input,
+				expectedOutput: testCase.expectedOutput,
+				actualOutput: result.output,
+				executionTime: executionResult.executionTime,
+				error: result.error,
+			};
+		} catch {
+			return {
+				testCaseId: testCase.id,
+				passed: false,
+				input: testCase.input,
+				expectedOutput: testCase.expectedOutput,
+				actualOutput: undefined,
+				executionTime: executionResult.executionTime,
+				error: "Failed to parse execution result",
+			};
+		}
 	}
 
-	private formatInput(input: any): any {
+	// ========================================================================
+	// Private Helper Methods - Data Parsing
+	// ========================================================================
+
+	private formatInput(input: unknown): unknown {
 		if (typeof input === "string") {
 			try {
 				return JSON.parse(input);
@@ -351,7 +396,7 @@ except Exception as error:
 		return input;
 	}
 
-	private formatOutput(output: any): any {
+	private formatOutput(output: unknown): unknown {
 		if (typeof output === "string") {
 			try {
 				return JSON.parse(output);
@@ -362,7 +407,8 @@ except Exception as error:
 		return output;
 	}
 
-	private parseInputParameters(input: any): any[] {
+	private parseInputParameters(input: unknown): unknown[] {
+		// Handle string input (newline-separated parameters)
 		if (typeof input === "string") {
 			const lines = input.trim().split("\n");
 			return lines.map((line) => {
@@ -372,13 +418,28 @@ except Exception as error:
 					return line;
 				}
 			});
-		} else if (Array.isArray(input)) {
-			return input;
-		} else if (typeof input === "object" && input !== null) {
-			const keys = Object.keys(input).sort();
-			return keys.map((key) => input[key]);
-		} else {
-			return [input];
 		}
+
+		// Handle array input
+		if (Array.isArray(input)) {
+			return input;
+		}
+
+		// Handle object input (extract values in sorted key order)
+		if (typeof input === "object" && input !== null) {
+			const keys = Object.keys(input).sort();
+			return keys.map((key) => (input as Record<string, unknown>)[key]);
+		}
+
+		// Handle primitive input
+		return [input];
+	}
+
+	// ========================================================================
+	// Utility Methods
+	// ========================================================================
+
+	private getErrorMessage(error: unknown): string {
+		return error instanceof Error ? error.message : "Unknown error";
 	}
 }

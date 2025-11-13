@@ -51,6 +51,7 @@ describe('LoginController', () => {
 		it('should create user successfully', async () => {
 			const mockSignupResponse = {
 				jwt: 'jwt-token',
+				refreshToken: 'refresh-token',
 				user: {
 					id: '550e8400-e29b-41d4-a716-446655440000',
 					username: 'testuser',
@@ -91,7 +92,16 @@ describe('LoginController', () => {
 
 			await LoginController.signup(req, res, next);
 
-			expect(AuthService).toHaveBeenCalledWith(req.body);
+			expect(AuthService).toHaveBeenCalledWith(
+				req.body,
+				undefined,
+				undefined,
+				undefined,
+				{
+					userAgent: undefined,
+					ipAddress: req.ip || req.socket.remoteAddress,
+				}
+			);
 			expect(mockAuthService.signup).toHaveBeenCalledTimes(1);
 			expect(ResponseObject.success).toHaveBeenCalledWith(
 				201,

@@ -27,15 +27,15 @@ export class ResponseObject implements IResponseObject {
 	}
 
 	public static success<T>(
-		statusCode: 200 | 201 | 500,
+		statusCode: 200 | 201,
 		message: string,
 		data?: T
 	): ResponseObject {
 		return new ResponseObject(statusCode, message, data);
 	}
 
-	public send(res: Response): void {
-		res
+	public send(res: Response): Response {
+		return res
 			.status(this.statusCode)
 			.json({ message: this.message, data: this.data });
 	}
