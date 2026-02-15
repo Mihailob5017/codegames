@@ -28,6 +28,7 @@ A full-stack LeetCode clone built with React, Node.js, PostgreSQL, and Code Exec
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - **Node.js** (v18+ recommended)
 - **Docker & Docker Compose**
 - **Git**
@@ -35,21 +36,24 @@ A full-stack LeetCode clone built with React, Node.js, PostgreSQL, and Code Exec
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone <repository-url>
    cd codegames
    ```
 
 2. **Set up environment variables**
+
    ```bash
    # Server environment
    cp server/.env.example server/.env
-   
-   # Client environment  
+
+   # Client environment
    cp client/.env.example client/.env
    ```
 
 3. **Start all services**
+
    ```bash
    npm run app:build  # Build and start all containers
    ```
@@ -133,6 +137,7 @@ codegames/
 ## 🛠️ Available Scripts
 
 ### Root Level Scripts
+
 ```bash
 # Development
 npm run app:up          # Start all services
@@ -146,6 +151,7 @@ npm run docker:status   # Check Docker resource usage
 ```
 
 ### Server Scripts
+
 ```bash
 cd server
 
@@ -171,13 +177,16 @@ npm run lint:fix       # Fix ESLint issues
 The application uses **Prisma** as the ORM with **PostgreSQL**.
 
 ### Database Schema
+
 Key entities:
+
 - **Users**: User accounts and authentication
 - **Problems**: Coding problems/challenges
 - **Submissions**: User code submissions
 - **Test Cases**: Problem test cases
 
 ### Migration Commands
+
 ```bash
 cd server
 
@@ -199,6 +208,7 @@ npx prisma studio
 The platform uses **JWT-based authentication** with the following features:
 
 ### Components
+
 - **Registration**: Email-based user registration
 - **Login**: JWT token generation
 - **Email Verification**: OTP-based email verification
@@ -206,10 +216,12 @@ The platform uses **JWT-based authentication** with the following features:
 - **Rate Limiting**: Protection against brute force attacks
 
 ### Middleware
+
 - `auth-middleware.ts`: Validates JWT tokens
 - `rate-limit-middleware.ts`: Implements rate limiting
 
 ### API Endpoints
+
 ```bash
 POST /api/auth/register    # User registration
 POST /api/auth/login       # User login
@@ -223,12 +235,14 @@ POST /api/auth/reset-password # Password reset
 **Code Execution Service** provides secure code execution in 60+ programming languages.
 
 ### Architecture
+
 - **Code Execution Service Server**: Main API for submissions
 - **Code Execution Service Workers**: Background code execution
 - **Code Execution Service Database**: Submission storage
 - **Code Execution Service Redis**: Job queue management
 
 ### Supported Languages
+
 - JavaScript (Node.js) - ID: 63
 - Python 3 - ID: 71
 - Java - ID: 62
@@ -238,6 +252,7 @@ POST /api/auth/reset-password # Password reset
 - Rust - ID: 73
 
 ### API Endpoints
+
 ```bash
 GET  /api/code-execution/languages     # Get supported languages
 POST /api/code-execution/submit        # Submit code (async)
@@ -246,6 +261,7 @@ POST /api/code-execution/execute       # Submit and wait (sync)
 ```
 
 ### Example Usage
+
 ```bash
 # Execute Python code
 curl -X POST http://localhost:4000/api/code-execution/execute \
@@ -259,6 +275,7 @@ curl -X POST http://localhost:4000/api/code-execution/execute \
 ## 🧪 Testing
 
 ### Test Structure
+
 ```
 server/__tests__/
 ├── utils/
@@ -278,6 +295,7 @@ server/__tests__/
 ```
 
 ### Running Tests
+
 ```bash
 # Run all tests
 npm test
@@ -295,6 +313,7 @@ npm run app:test
 ## 🌍 Environment Variables
 
 ### Server Environment (.env)
+
 ```bash
 # Database
 DATABASE_URL="postgresql://user:password@localhost:5432/codegames"
@@ -324,6 +343,7 @@ PORT=4000
 ```
 
 ### Client Environment (.env)
+
 ```bash
 VITE_API_URL=http://localhost:4000
 VITE_APP_NAME=CodeGames
@@ -332,6 +352,7 @@ VITE_APP_NAME=CodeGames
 ## 🐳 Docker Configuration
 
 ### Services Overview
+
 - **frontend**: React development server
 - **backend**: Node.js API server
 - **db**: PostgreSQL database
@@ -342,6 +363,7 @@ VITE_APP_NAME=CodeGames
 - **code-execution-redis**: Code Execution Service Redis instance
 
 ### Docker Commands
+
 ```bash
 # View running containers
 docker-compose ps
@@ -365,18 +387,20 @@ docker-compose exec backend bash
 ### Setting Up Development Environment
 
 1. **Install dependencies**
+
    ```bash
    # Root dependencies
    npm install
-   
+
    # Server dependencies
    cd server && npm install
-   
+
    # Client dependencies
    cd ../client && npm install
    ```
 
 2. **Database setup**
+
    ```bash
    cd server
    npm run generate    # Generate Prisma client
@@ -384,10 +408,11 @@ docker-compose exec backend bash
    ```
 
 3. **Start development servers**
+
    ```bash
    # Option 1: Docker (recommended)
    npm run app:up
-   
+
    # Option 2: Local development
    cd server && npm run dev    # Terminal 1
    cd client && npm run dev    # Terminal 2
@@ -396,6 +421,7 @@ docker-compose exec backend bash
 ### Code Quality
 
 The project enforces code quality through:
+
 - **ESLint**: Code linting
 - **TypeScript**: Type safety
 - **Jest**: Unit testing
@@ -404,6 +430,7 @@ The project enforces code quality through:
 ### Adding New Features
 
 1. **Create feature branch**
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
@@ -415,10 +442,11 @@ The project enforces code quality through:
    - Add types in `server/types/`
 
 3. **Write tests**
+
    ```bash
    # Create test file
    touch server/services/your-service/your-service.test.ts
-   
+
    # Run tests
    npm test
    ```
@@ -433,37 +461,41 @@ The project enforces code quality through:
 ### Common Issues
 
 1. **Port already in use**
+
    ```bash
    # Check what's using the port
    lsof -i :4000
-   
+
    # Kill process
    kill -9 <PID>
    ```
 
 2. **Database connection issues**
+
    ```bash
    # Check if PostgreSQL is running
    docker-compose ps db
-   
+
    # View database logs
    docker-compose logs db
    ```
 
 3. **Code Execution Service not responding**
+
    ```bash
    # Check Code Execution Service services
    docker-compose ps | grep code-execution
-   
+
    # Restart Code Execution Service
    docker-compose restart code-execution-server code-execution-workers
    ```
 
 4. **Frontend not loading**
+
    ```bash
    # Check if backend is running
    curl http://localhost:4000/health
-   
+
    # Check frontend logs
    docker-compose logs frontend
    ```
@@ -484,18 +516,21 @@ curl http://localhost:4000/health
 ## 📚 API Documentation
 
 ### Authentication Endpoints
+
 - `POST /api/auth/register` - Register new user
 - `POST /api/auth/login` - User login
 - `POST /api/auth/verify-otp` - Verify email OTP
 - `POST /api/auth/resend-otp` - Resend verification OTP
 
 ### Code Execution Service Endpoints
+
 - `GET /api/code-execution/languages` - Get supported programming languages
 - `POST /api/code-execution/submit` - Submit code for execution
 - `GET /api/code-execution/result/:token` - Get execution result
 - `POST /api/code-execution/execute` - Submit code and wait for result
 
 ### Admin Endpoints
+
 - `GET /api/admin/users` - Get all users (admin only)
 - `PUT /api/admin/users/:id` - Update user (admin only)
 
@@ -508,6 +543,7 @@ curl http://localhost:4000/health
 5. **Open Pull Request**
 
 ### Code Style Guidelines
+
 - Use TypeScript for all new code
 - Follow existing naming conventions
 - Add JSDoc comments for public APIs

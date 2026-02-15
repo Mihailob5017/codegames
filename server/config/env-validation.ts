@@ -27,9 +27,11 @@ const envSchema = z.object({
     // Redis Configuration
     REDIS_URL: z.string().url('REDIS_URL must be a valid URL'),
 
+    // Judge0 Code Execution
+    JUDGE0_API_URL: z.string().url('JUDGE0_API_URL must be a valid URL'),
+
     // Optional Configurations
     LOG_LEVEL: z.enum(['error', 'warn', 'info', 'http', 'verbose', 'debug', 'silly']).optional().default('info'),
-    CODE_EXECUTION_URL: z.string().url().optional(),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;

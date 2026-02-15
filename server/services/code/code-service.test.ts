@@ -1,21 +1,73 @@
 import { CodeService } from "./code-service";
 import { CodeRepository } from "../../repositories/code/code-respositories";
 import { CodePreparationService } from "./code-preparation-service";
-import { CodeExecutionValidationService } from "./code-execution-validation-service";
+import { Judge0Service } from "./judge0-service";
 import { UserRepository } from "../../repositories/login/login-repositories";
 import { HttpError } from "../../types/common/error-types";
 import { createMockUser } from "../../__tests__/utils/test-helpers";
 
 jest.mock("../../repositories/code/code-respositories");
 jest.mock("./code-preparation-service");
-jest.mock("./code-execution-validation-service");
+jest.mock("./judge0-service");
 jest.mock("../../repositories/login/login-repositories");
+
+const testCase1 = {
+	id: "test-1",
+	problemId: "problem-1",
+	input: { nums: [1, 2, 3] },
+	expectedOutput: 6,
+	timeLimit: 1000,
+	memoryLimit: 256,
+	isExample: true,
+	isHidden: false,
+};
+
+const testCase2 = {
+	id: "test-2",
+	problemId: "problem-1",
+	input: { nums: [4, 5] },
+	expectedOutput: 9,
+	timeLimit: 1000,
+	memoryLimit: 256,
+	isExample: false,
+	isHidden: false,
+};
+
+function passedExecution(output: unknown, expected: unknown) {
+	return {
+		success: true,
+		output: JSON.stringify({
+			success: true,
+			output,
+			expected,
+			passed: true,
+		}),
+		executionTime: 150,
+	};
+}
+
+function failedExecution(output: unknown, expected: unknown) {
+	return {
+		success: true,
+		output: JSON.stringify({
+			success: true,
+			output,
+			expected,
+			passed: false,
+		}),
+		executionTime: 120,
+	};
+}
+
+function errorExecution(error: string) {
+	return { success: false, error, executionTime: 50 };
+}
 
 describe("CodeService", () => {
 	let codeService: CodeService;
 	let mockCodeRepository: jest.Mocked<CodeRepository>;
-	let mockCodePreparationService: jest.Mocked<CodePreparationService>;
-	let mockCodeExecutionService: jest.Mocked<CodeExecutionValidationService>;
+	let mockPreparationService: jest.Mocked<CodePreparationService>;
+	let mockJudge0: jest.Mocked<Judge0Service>;
 	let mockUserRepository: jest.Mocked<UserRepository>;
 
 	beforeEach(() => {
@@ -26,32 +78,27 @@ describe("CodeService", () => {
 			updateUserSubmission: jest.fn(),
 		} as any;
 
-		mockCodePreparationService = {
-			prepareCodeForExecution: jest.fn(),
-			getSingleTestCase: jest.fn(),
-			getAllTestCases: jest.fn(),
+		mockPreparationService = {
+			wrapCodeForTestCase: jest.fn().mockReturnValue("wrapped code"),
 		} as any;
 
-		mockCodeExecutionService = {
-			validateAndExecuteCode: jest.fn(),
+		mockJudge0 = {
+			execute: jest.fn(),
 		} as any;
 
 		mockUserRepository = {
 			getUser: jest.fn(),
 			updateUser: jest.fn(),
-			checkIfUserExists: jest.fn(),
-			checkUserExistence: jest.fn(),
-			saveUser: jest.fn(),
 		} as any;
 
 		(CodeRepository as jest.MockedClass<typeof CodeRepository>).mockImplementation(
 			() => mockCodeRepository
 		);
 		(CodePreparationService as jest.MockedClass<typeof CodePreparationService>).mockImplementation(
-			() => mockCodePreparationService
+			() => mockPreparationService
 		);
-		(CodeExecutionValidationService as jest.MockedClass<typeof CodeExecutionValidationService>).mockImplementation(
-			() => mockCodeExecutionService
+		(Judge0Service as jest.MockedClass<typeof Judge0Service>).mockImplementation(
+			() => mockJudge0
 		);
 		(UserRepository as jest.MockedClass<typeof UserRepository>).mockImplementation(
 			() => mockUserRepository
@@ -66,43 +113,8 @@ describe("CodeService", () => {
 
 	describe("runSingleTestCase", () => {
 		it("should run a single test case successfully", async () => {
-			const mockPreparedData = {
-				problem: {
-					id: "problem-1",
-					title: "Two Sum",
-					rewardCredits: 10,
-				},
-				testCase: {
-					id: "test-1",
-					input: { nums: [1, 2, 3] },
-					expectedOutput: 6,
-					timeLimit: 1000,
-				},
-				allTestCases: [],
-				preparedCode: "function solution() {}",
-				language: "javascript",
-				originalCode: "function solution() {}",
-				problemId: "problem-1",
-			};
-
-			const mockExecutionResult = {
-				success: true,
-				output: JSON.stringify({
-					success: true,
-					output: 6,
-					expected: 6,
-					passed: true,
-				}),
-				executionTime: 150,
-				securityPassed: true,
-			};
-
-			mockCodePreparationService.prepareCodeForExecution.mockResolvedValue(
-				mockPreparedData as any
-			);
-			mockCodeExecutionService.validateAndExecuteCode.mockResolvedValue(
-				mockExecutionResult
-			);
+			mockCodeRepository.getTestCase.mockResolvedValue(testCase1 as any);
+			mockJudge0.execute.mockResolvedValue(passedExecution(6, 6));
 
 			const result = await codeService.runSingleTestCase({
 				problemId: "problem-1",
@@ -114,42 +126,16 @@ describe("CodeService", () => {
 			expect(result.testCaseId).toBe("test-1");
 			expect(result.actualOutput).toBe(6);
 			expect(result.executionTime).toBe(150);
+			expect(mockPreparationService.wrapCodeForTestCase).toHaveBeenCalledWith(
+				expect.any(String),
+				testCase1,
+				"javascript"
+			);
 		});
 
 		it("should handle failed test case", async () => {
-			const mockPreparedData = {
-				problem: { id: "problem-1" },
-				testCase: {
-					id: "test-1",
-					input: { nums: [1, 2, 3] },
-					expectedOutput: 6,
-					timeLimit: 1000,
-				},
-				allTestCases: [],
-				preparedCode: "function solution() {}",
-				language: "javascript",
-				originalCode: "function solution() {}",
-				problemId: "problem-1",
-			};
-
-			const mockExecutionResult = {
-				success: true,
-				output: JSON.stringify({
-					success: true,
-					output: 5,
-					expected: 6,
-					passed: false,
-				}),
-				executionTime: 120,
-				securityPassed: true,
-			};
-
-			mockCodePreparationService.prepareCodeForExecution.mockResolvedValue(
-				mockPreparedData as any
-			);
-			mockCodeExecutionService.validateAndExecuteCode.mockResolvedValue(
-				mockExecutionResult
-			);
+			mockCodeRepository.getTestCase.mockResolvedValue(testCase1 as any);
+			mockJudge0.execute.mockResolvedValue(failedExecution(5, 6));
 
 			const result = await codeService.runSingleTestCase({
 				problemId: "problem-1",
@@ -162,33 +148,9 @@ describe("CodeService", () => {
 		});
 
 		it("should handle execution errors", async () => {
-			const mockPreparedData = {
-				problem: { id: "problem-1" },
-				testCase: {
-					id: "test-1",
-					input: { nums: [1, 2, 3] },
-					expectedOutput: 6,
-					timeLimit: 1000,
-				},
-				allTestCases: [],
-				preparedCode: "function solution() {}",
-				language: "javascript",
-				originalCode: "function solution() {}",
-				problemId: "problem-1",
-			};
-
-			const mockExecutionResult = {
-				success: false,
-				error: "ReferenceError: nums is not defined",
-				executionTime: 50,
-				securityPassed: true,
-			};
-
-			mockCodePreparationService.prepareCodeForExecution.mockResolvedValue(
-				mockPreparedData as any
-			);
-			mockCodeExecutionService.validateAndExecuteCode.mockResolvedValue(
-				mockExecutionResult
+			mockCodeRepository.getTestCase.mockResolvedValue(testCase1 as any);
+			mockJudge0.execute.mockResolvedValue(
+				errorExecution("ReferenceError: nums is not defined")
 			);
 
 			const result = await codeService.runSingleTestCase({
@@ -201,10 +163,8 @@ describe("CodeService", () => {
 			expect(result.error).toBeDefined();
 		});
 
-		it("should throw HttpError when preparation fails", async () => {
-			mockCodePreparationService.prepareCodeForExecution.mockRejectedValue(
-				new HttpError(404, "Problem not found")
-			);
+		it("should throw HttpError when test case not found", async () => {
+			mockCodeRepository.getTestCase.mockResolvedValue(null);
 
 			await expect(
 				codeService.runSingleTestCase({
@@ -218,61 +178,13 @@ describe("CodeService", () => {
 
 	describe("runAllTestCases", () => {
 		it("should run all test cases successfully", async () => {
-			const mockPreparedData = {
-				problem: { id: "problem-1" },
-				testCase: {
-					id: "test-1",
-					input: { nums: [1, 2, 3] },
-					expectedOutput: 6,
-					timeLimit: 1000,
-				},
-				allTestCases: [
-					{
-						id: "test-1",
-						input: { nums: [1, 2, 3] },
-						expectedOutput: 6,
-						timeLimit: 1000,
-					},
-					{
-						id: "test-2",
-						input: { nums: [4, 5] },
-						expectedOutput: 9,
-						timeLimit: 1000,
-					},
-				],
-				preparedCode: "function solution() {}",
-				language: "javascript",
-				originalCode: "function solution() {}",
-				problemId: "problem-1",
-			};
-
-			mockCodePreparationService.prepareCodeForExecution.mockResolvedValue(
-				mockPreparedData as any
-			);
-
-			mockCodeExecutionService.validateAndExecuteCode
-				.mockResolvedValueOnce({
-					success: true,
-					output: JSON.stringify({
-						success: true,
-						output: 6,
-						expected: 6,
-						passed: true,
-					}),
-					executionTime: 150,
-					securityPassed: true,
-				})
-				.mockResolvedValueOnce({
-					success: true,
-					output: JSON.stringify({
-						success: true,
-						output: 9,
-						expected: 9,
-						passed: true,
-					}),
-					executionTime: 120,
-					securityPassed: true,
-				});
+			mockCodeRepository.getAllTestCases.mockResolvedValue([
+				testCase1,
+				testCase2,
+			] as any);
+			mockJudge0.execute
+				.mockResolvedValueOnce(passedExecution(6, 6))
+				.mockResolvedValueOnce(passedExecution(9, 9));
 
 			const result = await codeService.runAllTestCases({
 				problemId: "problem-1",
@@ -284,54 +196,19 @@ describe("CodeService", () => {
 			expect(result.totalTests).toBe(2);
 			expect(result.passedTests).toBe(2);
 			expect(result.testResults).toHaveLength(2);
+			expect(mockPreparationService.wrapCodeForTestCase).toHaveBeenCalledTimes(2);
 		});
 
 		it("should handle partial test case failures", async () => {
-			const mockPreparedData = {
-				problem: { id: "problem-1" },
-				testCase: { id: "test-1" },
-				allTestCases: [
-					{
-						id: "test-1",
-						input: { nums: [1, 2, 3] },
-						expectedOutput: 6,
-						timeLimit: 1000,
-					},
-					{
-						id: "test-2",
-						input: { nums: [] },
-						expectedOutput: 0,
-						timeLimit: 1000,
-					},
-				],
-				preparedCode: "function solution() {}",
-				language: "javascript",
-				originalCode: "function solution() {}",
-				problemId: "problem-1",
-			};
-
-			mockCodePreparationService.prepareCodeForExecution.mockResolvedValue(
-				mockPreparedData as any
-			);
-
-			mockCodeExecutionService.validateAndExecuteCode
-				.mockResolvedValueOnce({
-					success: true,
-					output: JSON.stringify({
-						success: true,
-						output: 6,
-						expected: 6,
-						passed: true,
-					}),
-					executionTime: 150,
-					securityPassed: true,
-				})
-				.mockResolvedValueOnce({
-					success: false,
-					error: "TypeError: Cannot read property",
-					executionTime: 50,
-					securityPassed: true,
-				});
+			mockCodeRepository.getAllTestCases.mockResolvedValue([
+				testCase1,
+				testCase2,
+			] as any);
+			mockJudge0.execute
+				.mockResolvedValueOnce(passedExecution(6, 6))
+				.mockResolvedValueOnce(
+					errorExecution("TypeError: Cannot read property")
+				);
 
 			const result = await codeService.runAllTestCases({
 				problemId: "problem-1",
@@ -345,30 +222,10 @@ describe("CodeService", () => {
 		});
 
 		it("should handle test case execution errors gracefully", async () => {
-			const mockPreparedData = {
-				problem: { id: "problem-1" },
-				testCase: { id: "test-1" },
-				allTestCases: [
-					{
-						id: "test-1",
-						input: { nums: [1, 2] },
-						expectedOutput: 3,
-						timeLimit: 1000,
-					},
-				],
-				preparedCode: "function solution() {}",
-				language: "javascript",
-				originalCode: "function solution() {}",
-				problemId: "problem-1",
-			};
-
-			mockCodePreparationService.prepareCodeForExecution.mockResolvedValue(
-				mockPreparedData as any
-			);
-
-			mockCodeExecutionService.validateAndExecuteCode.mockRejectedValue(
-				new Error("Execution timeout")
-			);
+			mockCodeRepository.getAllTestCases.mockResolvedValue([
+				testCase1,
+			] as any);
+			mockJudge0.execute.mockRejectedValue(new Error("Execution timeout"));
 
 			const result = await codeService.runAllTestCases({
 				problemId: "problem-1",
@@ -380,6 +237,18 @@ describe("CodeService", () => {
 			expect(result.passedTests).toBe(0);
 			expect(result.testResults[0].error).toContain("Execution timeout");
 		});
+
+		it("should throw when no test cases exist", async () => {
+			mockCodeRepository.getAllTestCases.mockResolvedValue([]);
+
+			await expect(
+				codeService.runAllTestCases({
+					problemId: "problem-1",
+					userCode: "function solution() {}",
+					language: "javascript",
+				})
+			).rejects.toThrow(HttpError);
+		});
 	});
 
 	describe("submitCodeSolution", () => {
@@ -387,56 +256,18 @@ describe("CodeService", () => {
 			const mockUser = createMockUser({ credits: 100, pointsScored: 50 });
 			const mockSubmission = {
 				id: "submission-1",
-				userId: "user-1",
-				problemId: "problem-1",
-				code: "function solution() {}",
-				language: "javascript",
-				status: "accepted" as const,
 				creditsEarned: 10,
 				score: 100,
-				testCasesPassed: 3,
-				totalTestCases: 3,
-				executionTime: 450,
-				memoryUsed: 0,
-				errorMessage: null,
-				submittedAt: new Date(),
 			};
 
-			const mockPreparedData = {
-				problem: { id: "problem-1" },
-				testCase: { id: "test-1" },
-				allTestCases: [
-					{
-						id: "test-1",
-						input: { nums: [1, 2] },
-						expectedOutput: 3,
-						timeLimit: 1000,
-					},
-				],
-				preparedCode: "function solution() {}",
-				language: "javascript",
-				originalCode: "function solution() {}",
-				problemId: "problem-1",
-			};
-
-			mockCodePreparationService.prepareCodeForExecution.mockResolvedValue(
-				mockPreparedData as any
-			);
-
-			mockCodeExecutionService.validateAndExecuteCode.mockResolvedValue({
-				success: true,
-				output: JSON.stringify({
-					success: true,
-					output: 3,
-					expected: 3,
-					passed: true,
-				}),
-				executionTime: 150,
-				securityPassed: true,
-			});
-
+			mockCodeRepository.getAllTestCases.mockResolvedValue([
+				testCase1,
+			] as any);
+			mockJudge0.execute.mockResolvedValue(passedExecution(3, 3));
 			mockUserRepository.getUser.mockResolvedValue(mockUser);
-			mockCodeRepository.updateUserSubmission.mockResolvedValue(mockSubmission as any);
+			mockCodeRepository.updateUserSubmission.mockResolvedValue(
+				mockSubmission as any
+			);
 			mockUserRepository.updateUser.mockResolvedValue(mockUser);
 
 			const result = await codeService.submitCodeSolution({
@@ -455,78 +286,25 @@ describe("CodeService", () => {
 			});
 		});
 
-		it("should submit solution without updating credits when tests fail", async () => {
+		it("should not update credits when tests fail", async () => {
 			const mockUser = createMockUser({ credits: 100, pointsScored: 50 });
 			const mockSubmission = {
 				id: "submission-2",
-				userId: "user-1",
-				problemId: "problem-1",
-				code: "function solution() {}",
-				language: "javascript",
-				status: "wrong_answer" as const,
 				creditsEarned: 0,
 				score: 50,
-				testCasesPassed: 1,
-				totalTestCases: 2,
-				executionTime: 200,
-				memoryUsed: 0,
-				errorMessage: null,
-				submittedAt: new Date(),
 			};
 
-			const mockPreparedData = {
-				problem: { id: "problem-1" },
-				testCase: { id: "test-1" },
-				allTestCases: [
-					{
-						id: "test-1",
-						input: { nums: [1, 2] },
-						expectedOutput: 3,
-						timeLimit: 1000,
-					},
-					{
-						id: "test-2",
-						input: { nums: [3, 4] },
-						expectedOutput: 7,
-						timeLimit: 1000,
-					},
-				],
-				preparedCode: "function solution() {}",
-				language: "javascript",
-				originalCode: "function solution() {}",
-				problemId: "problem-1",
-			};
-
-			mockCodePreparationService.prepareCodeForExecution.mockResolvedValue(
-				mockPreparedData as any
-			);
-
-			mockCodeExecutionService.validateAndExecuteCode
-				.mockResolvedValueOnce({
-					success: true,
-					output: JSON.stringify({
-						success: true,
-						output: 3,
-						expected: 3,
-						passed: true,
-					}),
-					executionTime: 100,
-					securityPassed: true,
-				})
-				.mockResolvedValueOnce({
-					success: true,
-					output: JSON.stringify({
-						success: true,
-						output: 8,
-						expected: 7,
-						passed: false,
-					}),
-					executionTime: 100,
-					securityPassed: true,
-				});
-
+			mockCodeRepository.getAllTestCases.mockResolvedValue([
+				testCase1,
+				testCase2,
+			] as any);
+			mockJudge0.execute
+				.mockResolvedValueOnce(passedExecution(6, 6))
+				.mockResolvedValueOnce(failedExecution(8, 9));
 			mockUserRepository.getUser.mockResolvedValue(mockUser);
-			mockCodeRepository.updateUserSubmission.mockResolvedValue(mockSubmission as any);
+			mockCodeRepository.updateUserSubmission.mockResolvedValue(
+				mockSubmission as any
+			);
 
 			const result = await codeService.submitCodeSolution({
 				problemId: "problem-1",
@@ -540,43 +318,15 @@ describe("CodeService", () => {
 			expect(mockUserRepository.updateUser).not.toHaveBeenCalled();
 		});
 
-		it("should submit solution without userId (guest mode)", async () => {
-			const mockPreparedData = {
-				problem: { id: "problem-1" },
-				testCase: { id: "test-1" },
-				allTestCases: [
-					{
-						id: "test-1",
-						input: { nums: [1, 2] },
-						expectedOutput: 3,
-						timeLimit: 1000,
-					},
-				],
-				preparedCode: "function solution() {}",
-				language: "javascript",
-				originalCode: "function solution() {}",
-				problemId: "problem-1",
-			};
-
-			mockCodePreparationService.prepareCodeForExecution.mockResolvedValue(
-				mockPreparedData as any
-			);
-
-			mockCodeExecutionService.validateAndExecuteCode.mockResolvedValue({
-				success: true,
-				output: JSON.stringify({
-					success: true,
-					output: 3,
-					expected: 3,
-					passed: true,
-				}),
-				executionTime: 150,
-				securityPassed: true,
-			});
+		it("should skip DB submission without userId (guest mode)", async () => {
+			mockCodeRepository.getAllTestCases.mockResolvedValue([
+				testCase1,
+			] as any);
+			mockJudge0.execute.mockResolvedValue(passedExecution(6, 6));
 
 			const result = await codeService.submitCodeSolution({
 				problemId: "problem-1",
-				userCode: "function solution(nums) { return nums[0] + nums[1]; }",
+				userCode: "function solution(nums) { return nums.reduce((a,b) => a+b, 0); }",
 				language: "javascript",
 			});
 
@@ -587,39 +337,10 @@ describe("CodeService", () => {
 		});
 
 		it("should throw error when user not found", async () => {
-			const mockPreparedData = {
-				problem: { id: "problem-1" },
-				testCase: { id: "test-1" },
-				allTestCases: [
-					{
-						id: "test-1",
-						input: { nums: [1, 2] },
-						expectedOutput: 3,
-						timeLimit: 1000,
-					},
-				],
-				preparedCode: "function solution() {}",
-				language: "javascript",
-				originalCode: "function solution() {}",
-				problemId: "problem-1",
-			};
-
-			mockCodePreparationService.prepareCodeForExecution.mockResolvedValue(
-				mockPreparedData as any
-			);
-
-			mockCodeExecutionService.validateAndExecuteCode.mockResolvedValue({
-				success: true,
-				output: JSON.stringify({
-					success: true,
-					output: 3,
-					expected: 3,
-					passed: true,
-				}),
-				executionTime: 150,
-				securityPassed: true,
-			});
-
+			mockCodeRepository.getAllTestCases.mockResolvedValue([
+				testCase1,
+			] as any);
+			mockJudge0.execute.mockResolvedValue(passedExecution(6, 6));
 			mockUserRepository.getUser.mockResolvedValue(null);
 
 			await expect(
@@ -636,56 +357,18 @@ describe("CodeService", () => {
 			const mockUser = createMockUser({ credits: 100, pointsScored: 50 });
 			const mockSubmission = {
 				id: "submission-3",
-				userId: "user-1",
-				problemId: "problem-2",
-				code: "def solution(nums):\n    return sum(nums)",
-				language: "python",
-				status: "accepted" as const,
 				creditsEarned: 15,
 				score: 100,
-				testCasesPassed: 2,
-				totalTestCases: 2,
-				executionTime: 300,
-				memoryUsed: 0,
-				errorMessage: null,
-				submittedAt: new Date(),
 			};
 
-			const mockPreparedData = {
-				problem: { id: "problem-2" },
-				testCase: { id: "test-1" },
-				allTestCases: [
-					{
-						id: "test-1",
-						input: { nums: [1, 2, 3] },
-						expectedOutput: 6,
-						timeLimit: 1000,
-					},
-				],
-				preparedCode: "def solution() {}",
-				language: "python",
-				originalCode: "def solution() {}",
-				problemId: "problem-2",
-			};
-
-			mockCodePreparationService.prepareCodeForExecution.mockResolvedValue(
-				mockPreparedData as any
-			);
-
-			mockCodeExecutionService.validateAndExecuteCode.mockResolvedValue({
-				success: true,
-				output: JSON.stringify({
-					success: true,
-					output: 6,
-					expected: 6,
-					passed: true,
-				}),
-				executionTime: 300,
-				securityPassed: true,
-			});
-
+			mockCodeRepository.getAllTestCases.mockResolvedValue([
+				testCase1,
+			] as any);
+			mockJudge0.execute.mockResolvedValue(passedExecution(6, 6));
 			mockUserRepository.getUser.mockResolvedValue(mockUser);
-			mockCodeRepository.updateUserSubmission.mockResolvedValue(mockSubmission as any);
+			mockCodeRepository.updateUserSubmission.mockResolvedValue(
+				mockSubmission as any
+			);
 			mockUserRepository.updateUser.mockResolvedValue(mockUser);
 
 			const result = await codeService.submitCodeSolution({

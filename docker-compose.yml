@@ -29,6 +29,61 @@ services:
       retries: 3
     restart: unless-stopped
 
+  judge0-db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: judge0
+      POSTGRES_USER: judge0
+      POSTGRES_PASSWORD: judge0password
+    volumes:
+      - judge0_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U judge0 -d judge0']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  judge0-redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  judge0-server:
+    image: judge0/judge0:1.13.1
+    ports:
+      - '2358:2358'
+    depends_on:
+      judge0-db:
+        condition: service_healthy
+      judge0-redis:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: judge0-db
+      POSTGRES_DB: judge0
+      POSTGRES_USER: judge0
+      POSTGRES_PASSWORD: judge0password
+      REDIS_HOST: judge0-redis
+      REDIS_PORT: 6379
+    restart: unless-stopped
+
+  judge0-worker:
+    image: judge0/judge0:1.13.1
+    command: ['./scripts/workers']
+    depends_on:
+      - judge0-server
+    privileged: true
+    environment:
+      POSTGRES_HOST: judge0-db
+      POSTGRES_DB: judge0
+      POSTGRES_USER: judge0
+      POSTGRES_PASSWORD: judge0password
+      REDIS_HOST: judge0-redis
+      REDIS_PORT: 6379
+    restart: unless-stopped
+
   backend:
     build: ./server
     ports:
@@ -38,10 +93,12 @@ services:
     depends_on:
       - db
       - redis
+      - judge0-server
     volumes:
       - ./server:/app
       - /app/node_modules
     command: npm run dev
+
   frontend:
     build: './client'
     ports:
@@ -55,7 +112,7 @@ services:
       - /app/node_modules
     command: npm run dev
 
-
 volumes:
   pgdata:
   redis_data:
+  judge0_pgdata:
