@@ -1,5 +1,5 @@
-import { PrismaClient, Prisma } from '../generated/prisma/client';
-import { parseEnvVar, parseEnvBool } from '../utils/helpers';
+import { PrismaClient, Prisma } from "../generated/prisma/client";
+import { parseEnvVar, parseEnvBool } from "../utils/helpers";
 
 export interface DatabaseConfig {
 	url: string;
@@ -11,8 +11,8 @@ export interface DatabaseConfig {
 
 class DatabaseService {
 	private static instance: DatabaseService;
-	private client: PrismaClient;
-	private config: DatabaseConfig;
+	private readonly client: PrismaClient;
+	private readonly config: DatabaseConfig;
 	private isConnected: boolean = false;
 
 	private constructor() {
@@ -44,13 +44,13 @@ class DatabaseService {
 		try {
 			await this.client.$connect();
 			this.isConnected = true;
-			console.log('📊 Database connected successfully');
-			
+			console.log("📊 Database connected successfully");
+
 			// Verify connection with a simple query
 			await this.healthCheck();
 		} catch (error) {
 			this.isConnected = false;
-			console.error('❌ Database connection failed:', error);
+			console.error("❌ Database connection failed:", error);
 			throw error;
 		}
 	}
@@ -59,18 +59,21 @@ class DatabaseService {
 		try {
 			await this.client.$disconnect();
 			this.isConnected = false;
-			console.log('📊 Database disconnected successfully');
+			console.log("📊 Database disconnected successfully");
 		} catch (error) {
-			console.error('❌ Database disconnection failed:', error);
+			console.error("❌ Database disconnection failed:", error);
 			throw error;
 		}
 	}
 
-	public async healthCheck(): Promise<{ status: 'healthy' | 'unhealthy'; details: any }> {
+	public async healthCheck(): Promise<{
+		status: "healthy" | "unhealthy";
+		details: any;
+	}> {
 		try {
 			const result = await this.client.$queryRaw`SELECT 1 as health_check`;
 			return {
-				status: 'healthy',
+				status: "healthy",
 				details: {
 					connected: this.isConnected,
 					result,
@@ -79,10 +82,10 @@ class DatabaseService {
 			};
 		} catch (error) {
 			return {
-				status: 'unhealthy',
+				status: "unhealthy",
 				details: {
 					connected: this.isConnected,
-					error: error instanceof Error ? error.message : 'Unknown error',
+					error: error instanceof Error ? error.message : "Unknown error",
 					timestamp: new Date().toISOString(),
 				},
 			};
@@ -95,7 +98,7 @@ class DatabaseService {
 			maxWait?: number;
 			timeout?: number;
 			isolationLevel?: Prisma.TransactionIsolationLevel;
-		}
+		},
 	): Promise<T> {
 		return this.client.$transaction(operations, {
 			maxWait: options?.maxWait || 5000,
@@ -105,17 +108,19 @@ class DatabaseService {
 	}
 
 	private loadConfiguration(): DatabaseConfig {
-		const logLevelStr = process.env.DATABASE_LOG_LEVEL || 'warn';
-		const logLevels = logLevelStr.split(',').map(level => 
-			level.trim() as Prisma.LogLevel
-		);
+		const logLevelStr = process.env.DATABASE_LOG_LEVEL || "warn";
+		const logLevels = logLevelStr
+			.split(",")
+			.map((level) => level.trim() as Prisma.LogLevel);
 
 		return {
-			url: parseEnvVar('DATABASE_URL'),
+			url: parseEnvVar("DATABASE_URL"),
 			logLevel: logLevels,
-			connectionTimeout: parseInt(process.env.DATABASE_CONNECTION_TIMEOUT || '10000'),
-			queryTimeout: parseInt(process.env.DATABASE_QUERY_TIMEOUT || '10000'),
-			enableLogging: parseEnvBool('DATABASE_ENABLE_LOGGING', false),
+			connectionTimeout: parseInt(
+				process.env.DATABASE_CONNECTION_TIMEOUT || "10000",
+			),
+			queryTimeout: parseInt(process.env.DATABASE_QUERY_TIMEOUT || "10000"),
+			enableLogging: parseEnvBool("DATABASE_ENABLE_LOGGING", false),
 		};
 	}
 
@@ -127,19 +132,19 @@ class DatabaseService {
 				},
 			},
 			log: this.config.enableLogging ? this.config.logLevel : [],
-			errorFormat: 'pretty',
+			errorFormat: "pretty",
 		});
 	}
 
 	private setupEventHandlers(): void {
 		// Graceful shutdown handling
-		process.on('SIGINT', async () => {
-			console.log('🛑 Received SIGINT, disconnecting from database...');
+		process.on("SIGINT", async () => {
+			console.log("🛑 Received SIGINT, disconnecting from database...");
 			await this.disconnect();
 		});
 
-		process.on('SIGTERM', async () => {
-			console.log('🛑 Received SIGTERM, disconnecting from database...');
+		process.on("SIGTERM", async () => {
+			console.log("🛑 Received SIGTERM, disconnecting from database...");
 			await this.disconnect();
 		});
 	}

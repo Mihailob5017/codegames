@@ -1,4 +1,3 @@
-import { RedisService, RedisServiceInstance } from "../../config/redis-config";
 import { extractTokenFromRequest } from "../../middlewares/auth-middleware";
 import { AuthService } from "../../services/auth/auth-service";
 import { RefreshTokenService } from "../../services/auth/refresh-token-service";
@@ -14,11 +13,10 @@ const refreshTokenSchema = z.object({
 	refreshToken: z.string().min(1, "Refresh token is required"),
 });
 
-export class LoginController {
+export class AuthController {
 	static signup: ControllerFn = async (req, res, next) => {
 		try {
-			// Extract metadata
-			const userAgent = req.headers['user-agent'];
+			const userAgent = req.headers["user-agent"];
 			const ipAddress = req.ip || req.socket.remoteAddress;
 
 			const authService = new AuthService(
@@ -26,14 +24,14 @@ export class LoginController {
 				undefined,
 				undefined,
 				undefined,
-				{ userAgent, ipAddress }
+				{ userAgent, ipAddress },
 			);
 			const response = await authService.signup();
 
 			const responseObj = ResponseObject.success(
 				201,
 				"User successfully created. A verification token has been sent to your email.",
-				response
+				response,
 			);
 
 			responseObj.send(res);
@@ -44,8 +42,7 @@ export class LoginController {
 
 	static login: ControllerFn = async (req, res, next) => {
 		try {
-			// Extract metadata
-			const userAgent = req.headers['user-agent'];
+			const userAgent = req.headers["user-agent"];
 			const ipAddress = req.ip || req.socket.remoteAddress;
 
 			const authService = new AuthService(
@@ -53,14 +50,14 @@ export class LoginController {
 				undefined,
 				undefined,
 				undefined,
-				{ userAgent, ipAddress }
+				{ userAgent, ipAddress },
 			);
 			const response = await authService.login();
 
 			const responseObj = ResponseObject.success(
 				200,
 				"Login successful",
-				response
+				response,
 			);
 
 			responseObj.send(res);
@@ -71,24 +68,21 @@ export class LoginController {
 
 	static refreshToken: ControllerFn = async (req, res, next) => {
 		try {
-			// Validate request body
 			const validatedData = refreshTokenSchema.parse(req.body);
 
-			// Extract metadata
-			const userAgent = req.headers['user-agent'];
+			const userAgent = req.headers["user-agent"];
 			const ipAddress = req.ip || req.socket.remoteAddress;
 
-			// Refresh the access token
 			const refreshTokenService = new RefreshTokenService();
 			const response = await refreshTokenService.refreshAccessToken(
 				validatedData.refreshToken,
-				{ userAgent, ipAddress }
+				{ userAgent, ipAddress },
 			);
 
 			const responseObj = ResponseObject.success(
 				200,
 				"Token refreshed successfully",
-				response
+				response,
 			);
 
 			responseObj.send(res);
@@ -118,19 +112,15 @@ export class LoginController {
 			if (!token) {
 				return next(new Error("Authorization token is required"));
 			}
-			const { id } = verifyJWT(token);
 
 			const authService = new AuthService({});
 			await authService.verifyOTP(token, otpNumber);
 
 			const responseObj = ResponseObject.success(
 				200,
-				"Email verified successfully. Your account is now active."
+				"Email verified successfully. Your account is now active.",
 			);
 
-			const redisService: RedisService = RedisServiceInstance;
-
-			await redisService.set(`user:verified:${id}`, "true");
 			responseObj.send(res);
 		} catch (error) {
 			next(error);
@@ -150,7 +140,7 @@ export class LoginController {
 
 			const responseObj = ResponseObject.success(
 				200,
-				"OTP has been resent to your email address"
+				"OTP has been resent to your email address",
 			);
 
 			responseObj.send(res);

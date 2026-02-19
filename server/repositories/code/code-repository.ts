@@ -8,10 +8,6 @@ import { PrismaServiceInstance } from "../../config/prisma-config";
 import { CodeSubmissionResult } from "../../services/code/code-service";
 import { HttpError } from "../../types/common/error-types";
 
-// ============================================================================
-// Interface Definition
-// ============================================================================
-
 interface ICodeRepository {
 	getProblem(id: string): Promise<Problem | null>;
 	getTestCase(id: string): Promise<TestCase | null>;
@@ -25,18 +21,10 @@ interface ICodeRepository {
 	): Promise<Submission>;
 }
 
-// ============================================================================
-// Repository Implementation
-// ============================================================================
-
 export class CodeRepository implements ICodeRepository {
 	private get prisma() {
 		return PrismaServiceInstance.getClient();
 	}
-
-	// ========================================================================
-	// Problem Operations
-	// ========================================================================
 
 	async getProblem(id: string): Promise<Problem | null> {
 		if (!id || typeof id !== 'string' || id.trim() === '') {
@@ -52,10 +40,6 @@ export class CodeRepository implements ICodeRepository {
 			throw new HttpError(500, 'Failed to retrieve problem from database', { originalError: errorMessage });
 		}
 	}
-
-	// ========================================================================
-	// Test Case Operations
-	// ========================================================================
 
 	async getTestCase(id: string): Promise<TestCase | null> {
 		if (!id || typeof id !== 'string' || id.trim() === '') {
@@ -87,10 +71,6 @@ export class CodeRepository implements ICodeRepository {
 		}
 	}
 
-	// ========================================================================
-	// Submission Operations
-	// ========================================================================
-
 	async updateUserSubmission(
 		userId: string,
 		problemId: string,
@@ -111,46 +91,32 @@ export class CodeRepository implements ICodeRepository {
 			throw new HttpError(400, 'Invalid language provided');
 		}
 
-		const problem = await this.getProblem(problemId);
-		if (!problem) {
-			throw new HttpError(404, `Problem with ID ${problemId} not found`);
-		}
-
 		const submissionData = this.buildSubmissionData(
 			userId,
 			problemId,
 			code,
 			language,
-			result,
-			problem.rewardCredits
+			result
 		);
 
 		try {
 			return await this.upsertSubmission(userId, problemId, submissionData);
 		} catch (error) {
-			if (error instanceof HttpError) {
-				throw error;
-			}
+			if (error instanceof HttpError) throw error;
 			const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 			throw new HttpError(500, 'Failed to update user submission', { originalError: errorMessage });
 		}
 	}
-
-	// ========================================================================
-	// Private Helper Methods
-	// ========================================================================
 
 	private buildSubmissionData(
 		userId: string,
 		problemId: string,
 		code: string,
 		language: string,
-		result: CodeSubmissionResult,
-		rewardCredits: number
+		result: CodeSubmissionResult
 	) {
 		const status = this.determineSubmissionStatus(result);
 		const score = this.calculateScore(result);
-		const creditsEarned = result.success ? rewardCredits : 0;
 		const errorMessage = this.extractErrorMessage(result);
 
 		return {
@@ -160,12 +126,11 @@ export class CodeRepository implements ICodeRepository {
 			language,
 			status,
 			executionTime: result.overallExecutionTime,
-			memoryUsed: 0, // TODO: Implement memory tracking
+			memoryUsed: 0,
 			score,
 			testCasesPassed: result.passedTests,
 			totalTestCases: result.totalTests,
 			errorMessage,
-			creditsEarned,
 		};
 	}
 
@@ -179,9 +144,7 @@ export class CodeRepository implements ICodeRepository {
 	}
 
 	private calculateScore(result: CodeSubmissionResult): number {
-		if (result.totalTests === 0) {
-			return 0;
-		}
+		if (result.totalTests === 0) return 0;
 		return Math.floor((result.passedTests / result.totalTests) * 100);
 	}
 
@@ -217,7 +180,6 @@ export class CodeRepository implements ICodeRepository {
 		existingSubmission: Submission,
 		newSubmissionData: ReturnType<CodeRepository["buildSubmissionData"]>
 	): Promise<Submission> {
-		// Only update if the new submission has a better or equal score
 		if (newSubmissionData.score >= existingSubmission.score) {
 			return await this.prisma.submission.update({
 				where: { id: existingSubmission.id },

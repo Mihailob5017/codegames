@@ -1,5 +1,5 @@
 import { AuthService } from './auth-service';
-import { IUserRepository } from '../../repositories/login/login-repositories';
+import { IUserRepository } from '../../repositories/auth/user-repository';
 import { EmailService } from '../email/email-service';
 import { RefreshTokenService } from './refresh-token-service';
 import { createMockUser, createMockCreateUserInput } from '../../__tests__/utils/test-helpers';

@@ -1,7 +1,7 @@
 import { Response, NextFunction } from 'express';
 import { VerifiedMiddleware } from './verified-middleware';
 import { AuthRequest } from './auth-middleware';
-import { UserRepository } from '../repositories/login/login-repositories';
+import { UserRepository } from '../repositories/auth/user-repository';
 import {
 	createMockRequest,
 	createMockResponse,
@@ -9,7 +9,7 @@ import {
 	createMockUser
 } from '../__tests__/utils/test-helpers';
 
-jest.mock('../repositories/login/login-repositories');
+jest.mock('../repositories/auth/user-repository');
 
 describe('VerifiedMiddleware', () => {
 	let mockRequest: AuthRequest;

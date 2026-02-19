@@ -2,7 +2,7 @@ import { CreateUserInput } from "../../models/user-model";
 import {
 	UserRepository,
 	IUserRepository,
-} from "../../repositories/login/login-repositories";
+} from "../../repositories/auth/user-repository";
 import { HttpError } from "../../types/common/error-types";
 import {
 	AuthResponseDTO,
@@ -32,17 +32,17 @@ interface ISignupService {
 
 export class AuthService implements ISignupService {
 	private userInput: Partial<CreateUserInput>;
-	private emailService: EmailService;
-	private userRepository: IUserRepository;
-	private refreshTokenService: RefreshTokenService;
-	private metadata?: RefreshTokenMetadata;
+	private readonly emailService: EmailService;
+	private readonly userRepository: IUserRepository;
+	private readonly refreshTokenService: RefreshTokenService;
+	private readonly metadata?: RefreshTokenMetadata;
 
 	constructor(
 		userInput: Partial<CreateUserInput>,
 		userRepository?: IUserRepository,
 		emailService?: EmailService,
 		refreshTokenService?: RefreshTokenService,
-		metadata?: RefreshTokenMetadata
+		metadata?: RefreshTokenMetadata,
 	) {
 		this.userInput = { ...userInput };
 		this.userRepository = userRepository || new UserRepository();
@@ -80,19 +80,20 @@ export class AuthService implements ISignupService {
 	}
 
 	private async validateUserAuthentication(
-		user: UserDTO | null
+		user: UserDTO | null,
 	): Promise<void> {
 		const providedPassword = this.userInput.passwordHash as string;
 
 		const isValidUser = user && user.passwordHash;
 		const isValidPassword =
-			isValidUser && await comparePassword(providedPassword, user.passwordHash!);
+			isValidUser &&
+			(await comparePassword(providedPassword, user.passwordHash!));
 		const isVerified = user?.verified;
 
 		if (!isValidUser) {
 			await comparePassword(
 				providedPassword,
-				"$2b$12$dummy.hash.to.prevent.timing.attacks.here"
+				"$2b$12$dummy.hash.to.prevent.timing.attacks.here",
 			);
 		}
 
@@ -128,10 +129,6 @@ export class AuthService implements ISignupService {
 			createdAt: new Date(),
 			updatedAt: new Date(),
 			googleId: this.userInput.isGoogleLogin ? this.userInput.googleId : "",
-			isProfileDeleted: false,
-			isProfileOpen: true,
-			credits: 100,
-			pointsScored: 0,
 			role: "user",
 			verifyToken: token,
 			verifyTokenExpiry: expiry,
@@ -161,7 +158,7 @@ export class AuthService implements ISignupService {
 
 		const result = await this.userRepository.checkUserExistence(
 			uniqueParams,
-			"signup"
+			"signup",
 		);
 
 		if (result.exists) {
@@ -176,7 +173,7 @@ export class AuthService implements ISignupService {
 
 		const result = await this.userRepository.checkUserExistence(
 			uniqueParams,
-			"login"
+			"login",
 		);
 
 		return result.exists ? result.user || null : null;
@@ -197,7 +194,7 @@ export class AuthService implements ISignupService {
 
 		await this.emailService.sendVerificationEmail(
 			this.userInput.email,
-			this.userInput.verifyToken
+			this.userInput.verifyToken,
 		);
 	}
 
@@ -298,7 +295,7 @@ export class AuthService implements ISignupService {
 
 		const refreshToken = await this.refreshTokenService.createRefreshToken(
 			this.userInput.id as string,
-			this.metadata
+			this.metadata,
 		);
 
 		return {

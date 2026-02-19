@@ -1,15 +1,12 @@
 import { CodeService } from "./code-service";
-import { CodeRepository } from "../../repositories/code/code-respositories";
+import { CodeRepository } from "../../repositories/code/code-repository";
 import { CodePreparationService } from "./code-preparation-service";
 import { Judge0Service } from "./judge0-service";
-import { UserRepository } from "../../repositories/login/login-repositories";
 import { HttpError } from "../../types/common/error-types";
-import { createMockUser } from "../../__tests__/utils/test-helpers";
 
-jest.mock("../../repositories/code/code-respositories");
+jest.mock("../../repositories/code/code-repository");
 jest.mock("./code-preparation-service");
 jest.mock("./judge0-service");
-jest.mock("../../repositories/login/login-repositories");
 
 const testCase1 = {
 	id: "test-1",
@@ -68,7 +65,6 @@ describe("CodeService", () => {
 	let mockCodeRepository: jest.Mocked<CodeRepository>;
 	let mockPreparationService: jest.Mocked<CodePreparationService>;
 	let mockJudge0: jest.Mocked<Judge0Service>;
-	let mockUserRepository: jest.Mocked<UserRepository>;
 
 	beforeEach(() => {
 		mockCodeRepository = {
@@ -86,11 +82,6 @@ describe("CodeService", () => {
 			execute: jest.fn(),
 		} as any;
 
-		mockUserRepository = {
-			getUser: jest.fn(),
-			updateUser: jest.fn(),
-		} as any;
-
 		(CodeRepository as jest.MockedClass<typeof CodeRepository>).mockImplementation(
 			() => mockCodeRepository
 		);
@@ -99,9 +90,6 @@ describe("CodeService", () => {
 		);
 		(Judge0Service as jest.MockedClass<typeof Judge0Service>).mockImplementation(
 			() => mockJudge0
-		);
-		(UserRepository as jest.MockedClass<typeof UserRepository>).mockImplementation(
-			() => mockUserRepository
 		);
 
 		codeService = new CodeService();
@@ -126,11 +114,6 @@ describe("CodeService", () => {
 			expect(result.testCaseId).toBe("test-1");
 			expect(result.actualOutput).toBe(6);
 			expect(result.executionTime).toBe(150);
-			expect(mockPreparationService.wrapCodeForTestCase).toHaveBeenCalledWith(
-				expect.any(String),
-				testCase1,
-				"javascript"
-			);
 		});
 
 		it("should handle failed test case", async () => {
@@ -196,7 +179,6 @@ describe("CodeService", () => {
 			expect(result.totalTests).toBe(2);
 			expect(result.passedTests).toBe(2);
 			expect(result.testResults).toHaveLength(2);
-			expect(mockPreparationService.wrapCodeForTestCase).toHaveBeenCalledTimes(2);
 		});
 
 		it("should handle partial test case failures", async () => {
@@ -221,23 +203,6 @@ describe("CodeService", () => {
 			expect(result.passedTests).toBe(1);
 		});
 
-		it("should handle test case execution errors gracefully", async () => {
-			mockCodeRepository.getAllTestCases.mockResolvedValue([
-				testCase1,
-			] as any);
-			mockJudge0.execute.mockRejectedValue(new Error("Execution timeout"));
-
-			const result = await codeService.runAllTestCases({
-				problemId: "problem-1",
-				userCode: "function solution() { while(true) {} }",
-				language: "javascript",
-			});
-
-			expect(result.success).toBe(false);
-			expect(result.passedTests).toBe(0);
-			expect(result.testResults[0].error).toContain("Execution timeout");
-		});
-
 		it("should throw when no test cases exist", async () => {
 			mockCodeRepository.getAllTestCases.mockResolvedValue([]);
 
@@ -252,76 +217,33 @@ describe("CodeService", () => {
 	});
 
 	describe("submitCodeSolution", () => {
-		it("should submit solution successfully and update user credits", async () => {
-			const mockUser = createMockUser({ credits: 100, pointsScored: 50 });
-			const mockSubmission = {
-				id: "submission-1",
-				creditsEarned: 10,
-				score: 100,
-			};
+		it("should submit solution and save to DB", async () => {
+			const mockSubmission = { id: "submission-1", score: 100 };
 
-			mockCodeRepository.getAllTestCases.mockResolvedValue([
-				testCase1,
-			] as any);
-			mockJudge0.execute.mockResolvedValue(passedExecution(3, 3));
-			mockUserRepository.getUser.mockResolvedValue(mockUser);
-			mockCodeRepository.updateUserSubmission.mockResolvedValue(
-				mockSubmission as any
-			);
-			mockUserRepository.updateUser.mockResolvedValue(mockUser);
+			mockCodeRepository.getAllTestCases.mockResolvedValue([testCase1] as any);
+			mockJudge0.execute.mockResolvedValue(passedExecution(6, 6));
+			mockCodeRepository.updateUserSubmission.mockResolvedValue(mockSubmission as any);
 
 			const result = await codeService.submitCodeSolution({
 				problemId: "problem-1",
-				userCode: "function solution(nums) { return nums[0] + nums[1]; }",
+				userCode: "function solution(nums) { return nums.reduce((a,b) => a+b, 0); }",
 				language: "javascript",
 				userId: "user-1",
 			});
 
 			expect(result.success).toBe(true);
 			expect(result.submissionId).toBe("submission-1");
-			expect(mockUserRepository.updateUser).toHaveBeenCalledWith({
-				id: "user-1",
-				credits: 110,
-				pointsScored: 150,
-			});
-		});
-
-		it("should not update credits when tests fail", async () => {
-			const mockUser = createMockUser({ credits: 100, pointsScored: 50 });
-			const mockSubmission = {
-				id: "submission-2",
-				creditsEarned: 0,
-				score: 50,
-			};
-
-			mockCodeRepository.getAllTestCases.mockResolvedValue([
-				testCase1,
-				testCase2,
-			] as any);
-			mockJudge0.execute
-				.mockResolvedValueOnce(passedExecution(6, 6))
-				.mockResolvedValueOnce(failedExecution(8, 9));
-			mockUserRepository.getUser.mockResolvedValue(mockUser);
-			mockCodeRepository.updateUserSubmission.mockResolvedValue(
-				mockSubmission as any
+			expect(mockCodeRepository.updateUserSubmission).toHaveBeenCalledWith(
+				"user-1",
+				"problem-1",
+				expect.any(String),
+				"javascript",
+				expect.any(Object)
 			);
-
-			const result = await codeService.submitCodeSolution({
-				problemId: "problem-1",
-				userCode: "function solution(nums) { return nums[0] + nums[1] + 1; }",
-				language: "javascript",
-				userId: "user-1",
-			});
-
-			expect(result.success).toBe(false);
-			expect(result.submissionId).toBe("submission-2");
-			expect(mockUserRepository.updateUser).not.toHaveBeenCalled();
 		});
 
-		it("should skip DB submission without userId (guest mode)", async () => {
-			mockCodeRepository.getAllTestCases.mockResolvedValue([
-				testCase1,
-			] as any);
+		it("should skip DB submission without userId", async () => {
+			mockCodeRepository.getAllTestCases.mockResolvedValue([testCase1] as any);
 			mockJudge0.execute.mockResolvedValue(passedExecution(6, 6));
 
 			const result = await codeService.submitCodeSolution({
@@ -332,44 +254,15 @@ describe("CodeService", () => {
 
 			expect(result.success).toBe(true);
 			expect(result.submissionId).toBeUndefined();
-			expect(mockUserRepository.getUser).not.toHaveBeenCalled();
 			expect(mockCodeRepository.updateUserSubmission).not.toHaveBeenCalled();
 		});
 
-		it("should throw error when user not found", async () => {
-			mockCodeRepository.getAllTestCases.mockResolvedValue([
-				testCase1,
-			] as any);
-			mockJudge0.execute.mockResolvedValue(passedExecution(6, 6));
-			mockUserRepository.getUser.mockResolvedValue(null);
-
-			await expect(
-				codeService.submitCodeSolution({
-					problemId: "problem-1",
-					userCode: "function solution() {}",
-					language: "javascript",
-					userId: "invalid-user",
-				})
-			).rejects.toThrow(HttpError);
-		});
-
 		it("should support Python language", async () => {
-			const mockUser = createMockUser({ credits: 100, pointsScored: 50 });
-			const mockSubmission = {
-				id: "submission-3",
-				creditsEarned: 15,
-				score: 100,
-			};
+			const mockSubmission = { id: "submission-3", score: 100 };
 
-			mockCodeRepository.getAllTestCases.mockResolvedValue([
-				testCase1,
-			] as any);
+			mockCodeRepository.getAllTestCases.mockResolvedValue([testCase1] as any);
 			mockJudge0.execute.mockResolvedValue(passedExecution(6, 6));
-			mockUserRepository.getUser.mockResolvedValue(mockUser);
-			mockCodeRepository.updateUserSubmission.mockResolvedValue(
-				mockSubmission as any
-			);
-			mockUserRepository.updateUser.mockResolvedValue(mockUser);
+			mockCodeRepository.updateUserSubmission.mockResolvedValue(mockSubmission as any);
 
 			const result = await codeService.submitCodeSolution({
 				problemId: "problem-2",

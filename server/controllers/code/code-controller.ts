@@ -8,30 +8,18 @@ import { z } from "zod";
 import { HttpError } from "../../types/common/error-types";
 import { AuthRequest } from "../../middlewares/auth-middleware";
 
-// ============================================================================
-// Validation Schema
-// ============================================================================
-
 const testCaseExecutionSchema = z.object({
 	problemId: z.string().min(1, "Problem ID is required"),
 	userCode: z.string().min(1, "User code is required"),
-	language: z.enum(["javascript", "python"], {
-		message: 'Language must be either "javascript" or "python"',
+	language: z.enum(["javascript", "python", "java", "cpp"], {
+		message: 'Language must be one of: "javascript", "python", "java", "cpp"',
 	}),
 });
 
 type TestCaseExecutionRequest = z.infer<typeof testCaseExecutionSchema>;
 
-// ============================================================================
-// Controller Implementation
-// ============================================================================
-
 export class CodeController {
 	private static codeService = new CodeService();
-
-	// ========================================================================
-	// Public Controller Methods
-	// ========================================================================
 
 	static runTestCase: ControllerFn = async (req, res, next) => {
 		try {
@@ -89,10 +77,6 @@ export class CodeController {
 			CodeController.handleError(error, next);
 		}
 	};
-
-	// ========================================================================
-	// Private Helper Methods
-	// ========================================================================
 
 	private static validateRequest(body: unknown): TestCaseExecutionRequest {
 		return testCaseExecutionSchema.parse(body);

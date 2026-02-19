@@ -2,7 +2,7 @@ import {
 	RefreshTokenRepository,
 	IRefreshTokenRepository,
 } from '../../repositories/auth/refresh-token-repository';
-import { UserRepository, IUserRepository } from '../../repositories/login/login-repositories';
+import { UserRepository, IUserRepository } from '../../repositories/auth/user-repository';
 import { HttpError } from '../../types/common/error-types';
 import {
 	JwtPayloadDTO,
@@ -124,10 +124,6 @@ export class RefreshTokenService implements IRefreshTokenService {
 
 			if (!user.verified) {
 				throw new HttpError(403, 'Account verification required');
-			}
-
-			if (user.isProfileDeleted) {
-				throw new HttpError(403, 'Account has been deleted');
 			}
 
 			// Create JWT payload

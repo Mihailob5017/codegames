@@ -8,12 +8,10 @@ const mockLogger = {
 };
 
 jest.mock('../config/prisma-config');
-jest.mock('../config/redis-config');
 jest.mock('../config/logger-config', () => mockLogger);
 
 import { HealthRouter } from './health-router';
 import { PrismaServiceInstance } from '../config/prisma-config';
-import { RedisServiceInstance } from '../config/redis-config';
 
 describe('HealthRouter', () => {
 	let healthRouter: HealthRouter;
@@ -24,7 +22,6 @@ describe('HealthRouter', () => {
 	let statusMock: jest.Mock;
 
 	beforeEach(() => {
-		// Clear mock call history but keep implementations
 		mockLogger.info.mockClear();
 		mockLogger.warn.mockClear();
 		mockLogger.error.mockClear();
@@ -63,16 +60,13 @@ describe('HealthRouter', () => {
 	});
 
 	describe('GET /health/detailed', () => {
-		it('should return healthy status when all services are operational', async () => {
+		it('should return healthy status when database is operational', async () => {
 			(PrismaServiceInstance.healthCheck as jest.Mock).mockResolvedValue({
 				status: 'healthy',
 				details: { connected: true },
 			});
 
 			(PrismaServiceInstance.isConnectedToDatabase as jest.Mock).mockReturnValue(true);
-			(RedisServiceInstance.isHealthy as jest.Mock).mockReturnValue(true);
-			(RedisServiceInstance.set as jest.Mock).mockResolvedValue(undefined);
-			(RedisServiceInstance.get as jest.Mock).mockResolvedValue('ok');
 
 			const router = healthRouter.getRouter();
 			const detailedHealthCheckHandler = router.stack.find(
@@ -87,7 +81,6 @@ describe('HealthRouter', () => {
 					status: 'healthy',
 					services: expect.objectContaining({
 						database: expect.objectContaining({ status: 'healthy' }),
-						redis: expect.objectContaining({ status: 'healthy' }),
 					}),
 				})
 			);
@@ -100,9 +93,6 @@ describe('HealthRouter', () => {
 			});
 
 			(PrismaServiceInstance.isConnectedToDatabase as jest.Mock).mockReturnValue(false);
-			(RedisServiceInstance.isHealthy as jest.Mock).mockReturnValue(true);
-			(RedisServiceInstance.set as jest.Mock).mockResolvedValue(undefined);
-			(RedisServiceInstance.get as jest.Mock).mockResolvedValue('ok');
 
 			const router = healthRouter.getRouter();
 			const detailedHealthCheckHandler = router.stack.find(
@@ -122,14 +112,11 @@ describe('HealthRouter', () => {
 			);
 		});
 
-		it('should include response time metrics', async () => {
+		it('should include response time and memory metrics', async () => {
 			(PrismaServiceInstance.healthCheck as jest.Mock).mockResolvedValue({
 				status: 'healthy',
 			});
 			(PrismaServiceInstance.isConnectedToDatabase as jest.Mock).mockReturnValue(true);
-			(RedisServiceInstance.isHealthy as jest.Mock).mockReturnValue(true);
-			(RedisServiceInstance.set as jest.Mock).mockResolvedValue(undefined);
-			(RedisServiceInstance.get as jest.Mock).mockResolvedValue('ok');
 
 			const router = healthRouter.getRouter();
 			const detailedHealthCheckHandler = router.stack.find(

@@ -1,11 +1,8 @@
-import { CodeRepository } from "../../repositories/code/code-respositories";
+import { CodeRepository } from "../../repositories/code/code-repository";
 import { CodePreparationService } from "./code-preparation-service";
-import { Judge0Service, ExecutionResult } from "./judge0-service";
+import { Judge0Service, ExecutionResult, SupportedLanguage } from "./judge0-service";
 import { HttpError } from "../../types/common/error-types";
-import { UserRepository } from "../../repositories/login/login-repositories";
 import { TestCase } from "../../generated/prisma";
-
-export type SupportedLanguage = "javascript" | "python";
 
 export interface CodeSubmissionRequest {
 	problemId: string;
@@ -37,13 +34,11 @@ export class CodeService {
 	private readonly preparationService: CodePreparationService;
 	private readonly judge0: Judge0Service;
 	private readonly codeRepository: CodeRepository;
-	private readonly userRepository: UserRepository;
 
 	constructor() {
 		this.preparationService = new CodePreparationService();
 		this.judge0 = new Judge0Service();
 		this.codeRepository = new CodeRepository();
-		this.userRepository = new UserRepository();
 	}
 
 	async runSingleTestCase(
@@ -99,7 +94,14 @@ export class CodeService {
 		const result = await this.runAllTestCases(request);
 
 		if (request.userId) {
-			await this.saveSubmission(request, result);
+			const submission = await this.codeRepository.updateUserSubmission(
+				request.userId,
+				request.problemId,
+				request.userCode,
+				request.language,
+				result
+			);
+			result.submissionId = submission.id;
 		}
 
 		return result;
@@ -183,35 +185,5 @@ export class CodeService {
 			);
 		}
 		return testCases;
-	}
-
-	private async saveSubmission(
-		request: CodeSubmissionRequest,
-		result: CodeSubmissionResult
-	): Promise<void> {
-		const userId = request.userId!;
-
-		const user = await this.userRepository.getUser(userId);
-		if (!user) {
-			throw new HttpError(404, "User not found");
-		}
-
-		const submission = await this.codeRepository.updateUserSubmission(
-			userId,
-			request.problemId,
-			request.userCode,
-			request.language,
-			result
-		);
-
-		if (submission.creditsEarned > 0) {
-			await this.userRepository.updateUser({
-				id: userId,
-				credits: user.credits + submission.creditsEarned,
-				pointsScored: user.pointsScored + submission.score,
-			});
-		}
-
-		result.submissionId = submission.id;
 	}
 }

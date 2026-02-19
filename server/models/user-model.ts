@@ -1,9 +1,9 @@
 import * as z from 'zod';
-import { 
-	VALIDATION_RULES, 
-	VALIDATION_ERRORS, 
-	USER_DEFAULTS, 
-	USER_ROLES 
+import {
+	VALIDATION_RULES,
+	VALIDATION_ERRORS,
+	USER_DEFAULTS,
+	USER_ROLES
 } from '../utils/constants';
 
 export const CreateUserInputSchema = z.object({
@@ -41,17 +41,6 @@ export const CreateUserInputSchema = z.object({
 		.min(1, 'Last name is required')
 		.max(50, 'Last name must be at most 50 characters')
 		.regex(/^[a-zA-Z\s'-]+$/, 'Last name can only contain letters, spaces, hyphens, and apostrophes'),
-	country: z
-		.string()
-		.min(2, 'Country code must be at least 2 characters')
-		.max(3, 'Country code must be at most 3 characters')
-		.toUpperCase(),
-	isAvatarSelected: z.boolean().default(USER_DEFAULTS.IS_AVATAR_SELECTED),
-	avatar: z.string().url('Avatar must be a valid URL').optional(),
-	isProfileDeleted: z.boolean().default(USER_DEFAULTS.IS_PROFILE_DELETED),
-	credits: z.number().int().min(0, 'Credits cannot be negative').default(USER_DEFAULTS.CREDITS),
-	pointsScored: z.number().int().min(0, 'Points cannot be negative').default(USER_DEFAULTS.POINTS_SCORED),
-	isProfileOpen: z.boolean().default(USER_DEFAULTS.IS_PROFILE_OPEN),
 	createdAt: z.date().default(() => new Date()),
 	updatedAt: z.date().default(() => new Date()),
 });
@@ -87,11 +76,6 @@ export const UserSignupSchema = z.object({
 		.min(1, 'Last name is required')
 		.max(50, 'Last name must be at most 50 characters')
 		.regex(/^[a-zA-Z\s'-]+$/, 'Last name can only contain letters, spaces, hyphens, and apostrophes'),
-	country: z
-		.string()
-		.min(2, 'Country code must be at least 2 characters')
-		.max(3, 'Country code must be at most 3 characters')
-		.toUpperCase(),
 	isGoogleLogin: z.boolean().default(false),
 	googleId: z.string().optional(),
 });
@@ -117,14 +101,6 @@ export const UserUpdateSchema = z.object({
 		.max(50, 'Last name must be at most 50 characters')
 		.regex(/^[a-zA-Z\s'-]+$/, 'Last name can only contain letters, spaces, hyphens, and apostrophes')
 		.optional(),
-	country: z
-		.string()
-		.min(2, 'Country code must be at least 2 characters')
-		.max(3, 'Country code must be at most 3 characters')
-		.toUpperCase()
-		.optional(),
-	avatar: z.string().url('Avatar must be a valid URL').optional(),
-	isProfileOpen: z.boolean().optional(),
 });
 
 export const OTPVerificationSchema = z.object({

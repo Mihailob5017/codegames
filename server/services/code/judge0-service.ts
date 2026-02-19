@@ -1,8 +1,10 @@
 import { HttpError } from "../../types/common/error-types";
 
+export type SupportedLanguage = "javascript" | "python" | "java" | "cpp";
+
 export interface CodeExecutionRequest {
 	code: string;
-	language: "javascript" | "python";
+	language: SupportedLanguage;
 	timeLimit?: number;
 	memoryLimit?: number;
 }
@@ -15,9 +17,11 @@ export interface ExecutionResult {
 	memoryUsed?: number;
 }
 
-const LANGUAGE_IDS: Record<string, number> = {
+const LANGUAGE_IDS: Record<SupportedLanguage, number> = {
 	javascript: 63,
 	python: 71,
+	java: 62,
+	cpp: 54,
 };
 
 const JUDGE0_STATUS = {

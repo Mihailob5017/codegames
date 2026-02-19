@@ -47,11 +47,6 @@ export type Role = typeof USER_ROLES[number];
 export const USER_DEFAULTS = {
 	IS_GOOGLE_LOGIN: false,
 	VERIFIED: false,
-	IS_AVATAR_SELECTED: false,
-	IS_PROFILE_DELETED: false,
-	IS_PROFILE_OPEN: true,
-	CREDITS: 100,
-	POINTS_SCORED: 0,
 	ROLE: 'user' as Role,
 } as const;
 
@@ -88,20 +83,20 @@ export const VALIDATION_ERRORS = {
 export const BCRYPT_SALT_ROUNDS = 10;
 export const TOKEN_EXPIRY_MINUTES = 15;
 export const JWT_EXPIRY = '24h';
-export const REFRESH_TOKEN_EXPIRY = '7d'; // 7 days
-export const REFRESH_TOKEN_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
+export const REFRESH_TOKEN_EXPIRY = '7d';
+export const REFRESH_TOKEN_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
 
 export const RATE_LIMITS = {
 	SIGNUP: {
 		MAX_REQUESTS: 5,
-		WINDOW_MS: 15 * 60 * 1000, // 15 minutes
+		WINDOW_MS: 15 * 60 * 1000,
 	},
 	LOGIN: {
 		MAX_REQUESTS: 10,
-		WINDOW_MS: 15 * 60 * 1000, // 15 minutes
+		WINDOW_MS: 15 * 60 * 1000,
 	},
 	OTP: {
 		MAX_REQUESTS: 3,
-		WINDOW_MS: 60 * 1000, // 1 minute
+		WINDOW_MS: 60 * 1000,
 	},
 } as const;

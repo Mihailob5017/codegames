@@ -1,18 +1,23 @@
-import { Router, Request, Response } from 'express';
-import { HttpError } from '../types/common/error-types';
-import { HttpStatusCode } from '../utils/constants';
+import { Router, Request, Response } from "express";
+import { HttpError } from "../types/common/error-types";
+import { HttpStatusCode } from "../utils/constants";
 
-import { adminRouter, loginRouter, codeExecutionRouter, healthRouter } from './index';
+import {
+	authRouter,
+	adminRouter,
+	codeExecutionRouter,
+	healthRouter,
+} from "./index";
 
 export interface RouterConfig {
 	apiPrefix: string;
-	adminRoute: string;
 	nodeEnv: string;
+	admin: string;
 }
 
 class MainRouter {
-	private router: Router;
-	private config: RouterConfig;
+	private readonly router: Router;
+	private readonly config: RouterConfig;
 
 	constructor(config: RouterConfig) {
 		this.config = config;
@@ -27,21 +32,15 @@ class MainRouter {
 	private setupRoutes(): void {
 		const apiPrefix = `/${this.config.apiPrefix}`;
 
-		this.config.adminRoute = process.env.ADMIN_ROUTE || 'admin';
-
-		// Health check routes (mounted at root level)
-		this.router.use('/', healthRouter);
-
-		// API routes
-		this.router.use(`${apiPrefix}/${this.config.adminRoute}`, adminRouter);
-		this.router.use(`${apiPrefix}/auth`, loginRouter);
+		this.router.use("/", healthRouter);
+		this.router.use(`${apiPrefix}/${this.config.admin}`, adminRouter);
+		this.router.use(`${apiPrefix}/auth`, authRouter);
 		this.router.use(`${apiPrefix}/code-execution`, codeExecutionRouter);
 
-		// 404 handler for undefined routes
-		this.router.all('/{*any}', (req: Request, _res: Response) => {
+		this.router.all("/{*any}", (req: Request, _res: Response) => {
 			throw new HttpError(
 				HttpStatusCode.NOT_FOUND,
-				`Route ${req.originalUrl} not found`
+				`Route ${req.originalUrl} not found`,
 			);
 		});
 	}
