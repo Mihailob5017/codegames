@@ -1,1 +1,27 @@
 **/node_modules/**
+
+# Environment files
+.env.local
+.env*.local
+**/.env.local
+**/.env*.local
+
+# OS files
+.DS_Store
+*/.DS_Store
+
+# Editor directories
+.vscode/
+.idea/
+
+# Build outputs
+**/dist/
+**/build/
+
+# Logs
+**/*.log
+logs/
+
+# Secrets
+secrets/*.key
+secrets/*.pem
