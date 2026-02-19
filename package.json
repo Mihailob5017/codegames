@@ -1,0 +1,20 @@
+{
+  "name": "codegames",
+  "version": "1.0.0",
+  "description": "A full-stack LeetCode clone built with React, Node.js, PostgreSQL, and Code Execution Service for code execution. This platform allows users to solve coding problems, submit solutions, and get real-time feedback on their code.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Mihailob5017/codegames.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Mihailob5017/codegames/issues"
+  },
+  "homepage": "https://github.com/Mihailob5017/codegames#readme"
+}
