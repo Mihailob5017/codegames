@@ -3,6 +3,7 @@ import env from "dotenv";
 // Load services
 import ExpressInstance from "./infrastructure/express-config";
 import PrismaInstance from "./infrastructure/prisma-config";
+import { validateEnv } from "./infrastructure/env-config";
 
 env.config();
 
@@ -12,10 +13,9 @@ type StartServerResult = {
 };
 
 const startServer = async (): Promise<StartServerResult> => {
-	// TODO: Add env validation here
+	const config = validateEnv(process.env);
 
-	//TODO: Load configurations, example:  new ExpressInstance({ port: env.PORT, ....})
-	const serverInstance = new ExpressInstance();
+	const serverInstance = new ExpressInstance(config);
 	const prismaInstance = new PrismaInstance();
 
 	await prismaInstance.connect();

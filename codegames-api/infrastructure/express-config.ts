@@ -1,9 +1,14 @@
 import express, { Express } from "express";
+import { EnvConfig } from "./env-config";
+import { Server } from "node:http";
 
 class ExpressServer {
 	private readonly app: Express;
+	private readonly config: EnvConfig;
+	private server: Server | null = null;
 
-	constructor() {
+	constructor(config: EnvConfig) {
+		this.config = config;
 		this.app = express();
 		this.setupMiddleware();
 		this.setupRoutes();
@@ -22,12 +27,17 @@ class ExpressServer {
 		console.log("TODO: Setting up error handling...");
 	}
 
-	public start() {
-		console.log("TODO: Starting server...");
+	public start(): void {
+		this.server = this.app.listen(this.config.PORT, () => {
+			console.log(`Server is running on port ${this.config.PORT}`);
+		});
 	}
 
-	public async stop() {
-		console.log("TODO: Stopping server...");
+	public stop(): Promise<void> {
+		return new Promise((resolve, reject) => {
+			if (!this.server) return resolve();
+			this.server.close((err) => (err ? reject(err) : resolve()));
+		});
 	}
 }
 
