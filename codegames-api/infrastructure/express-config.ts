@@ -1,6 +1,7 @@
 import express, { Express } from "express";
 import { EnvConfig } from "./env-config";
 import { Server } from "node:http";
+import { adminRouter } from "../admin";
 
 class ExpressServer {
 	private readonly app: Express;
@@ -20,7 +21,9 @@ class ExpressServer {
 	}
 
 	private setupRoutes() {
-		console.log("TODO: Setting up routes...");
+		const { API_VERSION, ADMIN_ROUTE } = this.config;
+
+		this.app.use(`/api/${API_VERSION}${ADMIN_ROUTE}`, adminRouter);
 	}
 
 	private setupErrorHandling() {
@@ -28,8 +31,8 @@ class ExpressServer {
 	}
 
 	public start(): void {
-		this.server = this.app.listen(this.config.PORT, () => {
-			console.log(`Server is running on port ${this.config.PORT}`);
+		this.server = this.app.listen(this.config.API_PORT, () => {
+			console.log(`Server is running on port ${this.config.API_PORT}`);
 		});
 	}
 

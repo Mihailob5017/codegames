@@ -5,13 +5,15 @@ const envSchema = z.object({
 		.enum(["development", "production", "test"])
 		.optional()
 		.default("development"),
-	PORT: z.string().transform((val) => {
+	API_PORT: z.string().transform((val) => {
 		const port = Number(val);
 		if (Number.isNaN(port) || port < 1 || port > 65535) {
-			throw new Error("PORT must be a valid port number (1-65535)");
+			throw new Error("API_PORT must be a valid port number (1-65535)");
 		}
 		return port;
 	}),
+	ADMIN_ROUTE: z.string().min(1, "ADMIN_ROUTE is required and cannot be empty"),
+	API_VERSION: z.string().min(1, "API_VERSION is required and cannot be empty"),
 	DATABASE_URL: z.url("DATABASE_URL must be a valid URL"),
 	JWT_SECRET: z
 		.string()
