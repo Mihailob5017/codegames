@@ -4,9 +4,9 @@
 	"description": "A full-stack LeetCode clone built with React, Node.js, PostgreSQL, and Code Execution Service for code execution. This platform allows users to solve coding problems, submit solutions, and get real-time feedback on their code.",
 	"main": "index.js",
 	"scripts": {
-		"app:up": "",
-		"app:down": "",
-		"app:build": "docker-compose -f docker-compose.prod.yml build"
+		"app:build": "docker-compose up --build",
+		"app:up": "docker-compose up",
+		"app:down": "docker-compose down"
 	},
 	"repository": {
 		"type": "git",

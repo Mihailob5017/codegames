@@ -44,3 +44,10 @@ services:
       - /app/node_modules
     networks:
       - codegames-network
+
+volumes:
+  pgdata:
+
+networks:
+  codegames-network:
+    driver: bridge

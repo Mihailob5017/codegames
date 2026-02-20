@@ -4,9 +4,9 @@
 	"description": "",
 	"main": "index.js",
 	"scripts": {
-		"dev": "nodemon index.ts",
+		"dev": "nodemon",
 		"generate": "prisma generate",
-		"build": "tsc ",
+		"build": "tsc",
 		"lint": "eslint . --ext .ts"
 	},
 	"keywords": [],
