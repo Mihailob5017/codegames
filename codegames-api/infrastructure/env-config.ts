@@ -21,6 +21,7 @@ const envSchema = z.object({
 	EMAIL_USER: z.email("EMAIL_USER must be a valid email address"),
 	EMAIL_PASSWORD: z.string().min(1, "EMAIL_PASSWORD is required"),
 	DUMMY_EMAIL: z.email("DUMMY_EMAIL must be a valid email address").optional(),
+	PISTON_URL: z.url("PISTON_URL must be a valid URL"),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;
