@@ -2,6 +2,7 @@ import express, { Express } from "express";
 import { EnvConfig } from "./env-config";
 import { Server } from "node:http";
 import { adminRouter } from "../admin";
+import { codeRouter } from "../code";
 
 class ExpressServer {
 	private readonly app: Express;
@@ -24,6 +25,7 @@ class ExpressServer {
 		const { API_VERSION, ADMIN_ROUTE } = this.config;
 
 		this.app.use(`/api/${API_VERSION}${ADMIN_ROUTE}`, adminRouter);
+		this.app.use(`/api/${API_VERSION}/code`, codeRouter);
 	}
 
 	private setupErrorHandling() {

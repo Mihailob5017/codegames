@@ -7,7 +7,6 @@ import { validateEnv } from "./infrastructure/env-config";
 
 env.config();
 
-
 type StartServerResult = {
 	server: ExpressInstance;
 	prisma: PrismaInstance;

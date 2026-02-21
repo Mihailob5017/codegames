@@ -1,563 +1,265 @@
-# CodeGames - LeetCode Clone
+# CodeGames
 
-A full-stack LeetCode clone built with React, Node.js, PostgreSQL, and Code Execution Service for code execution. This platform allows users to solve coding problems, submit solutions, and get real-time feedback on their code.
+A LeetCode-style coding challenge platform. Users submit code, it runs against test cases in a sandbox, and they get per-test pass/fail results back.
 
-## 🏗️ Architecture Overview
+## Architecture
 
 ```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Frontend      │    │    Backend      │    │    Code Execution Service       │
-│   (React)       │    │   (Node.js)     │    │  Code Executor  │
-│   Port: 5173    │◄──►│   Port: 4000    │◄──►│   Port: 2358    │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-         │                       │                       │
-         │                       │                       │
-         └───────────────────────┼───────────────────────┘
-                                 │
-                    ┌─────────────────┐
-                    │   PostgreSQL    │
-                    │   Port: 5432    │
-                    └─────────────────┘
-                                 │
-                    ┌─────────────────┐
-                    │     Redis       │
-                    │   Port: 6379    │
-                    └─────────────────┘
+┌─────────────────┐         ┌─────────────────┐         ┌─────────────────┐
+│   Frontend      │         │   Backend API   │         │     Piston      │
+│   (React)       │ ──────► │   (Express)     │ ──────► │ (Code Executor) │
+│   Port: 3000    │         │   Port: 4000    │         │   Port: 2000    │
+└─────────────────┘         └────────┬────────┘         └─────────────────┘
+                                     │
+                            ┌────────▼────────┐
+                            │   PostgreSQL    │
+                            │   Port: 5432    │
+                            └─────────────────┘
 ```
 
-## 🚀 Quick Start
+**Services:**
 
-### Prerequisites
+- `codegames-api` — Express + TypeScript backend
+- `db` — PostgreSQL 15 (Prisma ORM)
+- `piston` — sandboxed code execution engine
 
-- **Node.js** (v18+ recommended)
-- **Docker & Docker Compose**
-- **Git**
+## Quick Start
 
-### Installation
+```bash
+# 1. Copy and fill in your local env
+cp .env .env.local   # then edit .env.local with real values
 
-1. **Clone the repository**
+# 2. Start all services
+docker compose up
 
-   ```bash
-   git clone <repository-url>
-   cd codegames
-   ```
+# 3. Install Piston runtimes (first time only)
+curl -s -X POST http://localhost:2000/api/v2/packages \
+  -H "Content-Type: application/json" \
+  -d '{"language":"node","version":"*"}'
+```
 
-2. **Set up environment variables**
-
-   ```bash
-   # Server environment
-   cp server/.env.example server/.env
-
-   # Client environment
-   cp client/.env.example client/.env
-   ```
-
-3. **Start all services**
-
-   ```bash
-   npm run app:build  # Build and start all containers
-   ```
-
-4. **Access the application**
-   - **Frontend**: http://localhost:5173
-   - **Backend API**: http://localhost:4000
-   - **Code Execution Service API**: http://localhost:2358
-
-## 📂 Project Structure
+## Project Structure
 
 ```
 codegames/
-├── client/                     # React frontend application
-│   ├── src/
-│   │   ├── App.tsx            # Main app component
-│   │   ├── main.tsx           # App entry point
-│   │   └── assets/            # Static assets
-│   ├── Dockerfile             # Frontend container config
-│   └── package.json           # Frontend dependencies
-│
-├── server/                     # Node.js backend application
-│   ├── config/                # Application configuration
-│   │   ├── express-config.ts  # Express server setup
-│   │   └── prisma-config.ts   # Database configuration
-│   │
-│   ├── controllers/           # HTTP request handlers
-│   │   ├── auth/              # Authentication controllers
-│   │   ├── admin/             # Admin panel controllers
-│   │   └── code-execution/            # Code execution controllers
-│   │
-│   ├── services/              # Business logic layer
-│   │   ├── auth/              # Authentication services
-│   │   ├── admin/             # Admin services
-│   │   ├── email/             # Email services
-│   │   └── code-execution/            # Code execution services
-│   │
-│   ├── routes/                # API route definitions
-│   │   ├── main-router.ts     # Main router configuration
-│   │   ├── auth-route.ts      # Authentication routes
-│   │   ├── admin-route.ts     # Admin routes
-│   │   └── code-execution-route.ts    # Code execution routes
-│   │
-│   ├── repositories/          # Data access layer
-│   │   ├── login-repositories.ts
-│   │   └── admin-repositories.ts
-│   │
-│   ├── middlewares/           # Express middlewares
-│   │   ├── auth-middleware.ts # JWT authentication
-│   │   ├── error-middleware.ts# Global error handling
-│   │   └── rate-limit-middleware.ts # API rate limiting
-│   │
-│   ├── prisma/               # Database schema and migrations
-│   │   ├── schema.prisma     # Database schema
-│   │   └── migrations/       # Database migrations
-│   │
-│   ├── types/                # TypeScript type definitions
-│   │   ├── common/           # Shared types
-│   │   └── dto/              # Data transfer objects
-│   │
-│   ├── utils/                # Utility functions
-│   │   ├── auth.ts           # Auth helpers
-│   │   ├── constants.ts      # App constants
-│   │   └── helpers.ts        # General utilities
-│   │
-│   ├── templates/            # Email templates
-│   │   ├── html.ts           # HTML email templates
-│   │   └── text.ts           # Plain text templates
-│   │
-│   ├── Dockerfile            # Backend container config
-│   └── package.json          # Backend dependencies
-│
-├── scripts/                  # Utility scripts
-│   └── docker-cleanup.sh     # Docker cleanup script
-│
-├── docker-compose.yml        # Main Docker Compose config
-├── docker-compose.test.yml   # Test environment config
-└── package.json              # Root project scripts
+├── codegames-api/               # Express backend
+│   ├── code/                    # Code execution feature
+│   │   ├── piston.service.ts    # HTTP client for Piston
+│   │   ├── wrapper.service.ts   # Wraps user code in test harness
+│   │   ├── code.respository.ts  # Fetches problems + test cases from DB
+│   │   ├── code.service.ts      # Orchestrates the full execution pipeline
+│   │   ├── code.controller.ts   # HTTP request handler
+│   │   ├── code.route.ts        # Route definitions
+│   │   └── index.ts             # Barrel export
+│   ├── admin/                   # Admin feature (same structure)
+│   ├── infrastructure/
+│   │   ├── express-config.ts    # Express setup
+│   │   ├── prisma-config.ts     # PrismaService lifecycle
+│   │   ├── prisma.ts            # PrismaClient singleton
+│   │   └── env-config.ts        # Zod env validation
+│   ├── types/
+│   │   ├── common.types.ts      # Shared types (ControllerType etc.)
+│   │   └── dto.types.ts         # Request/response shapes
+│   └── prisma/
+│       └── schema.prisma        # DB schema
+├── docker-compose.yml
+├── .env                         # Committed defaults (no secrets)
+└── .env.local                   # Local overrides — NOT committed
 ```
 
-## 🛠️ Available Scripts
+## Code Execution — How It Works
 
-### Root Level Scripts
+### The pipeline
+
+When a user clicks "Run":
+
+```
+POST /code/run  { problemId, language, code }
+        │
+        ▼
+1. Fetch problem + test cases from DB
+        │
+        ▼
+2. Wrap user's function in a test harness
+        │
+        ▼
+3. Send the complete script to Piston (one HTTP request)
+        │
+        ▼
+4. Piston executes it in a sandbox, returns stdout/stderr
+        │
+        ▼
+5. Parse stdout → per-test results
+        │
+        ▼
+{ passed: 2, failed: 1, results: [...] }
+```
+
+One "Run" click = one Piston execution request, regardless of how many test cases there are.
+
+### What Piston is
+
+[Piston](https://github.com/engineer-man/piston) is an open-source code execution engine. It runs code in isolated sandboxes with no network access and strict resource limits.
+
+- **Free** — self-hosted, no API key, no usage limits
+- **Sandboxed** — user code cannot access the host system
+- **Multi-language** — supports 70+ languages via installable runtimes
+
+In this project we run Piston as a Docker service. The API container talks to it over the internal Docker network via `http://piston:2000`.
+
+### Piston API (what we use)
+
+**List installed runtimes:**
 
 ```bash
-# Development
-npm run app:up          # Start all services
-npm run app:build       # Build and start all services
-npm run app:down        # Stop all services
-npm run app:test        # Run tests in containers
-
-# Utilities
-npm run docker:cleanup  # Clean up Docker resources
-npm run docker:status   # Check Docker resource usage
+GET /api/v2/runtimes
 ```
 
-### Server Scripts
+**Install a runtime (first-time setup):**
 
 ```bash
-cd server
-
-# Development
-npm run dev            # Start development server
-npm run build          # Build TypeScript
-npm run generate       # Generate Prisma client
-
-# Testing
-npm test               # Run all tests
-npm run test:watch     # Run tests in watch mode
-
-# Database
-npm run migrate        # Run database migrations
-
-# Code Quality
-npm run lint           # Run ESLint
-npm run lint:fix       # Fix ESLint issues
+POST /api/v2/packages
+{ "language": "node", "version": "*" }
 ```
 
-## 🗄️ Database Setup
+Runtimes persist via the `./piston/packages` bind mount.
 
-The application uses **Prisma** as the ORM with **PostgreSQL**.
-
-### Database Schema
-
-Key entities:
-
-- **Users**: User accounts and authentication
-- **Problems**: Coding problems/challenges
-- **Submissions**: User code submissions
-- **Test Cases**: Problem test cases
-
-### Migration Commands
+**Execute code:**
 
 ```bash
-cd server
-
-# Generate Prisma client
-npm run generate
-
-# Create new migration
-npx prisma migrate dev --name migration_name
-
-# Reset database
-npx prisma migrate reset
-
-# View database
-npx prisma studio
+POST /api/v2/execute
+{
+  "language": "javascript",
+  "version": "20.11.1",
+  "files": [{ "content": "<source code here>" }]
+}
 ```
 
-## 🔐 Authentication System
+Response:
 
-The platform uses **JWT-based authentication** with the following features:
+```json
+{
+  "run": {
+    "stdout": "hello\n",
+    "stderr": "",
+    "code": 0
+  },
+  "language": "javascript",
+  "version": "20.11.1"
+}
+```
 
-### Components
+`code: 0` = clean exit. Non-zero = crash or thrown error.
 
-- **Registration**: Email-based user registration
-- **Login**: JWT token generation
-- **Email Verification**: OTP-based email verification
-- **Password Reset**: Secure password reset flow
-- **Rate Limiting**: Protection against brute force attacks
+### Language map
 
-### Middleware
+| Our DB enum | Piston language | Piston version |
+|-------------|-----------------|----------------|
+| JAVASCRIPT  | `javascript`    | `20.11.1`      |
+| PYTHON      | `python3`       | `3.12.0`       |
+| JAVA        | `java`          | `15.0.2`       |
+| CSHARP      | `mono`          | `6.12.0`       |
+| CPP         | `c++`           | `10.2.0`       |
 
-- `auth-middleware.ts`: Validates JWT tokens
-- `rate-limit-middleware.ts`: Implements rate limiting
+Versions can be overridden per-language via env vars (`PISTON_VERSION_JAVASCRIPT`, etc.).
 
-### API Endpoints
+### The test harness (wrapper)
+
+The user submits a raw function, e.g.:
+
+```javascript
+function twoSum(nums, target) {
+  // their solution
+}
+```
+
+`wrapper.service.ts` takes this function + the test cases from the DB and produces a complete runnable script:
+
+```javascript
+function twoSum(nums, target) {
+  // their solution
+}
+
+// injected test harness
+const cases = [
+  { input: [[2,7,11,15], 9], expected: [0,1] },
+  { input: [[3,2,4], 6],     expected: [1,2] },
+];
+for (let i = 0; i < cases.length; i++) {
+  try {
+    const result = twoSum(...cases[i].input);
+    const pass = JSON.stringify(result) === JSON.stringify(cases[i].expected);
+    console.log(JSON.stringify({ index: i, pass, result, expected: cases[i].expected }));
+  } catch (e) {
+    console.log(JSON.stringify({ index: i, pass: false, error: e.message }));
+  }
+}
+```
+
+stdout is one JSON line per test → easy to parse back into structured results.
+
+### Test case format (in DB)
+
+| Field            | Type    | Example            |
+|------------------|---------|--------------------|
+| `input`          | string  | `[[2,7,11,15],9]`  |
+| `expectedOutput` | string  | `[0,1]`            |
+| `isSample`       | boolean | `true`             |
+
+Both `input` and `expectedOutput` are JSON-encoded. `input` is an array of arguments (spread into the function call).
+
+## Environment Variables
+
+| Variable                    | Default                             | Description                   |
+|-----------------------------|-------------------------------------|-------------------------------|
+| `DATABASE_URL`              | (built from POSTGRES_* vars)        | Prisma connection string       |
+| `POSTGRES_USER`             | `postgres`                          | DB username                    |
+| `POSTGRES_PASSWORD`         | `CHANGE_ME_IN_ENV_LOCAL`            | DB password                    |
+| `POSTGRES_DB`               | `codegames`                         | DB name                        |
+| `PISTON_URL`                | `http://piston:2000/api/v2/execute` | Piston execute endpoint        |
+| `PISTON_VERSION_JAVASCRIPT` | `20.11.1`                           | Override JS runtime version    |
+| `JWT_SECRET`                | *(required)*                        | JWT signing secret             |
+| `API_PORT`                  | `4000`                              | Express server port            |
+| `NODE_ENV`                  | `development`                       | Runtime environment            |
+
+## Docker Commands
 
 ```bash
-POST /api/auth/register    # User registration
-POST /api/auth/login       # User login
-POST /api/auth/verify-otp  # Email verification
-POST /api/auth/resend-otp  # Resend OTP (limited to once per 5 minutes)
-POST /api/auth/reset-password # Password reset
-```
+# Start everything
+docker compose up
 
-## ⚖️ Code Execution Service Integration
-
-**Code Execution Service** provides secure code execution in 60+ programming languages.
-
-### Architecture
-
-- **Code Execution Service Server**: Main API for submissions
-- **Code Execution Service Workers**: Background code execution
-- **Code Execution Service Database**: Submission storage
-- **Code Execution Service Redis**: Job queue management
-
-### Supported Languages
-
-- JavaScript (Node.js) - ID: 63
-- Python 3 - ID: 71
-- Java - ID: 62
-- C++ - ID: 54
-- C - ID: 50
-- Go - ID: 60
-- Rust - ID: 73
-
-### API Endpoints
-
-```bash
-GET  /api/code-execution/languages     # Get supported languages
-POST /api/code-execution/submit        # Submit code (async)
-GET  /api/code-execution/result/:token # Get execution result
-POST /api/code-execution/execute       # Submit and wait (sync)
-```
-
-### Example Usage
-
-```bash
-# Execute Python code
-curl -X POST http://localhost:4000/api/code-execution/execute \
-  -H "Content-Type: application/json" \
-  -d '{
-    "source_code": "print(\"Hello World!\")",
-    "language_id": 71
-  }'
-```
-
-## 🧪 Testing
-
-### Test Structure
-
-```
-server/__tests__/
-├── utils/
-│   └── test-helpers.ts        # Test utilities
-│
-├── controllers/               # Controller tests
-│   ├── auth/
-│   └── admin/
-│
-├── services/                  # Service tests
-│   ├── auth/
-│   ├── admin/
-│   ├── email/
-│   └── code-execution/
-│
-└── repositories/              # Repository tests
-```
-
-### Running Tests
-
-```bash
-# Run all tests
-npm test
-
-# Run specific test file
-npm test -- code-execution-service.test.ts
-
-# Run tests in watch mode
-npm run test:watch
-
-# Run tests in Docker
-npm run app:test
-```
-
-## 🌍 Environment Variables
-
-### Server Environment (.env)
-
-```bash
-# Database
-DATABASE_URL="postgresql://user:password@localhost:5432/codegames"
-POSTGRES_DB=codegames
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=password
-
-# Authentication
-JWT_SECRET=your-super-secret-jwt-key
-JWT_EXPIRES_IN=7d
-
-# Email Configuration
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_USER=your-email@gmail.com
-EMAIL_PASS=your-app-password
-
-# Redis
-REDIS_URL=redis://localhost:6379
-
-# Code Execution Service
-JUDGE0_URL=http://code-execution-server:2358
-
-# Application
-NODE_ENV=development
-PORT=4000
-```
-
-### Client Environment (.env)
-
-```bash
-VITE_API_URL=http://localhost:4000
-VITE_APP_NAME=CodeGames
-```
-
-## 🐳 Docker Configuration
-
-### Services Overview
-
-- **frontend**: React development server
-- **backend**: Node.js API server
-- **db**: PostgreSQL database
-- **redis**: Redis cache
-- **code-execution-server**: Code Execution Service API server
-- **code-execution-workers**: Code Execution Service execution workers
-- **code-execution-db**: Code Execution Service PostgreSQL database
-- **code-execution-redis**: Code Execution Service Redis instance
-
-### Docker Commands
-
-```bash
-# View running containers
-docker-compose ps
+# Rebuild after code changes
+docker compose up --build api
 
 # View logs
-docker-compose logs backend
-docker-compose logs code-execution-server
+docker compose logs -f api
+docker compose logs -f piston
 
-# Restart specific service
-docker-compose restart backend
+# Stop everything
+docker compose down
 
-# Rebuild service
-docker-compose up --build backend
-
-# Access container shell
-docker-compose exec backend bash
+# Nuke volumes (resets DB)
+docker compose down -v
 ```
 
-## 🔧 Development Workflow
+## Troubleshooting
 
-### Setting Up Development Environment
+### `FATAL: role "postgres" does not exist`
 
-1. **Install dependencies**
+The healthcheck was using the wrong user. Fixed — the healthcheck now reads `POSTGRES_USER` from inside the container, which respects `.env.local`.
 
-   ```bash
-   # Root dependencies
-   npm install
+### Piston runtime not installed
 
-   # Server dependencies
-   cd server && npm install
-
-   # Client dependencies
-   cd ../client && npm install
-   ```
-
-2. **Database setup**
-
-   ```bash
-   cd server
-   npm run generate    # Generate Prisma client
-   npm run migrate     # Run migrations
-   ```
-
-3. **Start development servers**
-
-   ```bash
-   # Option 1: Docker (recommended)
-   npm run app:up
-
-   # Option 2: Local development
-   cd server && npm run dev    # Terminal 1
-   cd client && npm run dev    # Terminal 2
-   ```
-
-### Code Quality
-
-The project enforces code quality through:
-
-- **ESLint**: Code linting
-- **TypeScript**: Type safety
-- **Jest**: Unit testing
-- **Prettier**: Code formatting (configured in ESLint)
-
-### Adding New Features
-
-1. **Create feature branch**
-
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
-
-2. **Follow the architecture**
-   - Add routes in `server/routes/`
-   - Add controllers in `server/controllers/`
-   - Add services in `server/services/`
-   - Add types in `server/types/`
-
-3. **Write tests**
-
-   ```bash
-   # Create test file
-   touch server/services/your-service/your-service.test.ts
-
-   # Run tests
-   npm test
-   ```
-
-4. **Update documentation**
-   - Update this README if needed
-   - Add inline code comments
-   - Update API documentation
-
-## 🚨 Troubleshooting
-
-### Common Issues
-
-1. **Port already in use**
-
-   ```bash
-   # Check what's using the port
-   lsof -i :4000
-
-   # Kill process
-   kill -9 <PID>
-   ```
-
-2. **Database connection issues**
-
-   ```bash
-   # Check if PostgreSQL is running
-   docker-compose ps db
-
-   # View database logs
-   docker-compose logs db
-   ```
-
-3. **Code Execution Service not responding**
-
-   ```bash
-   # Check Code Execution Service services
-   docker-compose ps | grep code-execution
-
-   # Restart Code Execution Service
-   docker-compose restart code-execution-server code-execution-workers
-   ```
-
-4. **Frontend not loading**
-
-   ```bash
-   # Check if backend is running
-   curl http://localhost:4000/health
-
-   # Check frontend logs
-   docker-compose logs frontend
-   ```
-
-### Performance Monitoring
+On first run, install the Node.js runtime:
 
 ```bash
-# Check Docker resource usage
-npm run docker:status
-
-# Monitor container stats
-docker stats
-
-# Check application health
-curl http://localhost:4000/health
+curl -X POST http://localhost:2000/api/v2/packages \
+  -H "Content-Type: application/json" \
+  -d '{"language":"node","version":"*"}'
 ```
 
-## 📚 API Documentation
+It persists via `./piston/packages` bind mount — you only need to do this once.
 
-### Authentication Endpoints
+### `piston` directory in git
 
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - User login
-- `POST /api/auth/verify-otp` - Verify email OTP
-- `POST /api/auth/resend-otp` - Resend verification OTP
-
-### Code Execution Service Endpoints
-
-- `GET /api/code-execution/languages` - Get supported programming languages
-- `POST /api/code-execution/submit` - Submit code for execution
-- `GET /api/code-execution/result/:token` - Get execution result
-- `POST /api/code-execution/execute` - Submit code and wait for result
-
-### Admin Endpoints
-
-- `GET /api/admin/users` - Get all users (admin only)
-- `PUT /api/admin/users/:id` - Update user (admin only)
-
-## 🤝 Contributing
-
-1. **Fork the repository**
-2. **Create feature branch**: `git checkout -b feature/amazing-feature`
-3. **Commit changes**: `git commit -m 'Add amazing feature'`
-4. **Push to branch**: `git push origin feature/amazing-feature`
-5. **Open Pull Request**
-
-### Code Style Guidelines
-
-- Use TypeScript for all new code
-- Follow existing naming conventions
-- Add JSDoc comments for public APIs
-- Write tests for new features
-- Ensure all tests pass before committing
-
-## 📄 License
-
-This project is licensed under the ISC License.
-
-## 🔗 Useful Links
-
-- [Code Execution Service Documentation](https://ce.code-execution.com/)
-- [Prisma Documentation](https://www.prisma.io/docs/)
-- [React Documentation](https://react.dev/)
-- [Express.js Documentation](https://expressjs.com/)
-- [Docker Documentation](https://docs.docker.com/)
+`piston/` is gitignored — it contains downloaded runtime binaries, not source code.
