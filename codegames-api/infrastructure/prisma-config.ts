@@ -1,12 +1,15 @@
 import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 
 class PrismaService {
 	private readonly client: PrismaClient;
 	private isConnected: boolean = false;
 
 	constructor() {
+		const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 		this.client = new PrismaClient({
 			log: ["query", "info", "warn", "error"],
+			adapter,
 		});
 	}
 

@@ -28,8 +28,12 @@ class AdminRepository {
 		return prisma.problem.findMany({
 			where: {
 				...(filters.difficulty && { difficulty: filters.difficulty }),
-				...(filters.isPublished !== undefined && { isPublished: filters.isPublished }),
-				...(filters.categories?.length && { categories: { hasSome: filters.categories } }),
+				...(filters.isPublished !== undefined && {
+					isPublished: filters.isPublished,
+				}),
+				...(filters.categories?.length && {
+					categories: { hasSome: filters.categories },
+				}),
 				...(filters.search && {
 					OR: [
 						{ title: { contains: filters.search, mode: "insensitive" } },

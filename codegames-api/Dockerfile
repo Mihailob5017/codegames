@@ -6,11 +6,8 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 
-# Copy Prisma schema and generate client
-COPY prisma ./prisma/
-RUN npx prisma generate
-
 # Copy the rest of the application code
+# (prisma generate runs in the entrypoint at startup when DATABASE_URL is available)
 COPY . .
 
 # Install bash and python3 for local code execution

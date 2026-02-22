@@ -10,7 +10,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 enum problem_difficulty {
@@ -19,7 +18,7 @@ enum problem_difficulty {
   HARD
 }
 
-enum language {
+enum Language {
   PYTHON
   JAVASCRIPT
   JAVA
@@ -66,7 +65,7 @@ enum problem_status {
 
 model Problem {
   id String @id @default(cuid())
-  number Int @unique
+  number Int @unique @default(autoincrement())
   title String @db.VarChar(200)
   slug String @unique @db.VarChar(200) // URL-friendly version of the title
 
@@ -130,7 +129,7 @@ model ProblemCompany {
 model StarterCode {
   id String @id @default(cuid())
   problemId String
-  language language
+  language Language
   code String @db.Text
 
   problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
@@ -143,7 +142,7 @@ model StarterCode {
 model ProblemSolution {
   id String @id @default(cuid())
   problemId String
-  language language
+  language Language
   code String @db.Text
   approach String @db.Text
   time_complexity String @db.VarChar(100)

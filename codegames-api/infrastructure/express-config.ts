@@ -18,7 +18,7 @@ class ExpressServer {
 	}
 
 	private setupMiddleware() {
-		console.log("TODO: Setting up middleware...");
+		this.app.use(express.json());
 	}
 
 	private setupRoutes() {
