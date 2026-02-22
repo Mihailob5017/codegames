@@ -2,10 +2,24 @@ import { z } from "zod";
 
 const DIFFICULTIES = ["EASY", "MEDIUM", "HARD"] as const;
 const CATEGORIES = [
-	"ARRAYS", "STRINGS", "HASHMAPS", "TWO_POINTERS", "STACKS",
-	"BINARY_SEARCH", "SLIDING_WINDOW", "LINKED_LISTS", "TREES", "TRIES",
-	"BACKTRACKING", "HEAPS", "GRAPHS", "DYNAMIC_PROGRAMMING", "INTERVALS",
-	"GREEDY", "MATH", "MISC",
+	"ARRAYS",
+	"STRINGS",
+	"HASHMAPS",
+	"TWO_POINTERS",
+	"STACKS",
+	"BINARY_SEARCH",
+	"SLIDING_WINDOW",
+	"LINKED_LISTS",
+	"TREES",
+	"TRIES",
+	"BACKTRACKING",
+	"HEAPS",
+	"GRAPHS",
+	"DYNAMIC_PROGRAMMING",
+	"INTERVALS",
+	"GREEDY",
+	"MATH",
+	"MISC",
 ] as const;
 
 export const ProblemQuerySchema = z.object({
@@ -32,3 +46,5 @@ export const CodeExecutionSchema = z.object({
 			"Invalid language. Must be one of: JAVASCRIPT, PYTHON, JAVA, CSHARP, CPP",
 	}),
 });
+
+export type CodeExecutionInput = z.infer<typeof CodeExecutionSchema>;
