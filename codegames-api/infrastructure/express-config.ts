@@ -4,6 +4,7 @@ import { Server } from "node:http";
 import { adminRouter } from "../admin";
 import { codeRouter } from "../code";
 import { errorMiddleware } from "../middleware/error-middleware";
+import { requestLogger } from "../middleware/request-logger";
 import logger from "./logger";
 
 class ExpressServer {
@@ -20,6 +21,7 @@ class ExpressServer {
 	}
 
 	private setupMiddleware() {
+		this.app.use(requestLogger);
 		this.app.use(express.json());
 	}
 
