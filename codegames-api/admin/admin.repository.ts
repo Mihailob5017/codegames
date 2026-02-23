@@ -1,5 +1,5 @@
 import prisma from "../infrastructure/prisma";
-import { Prisma } from "@prisma/client";
+import { Language, Prisma } from "@prisma/client";
 import { ProblemQueryFilters } from "../util/validation-schema";
 
 const PROBLEM_LIST_SELECT = {
@@ -54,7 +54,10 @@ class AdminRepository {
 	}
 
 	createProblem(data: Prisma.ProblemCreateInput) {
-		return prisma.problem.create({ data });
+		return prisma.problem.create({
+			data,
+			include: { TestCases: true, StarterCodes: true },
+		});
 	}
 
 	updateProblem(id: string, data: Prisma.ProblemUpdateInput) {
@@ -80,6 +83,51 @@ class AdminRepository {
 				isSample: data.isSample ?? false,
 				problem: { connect: { id: problemId } },
 			},
+		});
+	}
+
+	bulkAddTestCasesToProblem(
+		problemId: string,
+		data: { input: string; expectedOutput: string; isSample?: boolean }[],
+	) {
+		return prisma.testCase.createMany({
+			data: data.map((tc) => ({
+				problemId,
+				input: tc.input,
+				expectedOutput: tc.expectedOutput,
+				isSample: tc.isSample ?? false,
+			})),
+		});
+	}
+
+	getStarterCodesByProblemId(problemId: string) {
+		return prisma.starterCode.findMany({ where: { problemId } });
+	}
+
+	addStarterCodeToProblem(
+		problemId: string,
+		data: { language: Language; code: string },
+	) {
+		return prisma.starterCode.create({
+			data: {
+				language: data.language,
+				code: data.code,
+				problem: { connect: { id: problemId } },
+			},
+		});
+	}
+
+	bulkAddStarterCodesToProblem(
+		problemId: string,
+		data: { language: Language; code: string }[],
+	) {
+		return prisma.starterCode.createMany({
+			data: data.map((sc) => ({
+				problemId,
+				language: sc.language,
+				code: sc.code,
+			})),
+			skipDuplicates: true,
 		});
 	}
 }

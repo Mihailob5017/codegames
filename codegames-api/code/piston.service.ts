@@ -10,7 +10,7 @@ const PISTON_LANGUAGE_MAP: Record<
 		version: process.env.PISTON_VERSION_JAVASCRIPT ?? "20.11.1",
 	},
 	PYTHON: {
-		language: "python3",
+		language: "python",
 		version: process.env.PISTON_VERSION_PYTHON ?? "3.12.0",
 	},
 	JAVA: {

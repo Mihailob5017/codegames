@@ -48,3 +48,57 @@ export const CodeExecutionSchema = z.object({
 });
 
 export type CodeExecutionInput = z.infer<typeof CodeExecutionSchema>;
+
+const LANGUAGES = ["PYTHON", "JAVASCRIPT", "JAVA", "CSHARP", "CPP"] as const;
+
+export const CreateProblemSchema = z.object({
+	title: z.string().min(1),
+	slug: z.string().min(1),
+	description: z.string().min(1),
+	examples: z.array(z.string()).default([]),
+	constrains: z.string().min(1),
+	hints: z.array(z.string()).default([]),
+	difficulty: z.enum(DIFFICULTIES),
+	categories: z.array(z.enum(CATEGORIES)).default([]),
+	solution: z.string().min(1),
+	explanation: z.string().min(1),
+	isPublished: z.boolean().default(false),
+	testCases: z
+		.array(
+			z.object({
+				input: z.string(),
+				expectedOutput: z.string(),
+				isSample: z.boolean().default(false),
+			}),
+		)
+		.default([]),
+	starterCodes: z
+		.array(
+			z.object({
+				language: z.enum(LANGUAGES),
+				code: z.string(),
+			}),
+		)
+		.default([]),
+});
+
+export type CreateProblemInput = z.infer<typeof CreateProblemSchema>;
+
+export const BulkAddTestCasesSchema = z.array(
+	z.object({
+		input: z.string(),
+		expectedOutput: z.string(),
+		isSample: z.boolean().default(false),
+	}),
+).min(1, "At least one test case is required");
+
+export type BulkAddTestCasesInput = z.infer<typeof BulkAddTestCasesSchema>;
+
+export const BulkAddStarterCodesSchema = z.array(
+	z.object({
+		language: z.enum(LANGUAGES),
+		code: z.string(),
+	}),
+).min(1, "At least one starter code is required");
+
+export type BulkAddStarterCodesInput = z.infer<typeof BulkAddStarterCodesSchema>;

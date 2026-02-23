@@ -1,7 +1,12 @@
 import { z } from "zod";
 import { ControllerType } from "../types/common.types";
 import AdminService from "./admin.service";
-import { ProblemQuerySchema } from "../util/validation-schema";
+import {
+	BulkAddStarterCodesSchema,
+	BulkAddTestCasesSchema,
+	CreateProblemSchema,
+	ProblemQuerySchema,
+} from "../util/validation-schema";
 
 class AdminController {
 	private static readonly adminService = new AdminService();
@@ -42,7 +47,15 @@ class AdminController {
 	};
 
 	static readonly createProblem: ControllerType<void> = async (req, res) => {
-		const problem = await AdminController.adminService.createProblem(req.body);
+		const parsed = CreateProblemSchema.safeParse(req.body);
+		if (!parsed.success) {
+			res.status(400).json({
+				status: "error",
+				message: z.flattenError(parsed.error).fieldErrors,
+			});
+			return;
+		}
+		const problem = await AdminController.adminService.createProblem(parsed.data);
 		res.status(201).json({ status: "success", data: problem });
 	};
 
@@ -58,8 +71,6 @@ class AdminController {
 		await AdminController.adminService.deleteProblem(req.params.id as string);
 		res.status(200).json({ status: "success", message: "Problem deleted" });
 	};
-
-	// SECTION: Test Cases
 
 	static readonly getTestCasesByProblemId: ControllerType<void> = async (
 		req,
@@ -81,6 +92,68 @@ class AdminController {
 			req.body,
 		);
 		res.status(201).json({ status: "success", data: testCase });
+	};
+
+	static readonly bulkAddTestCasesToProblem: ControllerType<void> = async (
+		req,
+		res,
+	) => {
+		const parsed = BulkAddTestCasesSchema.safeParse(req.body);
+		if (!parsed.success) {
+			res.status(400).json({
+				status: "error",
+				message: z.flattenError(parsed.error).fieldErrors,
+			});
+			return;
+		}
+		const result = await AdminController.adminService.bulkAddTestCasesToProblem(
+			req.params.id as string,
+			parsed.data,
+		);
+		res.status(201).json({ status: "success", data: result });
+	};
+
+	static readonly getStarterCodesByProblemId: ControllerType<void> = async (
+		req,
+		res,
+	) => {
+		const starterCodes =
+			await AdminController.adminService.getStarterCodesByProblemId(
+				req.params.id as string,
+			);
+		res.status(200).json({ status: "success", data: starterCodes });
+	};
+
+	static readonly addStarterCodeToProblem: ControllerType<void> = async (
+		req,
+		res,
+	) => {
+		const starterCode =
+			await AdminController.adminService.addStarterCodeToProblem(
+				req.params.id as string,
+				req.body,
+			);
+		res.status(201).json({ status: "success", data: starterCode });
+	};
+
+	static readonly bulkAddStarterCodesToProblem: ControllerType<void> = async (
+		req,
+		res,
+	) => {
+		const parsed = BulkAddStarterCodesSchema.safeParse(req.body);
+		if (!parsed.success) {
+			res.status(400).json({
+				status: "error",
+				message: z.flattenError(parsed.error).fieldErrors,
+			});
+			return;
+		}
+		const result =
+			await AdminController.adminService.bulkAddStarterCodesToProblem(
+				req.params.id as string,
+				parsed.data,
+			);
+		res.status(201).json({ status: "success", data: result });
 	};
 }
 

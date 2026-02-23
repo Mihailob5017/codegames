@@ -1,6 +1,11 @@
-import { Prisma } from "@prisma/client";
+import { Language, Prisma } from "@prisma/client";
 import AdminRepository from "./admin.repository";
-import { ProblemQueryFilters } from "../util/validation-schema";
+import {
+	BulkAddStarterCodesInput,
+	BulkAddTestCasesInput,
+	CreateProblemInput,
+	ProblemQueryFilters,
+} from "../util/validation-schema";
 
 class AdminService {
 	private readonly repository: AdminRepository;
@@ -21,8 +26,29 @@ class AdminService {
 		return this.repository.getProblemById(id);
 	}
 
-	createProblem(data: Prisma.ProblemCreateInput) {
-		return this.repository.createProblem(data);
+	getStarterCodesByProblemId(problemId: string) {
+		return this.repository.getStarterCodesByProblemId(problemId);
+	}
+
+	addStarterCodeToProblem(
+		problemId: string,
+		data: { language: Language; code: string },
+	) {
+		return this.repository.addStarterCodeToProblem(problemId, data);
+	}
+
+	createProblem({
+		testCases,
+		starterCodes,
+		...problemData
+	}: CreateProblemInput) {
+		return this.repository.createProblem({
+			...problemData,
+			...(testCases.length > 0 && { TestCases: { create: testCases } }),
+			...(starterCodes.length > 0 && {
+				StarterCodes: { create: starterCodes },
+			}),
+		});
 	}
 
 	updateProblem(id: string, data: Prisma.ProblemUpdateInput) {
@@ -42,6 +68,17 @@ class AdminService {
 		data: { input: string; expectedOutput: string; isSample?: boolean },
 	) {
 		return this.repository.addTestCaseToProblem(problemId, data);
+	}
+
+	bulkAddTestCasesToProblem(problemId: string, data: BulkAddTestCasesInput) {
+		return this.repository.bulkAddTestCasesToProblem(problemId, data);
+	}
+
+	bulkAddStarterCodesToProblem(
+		problemId: string,
+		data: BulkAddStarterCodesInput,
+	) {
+		return this.repository.bulkAddStarterCodesToProblem(problemId, data);
 	}
 }
 
