@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { ControllerType } from "../types/common.types";
+import { NotFoundError, ValidationError } from "../errors/app-error";
 import AdminService from "./admin.service";
 import {
 	BulkAddStarterCodesSchema,
@@ -23,11 +24,10 @@ class AdminController {
 	static readonly queryProblems: ControllerType<void> = async (req, res) => {
 		const parsed = ProblemQuerySchema.safeParse(req.query);
 		if (!parsed.success) {
-			res.status(400).json({
-				status: "error",
-				message: z.flattenError(parsed.error).fieldErrors,
-			});
-			return;
+			throw new ValidationError(
+				"Invalid query parameters",
+				z.flattenError(parsed.error).fieldErrors,
+			);
 		}
 		const problems = await AdminController.adminService.queryProblems(
 			parsed.data,
@@ -40,8 +40,7 @@ class AdminController {
 			req.params.id as string,
 		);
 		if (!problem) {
-			res.status(404).json({ status: "error", message: "Problem not found" });
-			return;
+			throw new NotFoundError("Problem not found");
 		}
 		res.status(200).json({ status: "success", data: problem });
 	};
@@ -49,11 +48,10 @@ class AdminController {
 	static readonly createProblem: ControllerType<void> = async (req, res) => {
 		const parsed = CreateProblemSchema.safeParse(req.body);
 		if (!parsed.success) {
-			res.status(400).json({
-				status: "error",
-				message: z.flattenError(parsed.error).fieldErrors,
-			});
-			return;
+			throw new ValidationError(
+				"Invalid problem data",
+				z.flattenError(parsed.error).fieldErrors,
+			);
 		}
 		const problem = await AdminController.adminService.createProblem(
 			parsed.data,
@@ -102,11 +100,7 @@ class AdminController {
 	) => {
 		const parsed = BulkAddTestCasesSchema.safeParse(req.body);
 		if (!parsed.success) {
-			res.status(400).json({
-				status: "error",
-				message: z.flattenError(parsed.error).fieldErrors,
-			});
-			return;
+			throw new ValidationError("Invalid test cases data");
 		}
 		const result = await AdminController.adminService.bulkAddTestCasesToProblem(
 			req.params.id as string,
@@ -144,11 +138,7 @@ class AdminController {
 	) => {
 		const parsed = BulkAddStarterCodesSchema.safeParse(req.body);
 		if (!parsed.success) {
-			res.status(400).json({
-				status: "error",
-				message: z.flattenError(parsed.error).fieldErrors,
-			});
-			return;
+			throw new ValidationError("Invalid starter codes data");
 		}
 		const result =
 			await AdminController.adminService.bulkAddStarterCodesToProblem(

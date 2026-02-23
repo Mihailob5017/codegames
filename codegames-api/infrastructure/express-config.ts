@@ -3,6 +3,8 @@ import { EnvConfig } from "./env-config";
 import { Server } from "node:http";
 import { adminRouter } from "../admin";
 import { codeRouter } from "../code";
+import { errorMiddleware } from "../middleware/error-middleware";
+import logger from "./logger";
 
 class ExpressServer {
 	private readonly app: Express;
@@ -29,12 +31,12 @@ class ExpressServer {
 	}
 
 	private setupErrorHandling() {
-		console.log("TODO: Setting up error handling...");
+		this.app.use(errorMiddleware);
 	}
 
 	public start(): void {
 		this.server = this.app.listen(this.config.API_PORT, () => {
-			console.log(`Server is running on port ${this.config.API_PORT}`);
+			logger.info(`Server is running on port ${this.config.API_PORT}`);
 		});
 	}
 

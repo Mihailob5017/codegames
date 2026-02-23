@@ -1,4 +1,5 @@
 import { Language } from "@prisma/client";
+import { ExternalServiceError } from "../errors/app-error";
 
 // Maps our Language enum to what Piston expects
 const PISTON_LANGUAGE_MAP: Record<
@@ -49,7 +50,7 @@ export class PistonService {
 		});
 
 		if (!response.ok) {
-			throw new Error(
+			throw new ExternalServiceError(
 				`Piston request failed: ${response.status} ${response.statusText}`,
 			);
 		}

@@ -3,7 +3,7 @@ import CodeRepository from "./code.repository";
 import { PistonService } from "./piston.service";
 import WrapperService from "./wrapper.service";
 import type { CodeExecutionInput } from "../util/validation-schema";
-import _ from "lodash";
+import { NotFoundError } from "../errors/app-error";
 
 export interface TestResult {
 	id: string;
@@ -38,7 +38,7 @@ class CodeService {
 		const testCases = await this.codeRepository.getSampleTestCases(problemId);
 
 		if (testCases.length === 0) {
-			throw new Error("No test cases found for the given problem ID");
+			throw new NotFoundError("No test cases found for the given problem ID");
 		}
 
 		const wrappedCode = this.wrapperService.wrapCode(
@@ -52,8 +52,7 @@ class CodeService {
 			wrappedCode,
 		);
 
-		const response = this.compareOutputs(testCases, stdout);
-		return response;
+		return this.compareOutputs(testCases, stdout, stderr);
 	}
 
 	async execute(body: CodeExecutionInput): Promise<any> {
@@ -61,7 +60,7 @@ class CodeService {
 		const testCases = await this.codeRepository.getAllTestCases(problemId);
 
 		if (testCases.length === 0) {
-			throw new Error("No test cases found for the given problem ID");
+			throw new NotFoundError("No test cases found for the given problem ID");
 		}
 
 		const wrappedCode = this.wrapperService.wrapCode(
@@ -75,12 +74,27 @@ class CodeService {
 			wrappedCode,
 		);
 
-		const response = this.compareOutputs(testCases, stdout);
-
-		return response;
+		return this.compareOutputs(testCases, stdout, stderr);
 	}
 
-	private compareOutputs(testArray: TestCase[], stdout: string): RunResult {
+	private compareOutputs(testArray: TestCase[], stdout: string, stderr: string): RunResult {
+		if (stderr) {
+			return {
+				total: testArray.length,
+				passed: 0,
+				failed: testArray.length,
+				allPassed: false,
+				results: testArray.map((testcase) => ({
+					id: testcase.id,
+					passed: false,
+					input: testcase.input,
+					expected: testcase.expectedOutput.trim(),
+					actual: "",
+				})),
+				stderr,
+			};
+		}
+
 		const lines = stdout.trim().split("\n");
 
 		const results: TestResult[] = testArray.map((testcase, i) => {
