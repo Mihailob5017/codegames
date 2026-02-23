@@ -43,6 +43,15 @@ export function errorMiddleware(
 		return;
 	}
 
+	if (err instanceof SyntaxError && "status" in err && (err as any).status === 400) {
+		logger.warn("Malformed JSON body", { message: err.message });
+		res.status(400).json({
+			status: "error",
+			message: "Invalid JSON in request body",
+		});
+		return;
+	}
+
 	if (err instanceof Prisma.PrismaClientKnownRequestError) {
 		const prismaResponse = handlePrismaError(err);
 		logger.warn("Prisma error", { code: err.code, meta: err.meta });

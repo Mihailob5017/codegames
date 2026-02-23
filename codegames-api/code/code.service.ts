@@ -5,6 +5,16 @@ import WrapperService from "./wrapper.service";
 import type { CodeExecutionInput } from "../util/validation-schema";
 import { NotFoundError } from "../errors/app-error";
 
+function deepEqual(a: string, b: string): boolean {
+	try {
+		const parsedA = JSON.parse(a);
+		const parsedB = JSON.parse(b);
+		return JSON.stringify(parsedA) === JSON.stringify(parsedB);
+	} catch {
+		return a === b;
+	}
+}
+
 export interface TestResult {
 	id: string;
 	passed: boolean;
@@ -102,7 +112,7 @@ class CodeService {
 			const expected = testcase.expectedOutput.trim();
 			return {
 				id: testcase.id,
-				passed: actual === expected,
+				passed: deepEqual(actual, expected),
 				input: testcase.input,
 				expected,
 				actual,
