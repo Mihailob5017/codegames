@@ -7,7 +7,9 @@
 		"dev": "nodemon",
 		"generate": "prisma generate",
 		"build": "tsc",
-		"lint": "eslint . --ext .ts"
+		"lint": "eslint . --ext .ts",
+		"test": "jest",
+		"test:watch": "jest --watchAll"
 	},
 	"keywords": [],
 	"author": "",
@@ -42,6 +44,8 @@
 		"@types/nodemailer": "^7.0.11",
 		"@types/pg": "^8.16.0",
 		"@types/supertest": "^6.0.3",
-		"@types/uuid": "^10.0.0"
+		"@types/uuid": "^10.0.0",
+		"jest": "^30.2.0",
+		"ts-jest": "^29.4.6"
 	}
 }
