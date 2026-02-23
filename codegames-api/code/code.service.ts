@@ -1,10 +1,12 @@
-import type { Language } from "@prisma/client";
+import type { Language, TestCase } from "@prisma/client";
 import CodeRepository from "./code.repository";
 import { PistonService } from "./piston.service";
 import WrapperService from "./wrapper.service";
 import type { CodeExecutionInput } from "../util/validation-schema";
+import _ from "lodash";
 
 export interface TestResult {
+	id: string;
 	passed: boolean;
 	input: string;
 	expected: string;
@@ -13,6 +15,9 @@ export interface TestResult {
 
 export interface RunResult {
 	allPassed: boolean;
+	total: number;
+	passed: number;
+	failed: number;
 	results: TestResult[];
 	stderr?: string;
 }
@@ -46,19 +51,57 @@ class CodeService {
 			language as Language,
 			wrappedCode,
 		);
-		console.log("WE OUT ERE BOIIII");
-		console.log(stdout, stderr);
+
+		const response = this.compareOutputs(testCases, stdout);
+		return response;
 	}
 
-	private compareOutputs(actual: string, expected: string): boolean {
-		try {
-			return (
-				JSON.stringify(JSON.parse(actual)) ===
-				JSON.stringify(JSON.parse(expected))
-			);
-		} catch {
-			return actual === expected.trim();
+	async execute(body: CodeExecutionInput): Promise<any> {
+		const { code, language, problemId } = body;
+		const testCases = await this.codeRepository.getAllTestCases(problemId);
+
+		if (testCases.length === 0) {
+			throw new Error("No test cases found for the given problem ID");
 		}
+
+		const wrappedCode = this.wrapperService.wrapCode(
+			code,
+			language as Language,
+			testCases,
+		);
+
+		const { stdout, stderr } = await this.pistonService.execute(
+			language as Language,
+			wrappedCode,
+		);
+
+		const response = this.compareOutputs(testCases, stdout);
+
+		return response;
+	}
+
+	private compareOutputs(testArray: TestCase[], stdout: string): RunResult {
+		const lines = stdout.trim().split("\n");
+
+		const results: TestResult[] = testArray.map((testcase, i) => {
+			const actual = (lines[i] ?? "").trim();
+			const expected = testcase.expectedOutput.trim();
+			return {
+				id: testcase.id,
+				passed: actual === expected,
+				input: testcase.input,
+				expected,
+				actual,
+			};
+		});
+
+		return {
+			total: testArray.length,
+			passed: results.filter((r) => r.passed).length,
+			failed: results.filter((r) => !r.passed).length,
+			allPassed: results.every((r) => r.passed),
+			results,
+		};
 	}
 }
 

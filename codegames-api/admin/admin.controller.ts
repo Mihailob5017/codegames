@@ -55,7 +55,9 @@ class AdminController {
 			});
 			return;
 		}
-		const problem = await AdminController.adminService.createProblem(parsed.data);
+		const problem = await AdminController.adminService.createProblem(
+			parsed.data,
+		);
 		res.status(201).json({ status: "success", data: problem });
 	};
 

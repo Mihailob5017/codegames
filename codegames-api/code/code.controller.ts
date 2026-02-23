@@ -11,7 +11,21 @@ class CodeController {
 		console.log("API: v1/code/health-check");
 		res.json({ status: "ok", message: "Hello from CodeController" });
 	};
-	static readonly executeCode: ControllerType<void> = async (req, res) => {};
+	static readonly executeCode: ControllerType<void> = async (req, res) => {
+		try {
+			const inputValid = validateInput(CodeExecutionSchema, req.body);
+			if (!inputValid) {
+				res.status(400).json({ status: "error", message: "Invalid input" });
+				return;
+			}
+			const result = await CodeController.codeService.execute(req.body);
+			res.status(200).json({ status: "success", data: result });
+		} catch (error) {
+			res
+				.status(500)
+				.json({ status: "error", message: "Internal server error" });
+		}
+	};
 	static readonly runCode: ControllerType<void> = async (req, res) => {
 		try {
 			const inputValid = validateInput(CodeExecutionSchema, req.body);

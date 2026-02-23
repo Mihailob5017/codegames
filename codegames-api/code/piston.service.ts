@@ -38,7 +38,6 @@ export class PistonService {
 
 	async execute(language: Language, sourceCode: string): Promise<PistonResult> {
 		const { language: pistonLang, version } = PISTON_LANGUAGE_MAP[language];
-
 		const response = await fetch(this.pistonUrl, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
