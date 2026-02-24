@@ -9,7 +9,8 @@
 		"build": "tsc",
 		"lint": "eslint . --ext .ts",
 		"test": "jest",
-		"test:watch": "jest --watchAll"
+		"test:watch": "jest --watchAll",
+		"seed": "npx tsx prisma/seed.ts"
 	},
 	"keywords": [],
 	"author": "",

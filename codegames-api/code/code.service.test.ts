@@ -14,6 +14,11 @@ const MockCodeRepository = CodeRepository as jest.MockedClass<typeof CodeReposit
 const MockWrapperService = WrapperService as jest.MockedClass<typeof WrapperService>;
 const MockPistonService = PistonService as jest.MockedClass<typeof PistonService>;
 
+// Helper to build a minimal TestCase-shaped object
+function makeTestCase(id: string, input: string, expectedOutput: string) {
+	return { id, input, expectedOutput, isSample: true, problemId: "p1" };
+}
+
 describe("CodeService", () => {
 	let service: CodeService;
 	let mockRepo: jest.Mocked<CodeRepository>;
@@ -75,6 +80,95 @@ describe("CodeService", () => {
 			expect(result.passed).toBe(0);
 			expect(result.failed).toBe(1);
 			expect(result.stderr).toBe("ReferenceError: x is not defined");
+		});
+	});
+
+	// ─── compareOutputs (via run) ─────────────────────────────────────────────
+
+	describe("compareOutputs", () => {
+		it("passes when stdout exactly matches expected output", async () => {
+			const tc = makeTestCase("tc1", "[1,2]", "3");
+			mockRepo.getSampleTestCases.mockResolvedValue([tc] as any);
+			mockWrapper.wrapCode.mockReturnValue("wrapped");
+			mockPiston.execute.mockResolvedValue({ stdout: "3\n", stderr: "", exitCode: 0 });
+
+			const result = await service.run(validInput);
+
+			expect(result.results[0].passed).toBe(true);
+		});
+
+		it("passes when JSON output differs only in whitespace ([0,2] vs [0, 2])", async () => {
+			const tc = makeTestCase("tc1", "[3,3]", "[0, 2]");
+			mockRepo.getSampleTestCases.mockResolvedValue([tc] as any);
+			mockWrapper.wrapCode.mockReturnValue("wrapped");
+			mockPiston.execute.mockResolvedValue({ stdout: "[0,2]\n", stderr: "", exitCode: 0 });
+
+			const result = await service.run(validInput);
+
+			expect(result.results[0].passed).toBe(true);
+		});
+
+		it("passes when nested array whitespace differs ([[0,1],[2,3]] vs [[0, 1], [2, 3]])", async () => {
+			const tc = makeTestCase("tc1", "input", "[[0, 1], [2, 3]]");
+			mockRepo.getSampleTestCases.mockResolvedValue([tc] as any);
+			mockWrapper.wrapCode.mockReturnValue("wrapped");
+			mockPiston.execute.mockResolvedValue({
+				stdout: "[[0,1],[2,3]]\n",
+				stderr: "",
+				exitCode: 0,
+			});
+
+			const result = await service.run(validInput);
+
+			expect(result.results[0].passed).toBe(true);
+		});
+
+		it("fails when actual value is wrong", async () => {
+			const tc = makeTestCase("tc1", "[1,2]", "3");
+			mockRepo.getSampleTestCases.mockResolvedValue([tc] as any);
+			mockWrapper.wrapCode.mockReturnValue("wrapped");
+			mockPiston.execute.mockResolvedValue({ stdout: "7\n", stderr: "", exitCode: 0 });
+
+			const result = await service.run(validInput);
+
+			expect(result.results[0].passed).toBe(false);
+			expect(result.allPassed).toBe(false);
+		});
+
+		it("maps each stdout line to the correct test case index", async () => {
+			const tc1 = makeTestCase("tc1", "[2,7]", "0 1");
+			const tc2 = makeTestCase("tc2", "[3,3]", "0 1");
+			const tc3 = makeTestCase("tc3", "[1,2]", "0 2");
+			mockRepo.getSampleTestCases.mockResolvedValue([tc1, tc2, tc3] as any);
+			mockWrapper.wrapCode.mockReturnValue("wrapped");
+			mockPiston.execute.mockResolvedValue({
+				stdout: "0 1\n0 1\nWRONG\n",
+				stderr: "",
+				exitCode: 0,
+			});
+
+			const result = await service.run(validInput);
+
+			expect(result.results[0].passed).toBe(true);
+			expect(result.results[1].passed).toBe(true);
+			expect(result.results[2].passed).toBe(false);
+			expect(result.passed).toBe(2);
+			expect(result.failed).toBe(1);
+		});
+
+		it("falls back to plain string comparison for non-JSON output", async () => {
+			const tc = makeTestCase("tc1", "input", "hello world");
+			mockRepo.getSampleTestCases.mockResolvedValue([tc] as any);
+			mockWrapper.wrapCode.mockReturnValue("wrapped");
+			mockPiston.execute.mockResolvedValue({
+				stdout: "hello world\n",
+				stderr: "",
+				exitCode: 0,
+			});
+
+			const result = await service.run(validInput);
+
+			expect(result.results[0].passed).toBe(true);
 		});
 	});
 
