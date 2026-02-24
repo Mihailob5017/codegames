@@ -41,6 +41,25 @@ services:
     networks:
       - codegames-network
 
+  web:
+    build: ./codegames-web
+    container_name: codegames-web
+    ports:
+      - "${WEB_PORT:-5173}:${WEB_PORT:-5173}"
+    env_file:
+      - .env
+      - .env.local
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      API_URL: ${API_URL:-http://localhost:${API_PORT:-4000}}
+    depends_on:
+      - api
+    volumes:
+      - ./codegames-web:/app
+      - /app/node_modules
+    networks:
+      - codegames-network
+
   piston:
     image: ghcr.io/engineer-man/piston
     ports:
