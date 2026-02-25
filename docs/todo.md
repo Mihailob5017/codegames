@@ -26,6 +26,15 @@
 - [ ] Remove `loadash` (typo duplicate of `lodash`) from dependencies
 - [ ] Pin `wait-for-it.sh` download to a specific commit hash in Dockerfile
 
+## Optional Features
+
+- [ ] **Solution diagram** — draw/sketch your approach before coding (tldraw-style whiteboard embedded in the problem page)
+- [ ] **Practice problems with timer** — pick a problem, set a time limit, and practice under pressure
+- [ ] **Study plans** — curated, ordered sequences of problems (e.g. "Blind 75", "Two Pointers Mastery")
+- [ ] **Shareable tests** — create a test (1–5 problems, custom time limit) and share it via link
+  - [ ] Anonymous mode — recipient solves without an account, sees results only
+  - [ ] Authenticated mode — recipient logs in, results count towards their total score
+
 ## Nice to Have (later)
 
 - [ ] Async code execution with a job queue (BullMQ) — only if Piston latency becomes an issue

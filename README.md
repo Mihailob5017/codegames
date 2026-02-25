@@ -104,7 +104,7 @@ One "Run" click = one Piston execution request, regardless of how many test case
 ### Language map
 
 | DB Enum    | Piston language | Install package | Piston version |
-|------------|-----------------|-----------------|----------------|
+| ---------- | --------------- | --------------- | -------------- |
 | JAVASCRIPT | `javascript`    | `node`          | `20.11.1`      |
 | PYTHON     | `python`        | `python`        | `3.12.0`       |
 | JAVA       | `java`          | `java`          | `15.0.2`       |
@@ -115,25 +115,25 @@ Versions can be overridden per-language via env vars (`PISTON_VERSION_JAVASCRIPT
 
 ## Environment Variables
 
-| Variable            | Default                               | Description                    |
-|---------------------|---------------------------------------|--------------------------------|
-| `POSTGRES_USER`     | `postgres`                            | DB username                    |
-| `POSTGRES_PASSWORD` | `CHANGE_ME_IN_ENV_LOCAL`              | DB password                    |
-| `POSTGRES_DB`       | `codegames`                           | DB name                        |
-| `DATABASE_URL`      | (built from POSTGRES_* vars)          | Prisma connection string       |
-| `API_PORT`          | `4000`                                | Express server port            |
-| `API_HOST`          | `0.0.0.0`                             | Express bind address           |
-| `WEB_PORT`          | `3000`                                | Vite dev server port           |
-| `DASHBOARD_PORT`    | `3001`                                | Admin dashboard port           |
-| `NODE_ENV`          | `development`                         | Runtime environment            |
-| `JWT_SECRET`        | *(required)*                          | JWT signing secret             |
-| `JWT_EXPIRES_IN`    | `7d`                                  | JWT token TTL                  |
-| `ADMIN_ROUTE`       | *(required)*                          | Secret admin URL prefix        |
-| `API_VERSION`       | *(required)*                          | API version prefix (e.g. `v1`) |
-| `CORS_ORIGIN`       | `http://localhost:3000,...`           | Allowed CORS origins           |
-| `PISTON_URL`        | `http://piston:2000/api/v2/execute`   | Piston execute endpoint        |
-| `EMAIL_USER`        | *(required for OTP)*                  | SMTP username                  |
-| `EMAIL_PASSWORD`    | *(required for OTP)*                  | SMTP password                  |
+| Variable            | Default                             | Description                    |
+| ------------------- | ----------------------------------- | ------------------------------ |
+| `POSTGRES_USER`     | `postgres`                          | DB username                    |
+| `POSTGRES_PASSWORD` | `CHANGE_ME_IN_ENV_LOCAL`            | DB password                    |
+| `POSTGRES_DB`       | `codegames`                         | DB name                        |
+| `DATABASE_URL`      | (built from POSTGRES\_\* vars)      | Prisma connection string       |
+| `API_PORT`          | `4000`                              | Express server port            |
+| `API_HOST`          | `0.0.0.0`                           | Express bind address           |
+| `WEB_PORT`          | `3000`                              | Vite dev server port           |
+| `DASHBOARD_PORT`    | `3001`                              | Admin dashboard port           |
+| `NODE_ENV`          | `development`                       | Runtime environment            |
+| `JWT_SECRET`        | _(required)_                        | JWT signing secret             |
+| `JWT_EXPIRES_IN`    | `7d`                                | JWT token TTL                  |
+| `ADMIN_ROUTE`       | _(required)_                        | Secret admin URL prefix        |
+| `API_VERSION`       | _(required)_                        | API version prefix (e.g. `v1`) |
+| `CORS_ORIGIN`       | `http://localhost:3000,...`         | Allowed CORS origins           |
+| `PISTON_URL`        | `http://piston:2000/api/v2/execute` | Piston execute endpoint        |
+| `EMAIL_USER`        | _(required for OTP)_                | SMTP username                  |
+| `EMAIL_PASSWORD`    | _(required for OTP)_                | SMTP password                  |
 
 See `.env` for the full list with defaults.
 
