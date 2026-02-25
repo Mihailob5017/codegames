@@ -1,6 +1,5 @@
 **/node_modules/**
-**/*.md
-**/*.MD
+
 # Environment files
 .env.local
 .env*.local
