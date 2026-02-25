@@ -34,6 +34,15 @@
 - [ ] **Shareable tests** — create a test (1–5 problems, custom time limit) and share it via link
   - [ ] Anonymous mode — recipient solves without an account, sees results only
   - [ ] Authenticated mode — recipient logs in, results count towards their total score
+- [ ] **Custom test cases** — let users type their own inputs to debug against (runs through Piston, doesn't count as a submission)
+- [ ] **Solution playback** — record keystrokes/diffs during a solve attempt so users can replay their thought process
+- [ ] **Pattern labels** — after solving, reveal the underlying pattern (sliding window, two pointers, etc.) with a link to the relevant study plan
+- [ ] **Dark mode** — theme toggle with Monaco editor theme sync
+- [ ] **Keyboard shortcuts** — vim/emacs keybindings toggle in Monaco, global shortcuts (Ctrl+Enter to run, Ctrl+Shift+Enter to submit)
+- [ ] **Problem recommendations** — suggest problems based on solve history and failure patterns ("you struggled with sliding window, try these next")
+- [ ] **Collaborative solving** — real-time pair programming on a problem via shared Monaco session (WebSocket)
+- [ ] **Solution comparison** — after accepted submission, show time/space complexity ranking against other users (distribution chart)
+- [ ] **Quiz mode** — non-coding questions (multiple choice, true/false, fill-in-the-blank) for testing theory knowledge (Big-O, data structure trade-offs, system design concepts). Can be mixed into study plans and shareable tests alongside coding problems
 
 ## Nice to Have (later)
 
