@@ -6,7 +6,8 @@
 	"scripts": {
 		"app:build": "docker-compose up --build",
 		"app:up": "docker-compose up",
-		"app:down": "docker-compose down"
+		"app:down": "docker-compose down",
+		"app:seed": " docker compose exec api npx prisma db seed   "
 	},
 	"repository": {
 		"type": "git",

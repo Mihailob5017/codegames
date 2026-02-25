@@ -1,4 +1,4 @@
-import type { Language, TestCase } from "@prisma/client";
+import { Language, StarterCode, type TestCase } from "@prisma/client";
 import CodeRepository from "./code.repository";
 import { PistonService } from "./piston.service";
 import WrapperService from "./wrapper.service";
@@ -87,7 +87,11 @@ class CodeService {
 		return this.compareOutputs(testCases, stdout, stderr);
 	}
 
-	private compareOutputs(testArray: TestCase[], stdout: string, stderr: string): RunResult {
+	private compareOutputs(
+		testArray: TestCase[],
+		stdout: string,
+		stderr: string,
+	): RunResult {
 		if (stderr) {
 			return {
 				total: testArray.length,
@@ -126,6 +130,20 @@ class CodeService {
 			allPassed: results.every((r) => r.passed),
 			results,
 		};
+	}
+
+	getSupportedLanguages(): string[] {
+		return Object.values(Language);
+	}
+
+	async getStarterCode(problemId: string): Promise<StarterCode[]> {
+		const starterCode = await this.codeRepository.getStarterCode(problemId);
+		if (!starterCode) {
+			throw new NotFoundError(
+				"Starter code not found for the given problem ID",
+			);
+		}
+		return starterCode;
 	}
 }
 

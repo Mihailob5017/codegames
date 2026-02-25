@@ -35,6 +35,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      piston:
+        condition: service_healthy
     volumes:
       - ./codegames-api:/app
       - /app/node_modules
@@ -45,13 +47,14 @@ services:
     build: ./codegames-web
     container_name: codegames-web
     ports:
-      - "${WEB_PORT:-5173}:${WEB_PORT:-5173}"
+      - "${WEB_PORT:-3000}:${WEB_PORT:-3000}"
     env_file:
       - .env
       - .env.local
     environment:
       NODE_ENV: ${NODE_ENV:-development}
-      API_URL: ${API_URL:-http://localhost:${API_PORT:-4000}}
+      WEB_PORT: ${WEB_PORT:-3000}
+      API_URL: http://api:${API_PORT:-4000}
     depends_on:
       - api
     volumes:
@@ -62,12 +65,21 @@ services:
 
   piston:
     image: ghcr.io/engineer-man/piston
+    container_name: codegames-piston
     ports:
       - "2000:2000"
     privileged: true
+    entrypoint: ["/bin/bash", "/piston-entrypoint.sh"]
     volumes:
       - ./piston/packages:/piston/packages
       - ./piston/jobs:/piston/jobs
+      - ./piston/piston-entrypoint.sh:/piston-entrypoint.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"const h=require('http');h.get('http://localhost:2000/api/v2/runtimes',r=>{if(r.statusCode===200)process.exit(0);else process.exit(1)}).on('error',()=>process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
     networks:
       - codegames-network
 

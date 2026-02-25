@@ -38,6 +38,22 @@ class CodeController {
 		const result = await CodeController.codeService.run(parsed.data);
 		res.status(200).json({ status: "success", data: result });
 	};
+
+	static readonly getSupportedLanguages: ControllerType<void> = async (
+		_req,
+		res,
+	) => {
+		const languages = CodeController.codeService.getSupportedLanguages();
+		res.status(200).json({ status: "success", data: languages });
+	};
+
+	static readonly getStarterCode: ControllerType<void> = async (req, res) => {
+		const { problemId } = req.params;
+		const starterCode = await CodeController.codeService.getStarterCode(
+			problemId as string,
+		);
+		res.status(200).json({ status: "success", data: starterCode });
+	};
 }
 
 export default CodeController;
