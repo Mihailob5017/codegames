@@ -22,6 +22,11 @@ const envSchema = z.object({
 	EMAIL_PASSWORD: z.string().min(1, "EMAIL_PASSWORD is required"),
 	DUMMY_EMAIL: z.email("DUMMY_EMAIL must be a valid email address").optional(),
 	PISTON_URL: z.url("PISTON_URL must be a valid URL"),
+	MINIO_ENDPOINT: z.url("MINIO_ENDPOINT must be a valid URL"),
+	MINIO_ROOT_USER: z.string().min(1, "MINIO_ROOT_USER is required"),
+	MINIO_ROOT_PASSWORD: z.string().min(1, "MINIO_ROOT_PASSWORD is required"),
+	MINIO_BUCKET: z.string().min(1, "MINIO_BUCKET is required").default("codegames"),
+	MINIO_PUBLIC_URL: z.url("MINIO_PUBLIC_URL must be a valid URL"),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;

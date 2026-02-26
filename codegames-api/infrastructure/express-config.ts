@@ -3,6 +3,7 @@ import { EnvConfig } from "./env-config";
 import { Server } from "node:http";
 import { adminRouter } from "../admin";
 import { codeRouter } from "../code";
+import { uploadRouter } from "../upload";
 import { errorMiddleware } from "../middleware/error-middleware";
 import { requestLogger } from "../middleware/request-logger";
 import logger from "./logger";
@@ -30,6 +31,7 @@ class ExpressServer {
 
 		this.app.use(`/api/${API_VERSION}${ADMIN_ROUTE}`, adminRouter);
 		this.app.use(`/api/${API_VERSION}/code`, codeRouter);
+		this.app.use(`/api/${API_VERSION}/upload`, uploadRouter);
 	}
 
 	private setupErrorHandling() {

@@ -4,6 +4,7 @@ import env from "dotenv";
 import ExpressInstance from "./infrastructure/express-config";
 import PrismaInstance from "./infrastructure/prisma-config";
 import { validateEnv } from "./infrastructure/env-config";
+import UploadService from "./upload/upload.service";
 
 env.config();
 
@@ -19,6 +20,10 @@ const startServer = async (): Promise<StartServerResult> => {
 	const prismaInstance = new PrismaInstance();
 
 	await prismaInstance.connect();
+
+	const uploadService = new UploadService();
+	await uploadService.ensureBucket();
+
 	serverInstance.start();
 
 	return {

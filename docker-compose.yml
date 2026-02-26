@@ -16,6 +16,26 @@ services:
     networks:
       - codegames-network
 
+  minio:
+    image: minio/minio:latest
+    container_name: codegames-minio
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - codegames-network
+
   api:
     build: ./codegames-api
     container_name: codegames-api
@@ -32,10 +52,17 @@ services:
       API_HOST: ${API_HOST:-0.0.0.0}
       CORS_ORIGIN: ${CORS_ORIGIN}
       PISTON_URL: ${PISTON_URL}
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      MINIO_BUCKET: ${MINIO_BUCKET:-codegames}
+      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:-http://localhost:9000}
     depends_on:
       db:
         condition: service_healthy
       piston:
+        condition: service_healthy
+      minio:
         condition: service_healthy
     volumes:
       - ./codegames-api:/app
@@ -85,6 +112,7 @@ services:
 
 volumes:
   pgdata:
+  minio-data:
 
 networks:
   codegames-network:
