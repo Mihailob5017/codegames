@@ -27,7 +27,7 @@ A record of every significant architectural and implementation choice, and the r
 
 ## 2. Project Structure: Feature Folders
 
-**Decision:** Code is organised by feature, not by layer.
+**Decision:** Code is organized by feature, not by layer.
 
 ```text
 codegames-api/
@@ -40,6 +40,8 @@ codegames-api/
 │   └── code.route.ts
 ├── admin/
 ├── auth/
+├── upload/
+├── user/
 ├── infrastructure/
 └── util/
 ```
@@ -58,7 +60,7 @@ codegames-api/
 **Why PostgreSQL over MySQL / SQLite / MongoDB:**
 
 - PostgreSQL is the most feature-complete open-source relational DB — native `String[]` array columns, full-text search, `JSONB`, window functions, and strong constraint enforcement all come for free.
-- The schema uses arrays (e.g. `hints String[]`, `examples String[]`, `disabledHintIndices Int[]`) which are a first-class type in PostgreSQL but require a separate join table in MySQL.
+- The schema uses arrays (e.g. `hints String[]`, `examples String[]`, `categories problem_category[]`) which are a first-class type in PostgreSQL but require a separate join table in MySQL.
 - MongoDB was rejected because the data is inherently relational (users, problems, submissions, test cases all have hard foreign-key constraints that matter here).
 
 **Why Prisma over TypeORM / Drizzle / raw pg:**
@@ -109,6 +111,11 @@ Judge0 was tried earlier in the project. It requires its own separate Postgres a
 
 **Decision:** User code is wrapped in a generated test harness and sent to Piston as a single script. One Piston request covers all test cases.
 
+**Run vs Submit behavior (from the plan):**
+
+- **Run:** Execute against sample test cases only. If the code fails on the first test case, return the expected vs actual result immediately (fail-fast). If it passes the first test, continue and return the full results object with pass/fail per case.
+- **Submit:** Execute against all test cases (sample + hidden). Track the submission in the DB.
+
 **Why not one request per test case:**
 
 - Spinning up a sandbox has non-trivial overhead. Batching all test cases into one execution is significantly faster.
@@ -136,19 +143,35 @@ Judge0 was tried earlier in the project. It requires its own separate Postgres a
 - Enums are fast to query and validated at the DB level — a problem cannot be assigned a typo'd category.
 - The downside is that adding a new category requires a schema migration (`ALTER TYPE`).
 
-**Future plan (documented in [schema-design.md](schema-design.md)):**
-
-- Replace with a many-to-many `Tag` table so that admins can add new tags without a migration, and so tags can be shared between problems and discussion posts.
+**Current stance:** Keep the enum for now. The category list is stable (standard algorithm categories). If it starts changing frequently, migrate to a many-to-many `Tag` table.
 
 ---
 
-## 7. Test Case Format
+## 7. User Roles: Three-Tier System
+
+**Decision:** Three roles — `USER`, `SUPER_USER`, `ADMIN`.
+
+| Role       | Access                                                                  |
+| ---------- | ----------------------------------------------------------------------- |
+| USER       | Browse, solve, tracked submissions, leaderboard, profile, streaks       |
+| SUPER_USER | Everything USER has + create timed tests, analytics, visibility control |
+| ADMIN      | Separate dashboard, CRUD everything, platform analytics                 |
+
+**Anonymous users (no account):** Can browse and attempt problems, but nothing is tracked. No submissions, no leaderboard, no streaks.
+
+**Why SUPER_USER is a role, not a separate boolean:**
+
+- A role enum is cleaner than layering `isPremium` booleans. The role check is a single field comparison in middleware. If more tiers are needed later, extend the enum.
+
+---
+
+## 8. Test Case Format
 
 **Decision:** `input` and `expectedOutput` are stored as JSON strings in the `TestCase` table.
 
 ```text
-input:          "[[2,7,11,15],9]"   → parsed as [args to spread]
-expectedOutput: "[0,1]"             → parsed and compared
+input:          "[[2,7,11,15],9]"   -> parsed as [args to spread]
+expectedOutput: "[0,1]"             -> parsed and compared
 ```
 
 **Why JSON strings over separate columns:**
@@ -159,7 +182,7 @@ expectedOutput: "[0,1]"             → parsed and compared
 
 ---
 
-## 8. Environment Configuration: Zod Validation
+## 9. Environment Configuration: Zod Validation
 
 **Decision:** All environment variables are validated at startup via a Zod schema in `env-config.ts`.
 
@@ -175,7 +198,7 @@ expectedOutput: "[0,1]"             → parsed and compared
 
 ---
 
-## 9. Piston Language Name Mapping
+## 10. Piston Language Name Mapping
 
 **Decision:** A `PISTON_LANGUAGE_MAP` in `piston.service.ts` translates between the internal `Language` enum (uppercase: `JAVASCRIPT`, `PYTHON`, etc.) and the strings Piston expects.
 
@@ -191,15 +214,15 @@ expectedOutput: "[0,1]"             → parsed and compared
 
 ---
 
-## 10. Docker Compose Architecture
+## 11. Docker Compose Architecture
 
 **Decision:** All services run in Docker Compose on a shared internal network (`codegames-network`).
 
 ```text
-Browser → localhost:3000 (web)
-                ↓ proxy /api/*
+Browser -> localhost:3000 (web)
+                | proxy /api/*
           localhost:4000 (api)
-              ↙        ↘
+              /        \
     db:5432          piston:2000
    (postgres)     (code execution)
 ```
@@ -227,7 +250,7 @@ Browser → localhost:3000 (web)
 
 ---
 
-## 11. Auth Strategy (planned / in progress)
+## 12. Auth Strategy (planned)
 
 **Decision:** JWT access tokens (short-lived) + refresh token rotation + OTP email verification.
 
@@ -244,15 +267,20 @@ Browser → localhost:3000 (web)
 
 - OTPs are shorter to type and work better on mobile where clicking a link in email may open a different browser session.
 
+**Anonymous access:**
+
+- Users can browse and attempt problems without an account. The API serves problems and runs code without auth. Submissions, leaderboard, streaks, and profile features require login.
+
 ---
 
-## 12. What Was Intentionally Left Out
+## 13. What Was Intentionally Left Out
 
-| Omitted                           | Why                                                                                 |
-| --------------------------------- | ----------------------------------------------------------------------------------- |
-| Redis                             | Was part of Judge0's stack. Removed when switching to Piston. Not needed currently. |
-| Credits / points system           | All problems are free. A credits layer adds complexity with no current benefit.     |
-| Real-time (WebSocket)             | Design as polling first; add WS when there's a concrete use case.                   |
-| Image upload pipeline             | Schema stores a URL. Upload infra (S3, Cloudinary) is separate from app logic.      |
-| User follow graph                 | Nice-to-have, low priority for MVP.                                                 |
-| TypeScript strict mode everywhere | Some legacy files predate the strict config. Enforced on new code.                  |
+| Omitted                     | Why                                                                            |
+| --------------------------- | ------------------------------------------------------------------------------ |
+| Redis                       | Was part of Judge0's stack. Removed when switching to Piston. Not needed now.  |
+| Credits / points system     | All problems are free. Super user pays a subscription, not per-problem.        |
+| Real-time (WebSocket)       | Design as polling first; add WS when there's a concrete use case (pair coding).|
+| Image upload pipeline       | Schema stores a URL. Upload infra (S3, Cloudinary) is separate from app logic. |
+| Discussion / comments       | Future scope. Build after the core solve loop is solid.                        |
+| Learning plans              | Future scope. Needs the core problem set and tagging to be mature first.       |
+| Quiz mode                   | Future scope. Different content type, build separately.                        |
