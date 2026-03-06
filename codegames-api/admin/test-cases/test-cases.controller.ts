@@ -1,7 +1,7 @@
 import { ControllerType } from "../../types/common.types";
 import { ValidationError } from "../../errors/app-error";
 import TestCasesService from "./test-cases.service";
-import { BulkAddTestCasesSchema } from "../../util/validation-schema";
+import { BulkAddTestCasesSchema } from "./test-cases.dto";
 
 class TestCasesController {
 	private static readonly service = new TestCasesService();

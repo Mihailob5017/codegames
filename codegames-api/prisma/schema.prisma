@@ -26,6 +26,12 @@ enum Language {
   CPP
 }
 
+enum Role {
+  USER
+  SUPER_USER
+  ADMIN
+}
+
 enum problem_category {
   ARRAYS
   STRINGS
@@ -178,4 +184,36 @@ model TestCase {
 
   @@map("test_cases")
   @@index([problemId])
+}
+
+
+model User {
+  id String @id @default(cuid())
+  username String @unique @db.VarChar(50)
+  email String @unique @db.VarChar(100)
+  passwordHash String @db.VarChar(200)
+  firstName String? @db.VarChar(100)
+  lastName String? @db.VarChar(100)
+  profilePictureUrl String? @db.VarChar(500)
+  googleId String? @unique @db.VarChar(100)
+  isGoogleLogin Boolean @default(false)
+  isVerified Boolean @default(false)
+  verifyToken Int?
+  verifyTokenExpiry DateTime?
+  role Role @default(USER)
+  country    String?  @db.VarChar(100)
+
+  totalSolved Int @default(0)
+  currentStreak Int       @default(0)
+  longestStreak Int       @default(0)
+
+
+
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+  @@index([username])
+  @@index([email])
 }

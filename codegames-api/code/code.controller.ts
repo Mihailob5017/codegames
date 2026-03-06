@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { ControllerType } from "../types/common.types";
-import { CodeExecutionSchema } from "../util/validation-schema";
+import { CodeExecutionSchema } from "./code.dto";
 import { ValidationError } from "../errors/app-error";
 import CodeService from "./code.service";
 import logger from "../infrastructure/logger";

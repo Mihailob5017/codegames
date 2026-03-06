@@ -1,6 +1,6 @@
 import { Language } from "@prisma/client";
 import StarterCodesRepository from "./starter-codes.repository";
-import { BulkAddStarterCodesInput } from "../../util/validation-schema";
+import { BulkAddStarterCodesInput } from "./starter-codes.dto";
 
 class StarterCodesService {
 	private readonly repository: StarterCodesRepository;

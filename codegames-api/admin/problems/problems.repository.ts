@@ -1,6 +1,6 @@
 import prisma from "../../infrastructure/prisma";
 import { Prisma } from "@prisma/client";
-import { ProblemQueryFilters } from "../../util/validation-schema";
+import { ProblemQueryFilters } from "./problems.dto";
 
 export const PROBLEM_LIST_SELECT = {
 	id: true,

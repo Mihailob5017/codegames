@@ -10,9 +10,15 @@ import WrapperService from "./wrapper.service";
 import { PistonService } from "./piston.service";
 import CodeService from "./code.service";
 
-const MockCodeRepository = CodeRepository as jest.MockedClass<typeof CodeRepository>;
-const MockWrapperService = WrapperService as jest.MockedClass<typeof WrapperService>;
-const MockPistonService = PistonService as jest.MockedClass<typeof PistonService>;
+const MockCodeRepository = CodeRepository as jest.MockedClass<
+	typeof CodeRepository
+>;
+const MockWrapperService = WrapperService as jest.MockedClass<
+	typeof WrapperService
+>;
+const MockPistonService = PistonService as jest.MockedClass<
+	typeof PistonService
+>;
 
 // Helper to build a minimal TestCase-shaped object
 function makeTestCase(id: string, input: string, expectedOutput: string) {
@@ -33,9 +39,12 @@ describe("CodeService", () => {
 
 	beforeEach(() => {
 		service = new CodeService("http://piston.test");
-		mockRepo = MockCodeRepository.mock.instances[0] as jest.Mocked<CodeRepository>;
-		mockWrapper = MockWrapperService.mock.instances[0] as jest.Mocked<WrapperService>;
-		mockPiston = MockPistonService.mock.instances[0] as jest.Mocked<PistonService>;
+		mockRepo = MockCodeRepository.mock
+			.instances[0] as jest.Mocked<CodeRepository>;
+		mockWrapper = MockWrapperService.mock
+			.instances[0] as jest.Mocked<WrapperService>;
+		mockPiston = MockPistonService.mock
+			.instances[0] as jest.Mocked<PistonService>;
 	});
 
 	// ─── run ──────────────────────────────────────────────────────────────────
@@ -44,7 +53,9 @@ describe("CodeService", () => {
 		it("throws NotFoundError when no sample test cases exist", async () => {
 			mockRepo.getSampleTestCases.mockResolvedValue([]);
 
-			await expect(service.run(validInput)).rejects.toBeInstanceOf(NotFoundError);
+			await expect(service.run(validInput)).rejects.toBeInstanceOf(
+				NotFoundError,
+			);
 			expect(mockWrapper.wrapCode).not.toHaveBeenCalled();
 		});
 
@@ -90,7 +101,11 @@ describe("CodeService", () => {
 			const tc = makeTestCase("tc1", "[1,2]", "3");
 			mockRepo.getSampleTestCases.mockResolvedValue([tc] as any);
 			mockWrapper.wrapCode.mockReturnValue("wrapped");
-			mockPiston.execute.mockResolvedValue({ stdout: "3\n", stderr: "", exitCode: 0 });
+			mockPiston.execute.mockResolvedValue({
+				stdout: "3\n",
+				stderr: "",
+				exitCode: 0,
+			});
 
 			const result = await service.run(validInput);
 
@@ -101,7 +116,11 @@ describe("CodeService", () => {
 			const tc = makeTestCase("tc1", "[3,3]", "[0, 2]");
 			mockRepo.getSampleTestCases.mockResolvedValue([tc] as any);
 			mockWrapper.wrapCode.mockReturnValue("wrapped");
-			mockPiston.execute.mockResolvedValue({ stdout: "[0,2]\n", stderr: "", exitCode: 0 });
+			mockPiston.execute.mockResolvedValue({
+				stdout: "[0,2]\n",
+				stderr: "",
+				exitCode: 0,
+			});
 
 			const result = await service.run(validInput);
 
@@ -127,7 +146,11 @@ describe("CodeService", () => {
 			const tc = makeTestCase("tc1", "[1,2]", "3");
 			mockRepo.getSampleTestCases.mockResolvedValue([tc] as any);
 			mockWrapper.wrapCode.mockReturnValue("wrapped");
-			mockPiston.execute.mockResolvedValue({ stdout: "7\n", stderr: "", exitCode: 0 });
+			mockPiston.execute.mockResolvedValue({
+				stdout: "7\n",
+				stderr: "",
+				exitCode: 0,
+			});
 
 			const result = await service.run(validInput);
 
@@ -178,7 +201,9 @@ describe("CodeService", () => {
 		it("throws NotFoundError when no test cases exist", async () => {
 			mockRepo.getAllTestCases.mockResolvedValue([]);
 
-			await expect(service.execute(validInput)).rejects.toBeInstanceOf(NotFoundError);
+			await expect(service.execute(validInput)).rejects.toBeInstanceOf(
+				NotFoundError,
+			);
 		});
 
 		it("returns RunResult with passing tests", async () => {

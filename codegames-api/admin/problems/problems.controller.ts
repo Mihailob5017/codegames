@@ -5,7 +5,7 @@ import ProblemsService from "./problems.service";
 import {
 	CreateProblemSchema,
 	ProblemQuerySchema,
-} from "../../util/validation-schema";
+} from "./problems.dto";
 
 class ProblemsController {
 	private static readonly service = new ProblemsService();

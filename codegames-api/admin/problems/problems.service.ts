@@ -3,7 +3,7 @@ import ProblemsRepository from "./problems.repository";
 import {
 	CreateProblemInput,
 	ProblemQueryFilters,
-} from "../../util/validation-schema";
+} from "./problems.dto";
 
 class ProblemsService {
 	private readonly repository: ProblemsRepository;

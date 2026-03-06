@@ -1,5 +1,5 @@
 import TestCasesRepository from "./test-cases.repository";
-import { BulkAddTestCasesInput } from "../../util/validation-schema";
+import { BulkAddTestCasesInput } from "./test-cases.dto";
 
 class TestCasesService {
 	private readonly repository: TestCasesRepository;

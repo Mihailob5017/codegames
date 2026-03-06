@@ -1,7 +1,7 @@
 import { ControllerType } from "../../types/common.types";
 import { ValidationError } from "../../errors/app-error";
 import StarterCodesService from "./starter-codes.service";
-import { BulkAddStarterCodesSchema } from "../../util/validation-schema";
+import { BulkAddStarterCodesSchema } from "./starter-codes.dto";
 
 class StarterCodesController {
 	private static readonly service = new StarterCodesService();

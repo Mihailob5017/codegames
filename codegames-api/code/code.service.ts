@@ -2,7 +2,7 @@ import { Language, StarterCode, type TestCase } from "@prisma/client";
 import CodeRepository from "./code.repository";
 import { PistonService } from "./piston.service";
 import WrapperService from "./wrapper.service";
-import type { CodeExecutionInput } from "../util/validation-schema";
+import type { CodeExecutionInput } from "./code.dto";
 import { NotFoundError } from "../errors/app-error";
 
 function deepEqual(a: string, b: string): boolean {
