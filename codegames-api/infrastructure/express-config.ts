@@ -6,8 +6,9 @@ import { codeRouter } from "../code";
 import { uploadRouter } from "../upload";
 import { errorMiddleware } from "../middleware/error-middleware";
 import { requestLogger } from "../middleware/request-logger";
+import helmet from "helmet";
 import logger from "./logger";
-
+import { generalRateLimiter } from "../middleware/rate-limit-middleware";
 class ExpressServer {
 	private readonly app: Express;
 	private readonly config: EnvConfig;
@@ -22,13 +23,14 @@ class ExpressServer {
 	}
 
 	private setupMiddleware() {
+		this.app.use(helmet());
 		this.app.use(requestLogger);
+		this.app.use(generalRateLimiter);
 		this.app.use(express.json());
 	}
 
 	private setupRoutes() {
 		const { API_VERSION, ADMIN_ROUTE } = this.config;
-
 		this.app.use(`/api/${API_VERSION}${ADMIN_ROUTE}`, adminRouter);
 		this.app.use(`/api/${API_VERSION}/code`, codeRouter);
 		this.app.use(`/api/${API_VERSION}/upload`, uploadRouter);
