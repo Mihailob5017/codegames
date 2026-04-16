@@ -1,4 +1,5 @@
 import { UploadService } from "../upload";
+import { AppError } from "../shared/errors/app-error";
 import { CreateUserInput } from "./user.dto";
 import { UserRepository } from "./user.repository";
 import bcrypt from "bcryptjs";
@@ -9,9 +10,20 @@ export class UserService {
 		userInfo: CreateUserInput,
 		profileImage?: Express.Multer.File,
 	) => {
-		const saltRounds: number = parseInt(process.env.SALT_ROUNDS!);
+		const saltRounds: number = Number.parseInt(process.env.SALT_ROUNDS!);
 
-		const passwordHash = await bcrypt.hash(userInfo.password, saltRounds);
+		const [passwordHash, existingUser] = await Promise.all([
+			bcrypt.hash(userInfo.password, saltRounds),
+			UserService.userRepository.findByUsernameOrEmail(
+				userInfo.username,
+				userInfo.email,
+			),
+		]);
+
+		if (existingUser) {
+			throw new AppError("Resource already exists", 409);
+		}
+
 		const profilePictureUrl = profileImage
 			? await UserService.uploadToS3(profileImage)
 			: null;
