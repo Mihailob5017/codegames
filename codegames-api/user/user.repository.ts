@@ -11,6 +11,17 @@ export type RegisterUserData = {
 };
 
 export class UserRepository {
+	findByUsernameOrEmail(username: string, email: string) {
+		return prisma.user.findFirst({
+			where: {
+				OR: [{ username }, { email }],
+			},
+			select: {
+				id: true,
+			},
+		});
+	}
+
 	registerUser(data: RegisterUserData) {
 		return prisma.user.create({
 			data,

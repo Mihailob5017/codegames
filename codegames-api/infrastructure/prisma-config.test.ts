@@ -54,5 +54,30 @@ describe("PrismaService", () => {
 			await service.disconnect();
 			expect(mockPrisma.$disconnect).toHaveBeenCalledTimes(1);
 		});
+
+		it("does not call $disconnect if not connected", async () => {
+			(mockPrisma.$disconnect as jest.Mock).mockResolvedValue(undefined);
+			await service.disconnect();
+			expect(mockPrisma.$disconnect).not.toHaveBeenCalled();
+		});
+	});
+
+	describe("healthCheck", () => {
+		it("returns true when query succeeds", async () => {
+			(mockPrisma.$queryRaw as jest.Mock).mockResolvedValue([{ "?column?": 1 }]);
+			const result = await service.healthCheck();
+			expect(result).toBe(true);
+		});
+
+		it("returns false and logs error when query fails", async () => {
+			const logger = (await import("./logger")).default;
+			(mockPrisma.$queryRaw as jest.Mock).mockRejectedValue(new Error("DB down"));
+			const result = await service.healthCheck();
+			expect(result).toBe(false);
+			expect(logger.error).toHaveBeenCalledWith(
+				"Database health check failed",
+				expect.objectContaining({ error: "DB down" }),
+			);
+		});
 	});
 });
