@@ -1,51 +1,30 @@
-import { PrismaClient } from "@prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
+import prisma from "./prisma";
+import logger from "./logger";
 
 class PrismaService {
-	private readonly client: PrismaClient;
 	private isConnected: boolean = false;
 
-	constructor() {
-		const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
-		this.client = new PrismaClient({
-			log: ["query", "info", "warn", "error"],
-			adapter,
-		});
+	public async connect(): Promise<void> {
+		if (this.isConnected) return;
+		await prisma.$connect();
+		this.isConnected = true;
+		logger.info("Database connected successfully");
 	}
 
-	public async connect() {
-		if (this.isConnected) {
-			return;
-		}
-		this.client
-			.$connect()
-			.then(() => {
-				this.isConnected = true;
-				console.log("Database connected successfully");
-			})
-			.catch((error) => {
-				console.error("Failed to connect to database", {
-					error: error.message,
-					stack: error.stack,
-				});
-			});
-	}
-	public async disconnect() {
-		if (!this.isConnected) {
-			return;
-		}
-		await this.client.$disconnect();
+	public async disconnect(): Promise<void> {
+		if (!this.isConnected) return;
+		await prisma.$disconnect();
 		this.isConnected = false;
-		console.log("Database disconnected successfully");
+		logger.info("Database disconnected successfully");
 	}
 
-	public async healthCheck() {
+	public async healthCheck(): Promise<boolean> {
 		try {
-			await this.client.$queryRaw`SELECT 1`;
+			await prisma.$queryRaw`SELECT 1`;
 			return true;
 		} catch (error) {
 			const err = error instanceof Error ? error : new Error(String(error));
-			console.error("Database health check failed", {
+			logger.error("Database health check failed", {
 				error: err.message,
 				stack: err.stack,
 			});
