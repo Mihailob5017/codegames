@@ -3,8 +3,8 @@ import {
 	createMockRequest,
 	createMockResponse,
 	mockTestCase,
-} from "../../__tests__/utils/test-helpers";
-import { ValidationError } from "../../errors/app-error";
+} from "../../shared/test-utils/test-helpers";
+import { ValidationError } from "../../shared/errors/app-error";
 
 jest.mock("./test-cases.service");
 

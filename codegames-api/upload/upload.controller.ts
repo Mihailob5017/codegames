@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { ControllerType } from "../types/common.types";
-import { BadRequestError, ValidationError } from "../errors/app-error";
+import { ControllerType } from "../shared/types/common.types";
+import { BadRequestError, ValidationError } from "../shared/errors/app-error";
 import UploadService from "./upload.service";
 
 const UploadParamsSchema = z.object({

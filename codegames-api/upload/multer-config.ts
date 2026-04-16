@@ -1,5 +1,5 @@
 import multer from "multer";
-import { BadRequestError } from "../errors/app-error";
+import { BadRequestError } from "../shared/errors/app-error";
 
 const ALLOWED_MIME_TYPES = [
 	"image/jpeg",

@@ -1,7 +1,7 @@
 import {
 	mockProblemFull,
 	mockProblemSummary,
-} from "../../__tests__/utils/test-helpers";
+} from "../../shared/test-utils/test-helpers";
 
 jest.mock("./problems.repository");
 

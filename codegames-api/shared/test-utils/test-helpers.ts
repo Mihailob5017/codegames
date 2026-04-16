@@ -25,7 +25,6 @@ export const createMockResponse = () => {
 
 export const createMockNext = (): NextFunction => jest.fn();
 
-// Shared mock data factories
 export const mockProblemSummary = {
 	id: "problem-id-1",
 	number: 1,

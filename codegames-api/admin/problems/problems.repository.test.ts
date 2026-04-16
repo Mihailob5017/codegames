@@ -2,7 +2,7 @@ import {
 	mockProblemFull,
 	mockProblemSummary,
 	mockTestCase,
-} from "../../__tests__/utils/test-helpers";
+} from "../../shared/test-utils/test-helpers";
 
 jest.mock("../../infrastructure/prisma", () => ({
 	__esModule: true,

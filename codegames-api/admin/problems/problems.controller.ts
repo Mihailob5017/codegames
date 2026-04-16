@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { ControllerType } from "../../types/common.types";
-import { NotFoundError, ValidationError } from "../../errors/app-error";
+import { ControllerType } from "../../shared/types/common.types";
+import { NotFoundError, ValidationError } from "../../shared/errors/app-error";
 import ProblemsService from "./problems.service";
 import {
 	CreateProblemSchema,

@@ -1,5 +1,5 @@
 import { Language } from "@prisma/client";
-import { ExternalServiceError } from "../errors/app-error";
+import { ExternalServiceError } from "../shared/errors/app-error";
 
 // Maps our Language enum to what Piston expects
 const PISTON_LANGUAGE_MAP: Record<

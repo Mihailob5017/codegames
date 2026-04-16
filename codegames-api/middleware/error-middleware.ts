@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import { Prisma } from "@prisma/client";
-import { AppError, ValidationError } from "../errors/app-error";
+import { AppError, ValidationError } from "../shared/errors/app-error";
 import logger from "../infrastructure/logger";
 
 export function errorMiddleware(

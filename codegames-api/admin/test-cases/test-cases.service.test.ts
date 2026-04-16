@@ -1,4 +1,4 @@
-import { mockTestCase } from "../../__tests__/utils/test-helpers";
+import { mockTestCase } from "../../shared/test-utils/test-helpers";
 
 jest.mock("./test-cases.repository");
 

@@ -3,12 +3,12 @@ import {
 	ExternalServiceError,
 	NotFoundError,
 	ValidationError,
-} from "../errors/app-error";
+} from "../shared/errors/app-error";
 import {
 	createMockNext,
 	createMockRequest,
 	createMockResponse,
-} from "../__tests__/utils/test-helpers";
+} from "../shared/test-utils/test-helpers";
 
 jest.mock("../infrastructure/logger", () => ({
 	__esModule: true,

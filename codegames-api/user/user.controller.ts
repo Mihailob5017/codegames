@@ -1,5 +1,5 @@
-import { ValidationError } from "../errors/app-error";
-import { ControllerType } from "../types/common.types";
+import { ValidationError } from "../shared/errors/app-error";
+import { ControllerType } from "../shared/types/common.types";
 import { z } from "zod";
 import { CreateUserSchema } from "./user.dto";
 import { UserService } from "./user.service";

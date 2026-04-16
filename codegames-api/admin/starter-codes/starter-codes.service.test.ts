@@ -1,4 +1,4 @@
-import { mockStarterCode } from "../../__tests__/utils/test-helpers";
+import { mockStarterCode } from "../../shared/test-utils/test-helpers";
 
 jest.mock("./starter-codes.repository");
 

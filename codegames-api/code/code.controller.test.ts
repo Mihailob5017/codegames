@@ -2,8 +2,8 @@ import {
 	createMockNext,
 	createMockRequest,
 	createMockResponse,
-} from "../__tests__/utils/test-helpers";
-import { ValidationError } from "../errors/app-error";
+} from "../shared/test-utils/test-helpers";
+import { ValidationError } from "../shared/errors/app-error";
 
 jest.mock("./code.service");
 

@@ -4,8 +4,8 @@ import {
 	createMockResponse,
 	mockProblemFull,
 	mockProblemSummary,
-} from "../../__tests__/utils/test-helpers";
-import { NotFoundError, ValidationError } from "../../errors/app-error";
+} from "../../shared/test-utils/test-helpers";
+import { NotFoundError, ValidationError } from "../../shared/errors/app-error";
 
 jest.mock("./problems.service");
 

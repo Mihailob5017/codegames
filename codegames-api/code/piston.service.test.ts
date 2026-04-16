@@ -1,4 +1,4 @@
-import { ExternalServiceError } from "../errors/app-error";
+import { ExternalServiceError } from "../shared/errors/app-error";
 import { PistonService } from "./piston.service";
 
 const mockFetch = jest.fn();

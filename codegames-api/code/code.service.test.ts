@@ -1,5 +1,5 @@
-import { mockTestCase } from "../__tests__/utils/test-helpers";
-import { NotFoundError } from "../errors/app-error";
+import { mockTestCase } from "../shared/test-utils/test-helpers";
+import { NotFoundError } from "../shared/errors/app-error";
 
 jest.mock("./code.repository");
 jest.mock("./wrapper.service");

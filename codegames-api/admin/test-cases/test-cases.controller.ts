@@ -1,5 +1,5 @@
-import { ControllerType } from "../../types/common.types";
-import { ValidationError } from "../../errors/app-error";
+import { ControllerType } from "../../shared/types/common.types";
+import { ValidationError } from "../../shared/errors/app-error";
 import TestCasesService from "./test-cases.service";
 import { BulkAddTestCasesSchema } from "./test-cases.dto";
 
