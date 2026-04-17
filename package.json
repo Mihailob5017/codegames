@@ -1,17 +1,23 @@
 {
 	"name": "codegames",
 	"version": "1.0.0",
-	"description": "a leetcode clone",
-	"license": "ISC",
-	"author": "",
-	"type": "commonjs",
+	"description": "A full-stack LeetCode clone built with React, Node.js, PostgreSQL, and Code Execution Service for code execution. This platform allows users to solve coding problems, submit solutions, and get real-time feedback on their code.",
 	"main": "index.js",
 	"scripts": {
 		"app:build": "docker-compose up --build",
 		"app:up": "docker-compose up",
 		"app:down": "docker-compose down",
-		"app:test": "docker-compose -f docker-compose.test.yml up --build",
-		"docker:cleanup": "./scripts/docker-cleanup.sh",
-		"docker:status": "docker system df && df -h | grep docker"
-	}
+		"app:seed": " docker compose exec api npx prisma db seed   "
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/Mihailob5017/codegames.git"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"bugs": {
+		"url": "https://github.com/Mihailob5017/codegames/issues"
+	},
+	"homepage": "https://github.com/Mihailob5017/codegames#readme"
 }

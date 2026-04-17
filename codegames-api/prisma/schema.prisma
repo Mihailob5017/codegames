@@ -1,0 +1,219 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum problem_difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum Language {
+  PYTHON
+  JAVASCRIPT
+  JAVA
+  CSHARP
+  CPP
+}
+
+enum Role {
+  USER
+  SUPER_USER
+  ADMIN
+}
+
+enum problem_category {
+  ARRAYS
+  STRINGS
+  HASHMAPS
+  TWO_POINTERS
+  STACKS
+  BINARY_SEARCH
+  SLIDING_WINDOW
+  LINKED_LISTS
+  TREES
+  TRIES
+  BACKTRACKING
+  HEAPS
+  GRAPHS
+  DYNAMIC_PROGRAMMING
+  INTERVALS
+  GREEDY
+  MATH
+  MISC
+}
+
+enum submission_status {
+  ACCEPTED
+  PENDING
+  WRONG_ANSWER
+  TIME_LIMIT_EXCEEDED
+  MEMORY_LIMIT_EXCEEDED
+  RUNTIME_ERROR
+  COMPILE_ERROR
+}
+
+enum problem_status {
+  SOLVED
+  ATTEMPTED
+  UNSOLVED
+}
+
+model Problem {
+  id String @id @default(cuid())
+  number Int @unique @default(autoincrement())
+  title String @db.VarChar(200)
+  slug String @unique @db.VarChar(200) // URL-friendly version of the title
+
+  
+  description String @db.Text
+  examples String[] @db.Text
+  constrains String @db.Text
+  hints String[] @db.Text
+  difficulty problem_difficulty
+  categories problem_category[]
+  solution String @db.Text
+  explanation String @db.Text
+  isPublished Boolean @default(false)
+
+  Companies ProblemCompany[]
+  StarterCodes StarterCode[]
+  ProblemSolutions ProblemSolution[]
+  ProblemImages ProblemImage[]
+  TestCases TestCase[]
+
+
+// Statistics
+  totalSubmissions Int @default(0)
+  acceptedSubmissions Int @default(0)
+  acceptanceRate Float @default(0)
+
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("problems")
+  @@index([number])
+  @@index([slug])
+  @@index([difficulty])
+  @@index([categories])
+}
+
+
+model Company {
+  id      String  @id @default(cuid())
+  name    String  @unique @db.VarChar(100)
+  logoUrl String?
+
+  problems ProblemCompany[]
+
+  @@map("companies")
+}
+
+model ProblemCompany {
+  problemId String
+  companyId String
+  frequency Int    @default(1) // 1 = common, 2 = uncommon, 3 = rare
+
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@id([problemId, companyId])
+  @@map("problem_companies")
+}
+
+model StarterCode {
+  id String @id @default(cuid())
+  problemId String
+  language Language
+  code String @db.Text
+
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@unique([problemId, language])
+  @@map("starter_codes")
+}
+
+
+model ProblemSolution {
+  id String @id @default(cuid())
+  problemId String
+  language Language
+  code String @db.Text
+  approach String @db.Text
+  time_complexity String @db.VarChar(100)
+  space_complexity String @db.VarChar(100)
+
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  @@unique([problemId, language])
+  @@map("problem_solutions")
+}
+
+model ProblemImage {
+  id        String  @id @default(cuid())
+  problemId String
+  url       String  @db.VarChar(500)
+  altText   String? @db.VarChar(200)
+  order     Int     @default(0)
+
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@map("problem_images")
+  @@index([problemId])
+}
+
+
+model TestCase {
+  id String @id @default(cuid())
+  problemId String
+  input String @db.Text
+  expectedOutput String @db.Text
+  isSample Boolean @default(false)
+
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@map("test_cases")
+  @@index([problemId])
+}
+
+
+model User {
+  id String @id @default(cuid())
+  username String @unique @db.VarChar(50)
+  email String @unique @db.VarChar(100)
+  passwordHash String @db.VarChar(200)
+  firstName String? @db.VarChar(100)
+  lastName String? @db.VarChar(100)
+  profilePictureUrl String? @db.VarChar(500)
+  googleId String? @unique @db.VarChar(100)
+  isGoogleLogin Boolean @default(false)
+  isVerified Boolean @default(false)
+  verifyToken Int?
+  verifyTokenExpiry DateTime?
+  role Role @default(USER)
+  country    String?  @db.VarChar(100)
+
+  totalSolved Int @default(0)
+  currentStreak Int       @default(0)
+  longestStreak Int       @default(0)
+
+
+
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+  @@index([username])
+  @@index([email])
+}

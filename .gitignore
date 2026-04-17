@@ -1,17 +1,30 @@
-node_modules
-.env
-/prisma/prisma
+**/node_modules/**
+**/.claude/**
+# Environment files
+.env.local
+.env*.local
+**/.env.local
+**/.env*.local
 
-/src/generated/prisma
+# OS files
+.DS_Store
+*/.DS_Store
 
-/generated/prisma
+# Editor directories
+.vscode/
+.idea/
 
-/generated/prisma
+# Build outputs
+**/dist/
+**/build/
 
-server/prisma/migrations/*
+# Logs
+**/*.log
+logs/
 
-client/src/exams/*
+# Secrets
+secrets/*.key
+secrets/*.pem
 
-server/dist
-
-**/.DS_Store
+# Piston runtime data
+piston/
