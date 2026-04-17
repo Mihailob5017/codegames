@@ -43,47 +43,38 @@ class CodeService {
 		this.pistonService = new PistonService(pistonUrl);
 	}
 
-	async run(body: CodeExecutionInput): Promise<RunResult | any> {
-		const { code, language, problemId } = body;
+	async run(body: CodeExecutionInput): Promise<RunResult> {
+		const { problemId } = body;
 		const testCases = await this.codeRepository.getSampleTestCases(problemId);
-
 		if (testCases.length === 0) {
 			throw new NotFoundError("No test cases found for the given problem ID");
 		}
-
-		const wrappedCode = this.codePreparationService.wrapCode(
-			code,
-			language as Language,
-			testCases,
-		);
-
-		const { stdout, stderr } = await this.pistonService.execute(
-			language as Language,
-			wrappedCode,
-		);
-
-		return this.compareOutputs(testCases, stdout, stderr);
+		return this._runWithTestCases(body, testCases);
 	}
 
-	async execute(body: CodeExecutionInput): Promise<any> {
-		const { code, language, problemId } = body;
+	async execute(body: CodeExecutionInput): Promise<RunResult> {
+		const { problemId } = body;
 		const testCases = await this.codeRepository.getAllTestCases(problemId);
-
 		if (testCases.length === 0) {
 			throw new NotFoundError("No test cases found for the given problem ID");
 		}
+		return this._runWithTestCases(body, testCases);
+	}
 
+	private async _runWithTestCases(
+		body: CodeExecutionInput,
+		testCases: TestCase[],
+	): Promise<RunResult> {
+		const { code, language } = body;
 		const wrappedCode = this.codePreparationService.wrapCode(
 			code,
 			language as Language,
 			testCases,
 		);
-
 		const { stdout, stderr } = await this.pistonService.execute(
 			language as Language,
 			wrappedCode,
 		);
-
 		return this.compareOutputs(testCases, stdout, stderr);
 	}
 

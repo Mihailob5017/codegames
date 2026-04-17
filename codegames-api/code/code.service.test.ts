@@ -235,5 +235,24 @@ describe("CodeService", () => {
 			expect(result.allPassed).toBe(false);
 			expect(result.stderr).toBe("SyntaxError: Unexpected token");
 		});
+
+		it("result has all RunResult fields: allPassed, total, passed, failed, results", async () => {
+			mockRepo.getAllTestCases.mockResolvedValue([mockTestCase] as any);
+			mockCodePrep.wrapCode.mockReturnValue("wrapped");
+			mockPiston.execute.mockResolvedValue({
+				stdout: mockTestCase.expectedOutput + "\n",
+				stderr: "",
+				exitCode: 0,
+			});
+
+			const result = await service.execute(validInput);
+
+			expect(result).toHaveProperty("allPassed");
+			expect(result).toHaveProperty("total");
+			expect(result).toHaveProperty("passed");
+			expect(result).toHaveProperty("failed");
+			expect(result).toHaveProperty("results");
+			expect(Array.isArray(result.results)).toBe(true);
+		});
 	});
 });
