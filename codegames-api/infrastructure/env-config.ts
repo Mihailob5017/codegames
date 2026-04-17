@@ -22,6 +22,13 @@ const envSchema = z.object({
 	EMAIL_PASSWORD: z.string().min(1, "EMAIL_PASSWORD is required"),
 	DUMMY_EMAIL: z.email("DUMMY_EMAIL must be a valid email address").optional(),
 	PISTON_URL: z.url("PISTON_URL must be a valid URL"),
+	SALT_ROUNDS: z.string().transform((val) => {
+		const rounds = Number(val);
+		if (Number.isNaN(rounds) || rounds < 1) {
+			throw new Error("SALT_ROUNDS must be a positive integer");
+		}
+		return rounds;
+	}),
 	MINIO_ENDPOINT: z.url("MINIO_ENDPOINT must be a valid URL"),
 	MINIO_ROOT_USER: z.string().min(1, "MINIO_ROOT_USER is required"),
 	MINIO_ROOT_PASSWORD: z.string().min(1, "MINIO_ROOT_PASSWORD is required"),

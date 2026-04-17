@@ -7,7 +7,7 @@ const router = Router();
 router.get("/health-check", CodeController.healthCheck);
 router.post("/execute", codeSubmissionRateLimiter, CodeController.executeCode);
 router.post("/run", codeSubmissionRateLimiter, CodeController.runCode);
-router.get("/get-languages", CodeController.getSupportedLanguages);
-router.get("/get-starter-code/:problemId", CodeController.getStarterCode);
+router.get("/languages", CodeController.getSupportedLanguages);
+router.get("/starter-code/:problemId", CodeController.getStarterCode);
 
 export const codeRouter = router;
