@@ -27,8 +27,12 @@ describe("ProblemsController", () => {
 	// ─── GET /problems ────────────────────────────────────────────────────────
 
 	describe("getProblems", () => {
-		it("returns 200 with all problems", async () => {
-			mockService.getAllProblems.mockResolvedValue([mockProblemSummary] as any);
+		it("returns 200 with paginated problems", async () => {
+			const paginatedResult = {
+				data: [mockProblemSummary],
+				pagination: { page: 1, limit: 20, total: 1, totalPages: 1 },
+			};
+			mockService.getAllProblems.mockResolvedValue(paginatedResult as any);
 
 			const req = createMockRequest();
 			const res = createMockResponse();
@@ -43,6 +47,7 @@ describe("ProblemsController", () => {
 			expect((res as any).json).toHaveBeenCalledWith({
 				status: "success",
 				data: [mockProblemSummary],
+				pagination: { page: 1, limit: 20, total: 1, totalPages: 1 },
 			});
 		});
 	});
@@ -50,8 +55,12 @@ describe("ProblemsController", () => {
 	// ─── GET /problems/search ─────────────────────────────────────────────────
 
 	describe("queryProblems", () => {
-		it("returns 200 with filtered problems for valid query params", async () => {
-			mockService.queryProblems.mockResolvedValue([mockProblemSummary] as any);
+		it("returns 200 with filtered paginated problems for valid query params", async () => {
+			const paginatedResult = {
+				data: [mockProblemSummary],
+				pagination: { page: 1, limit: 20, total: 1, totalPages: 1 },
+			};
+			mockService.queryProblems.mockResolvedValue(paginatedResult as any);
 
 			const req = createMockRequest({
 				query: { difficulty: "EASY", isPublished: "true" },
@@ -68,6 +77,7 @@ describe("ProblemsController", () => {
 			expect((res as any).json).toHaveBeenCalledWith({
 				status: "success",
 				data: [mockProblemSummary],
+				pagination: { page: 1, limit: 20, total: 1, totalPages: 1 },
 			});
 		});
 
@@ -81,7 +91,10 @@ describe("ProblemsController", () => {
 		});
 
 		it("returns 200 with an empty list when no problems match", async () => {
-			mockService.queryProblems.mockResolvedValue([]);
+			mockService.queryProblems.mockResolvedValue({
+				data: [],
+				pagination: { page: 1, limit: 20, total: 0, totalPages: 0 },
+			} as any);
 
 			const req = createMockRequest({ query: { search: "nonexistent" } });
 			const res = createMockResponse();
@@ -96,6 +109,7 @@ describe("ProblemsController", () => {
 			expect((res as any).json).toHaveBeenCalledWith({
 				status: "success",
 				data: [],
+				pagination: { page: 1, limit: 20, total: 0, totalPages: 0 },
 			});
 		});
 	});

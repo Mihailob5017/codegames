@@ -1,6 +1,7 @@
 import prisma from "../../infrastructure/prisma";
 import { Prisma } from "@prisma/client";
 import { ProblemQueryFilters } from "./problems.dto";
+import { PaginationParams } from "../../shared/types/common.types";
 
 export const PROBLEM_LIST_SELECT = {
 	id: true,
@@ -17,33 +18,48 @@ export const PROBLEM_LIST_SELECT = {
 } satisfies Prisma.ProblemSelect;
 
 class ProblemsRepository {
-	getAllProblems() {
-		return prisma.problem.findMany({
-			select: PROBLEM_LIST_SELECT,
-			orderBy: { number: "asc" },
-		});
+	async getAllProblems(pagination: PaginationParams) {
+		const skip = (pagination.page - 1) * pagination.limit;
+		const [data, total] = await Promise.all([
+			prisma.problem.findMany({
+				select: PROBLEM_LIST_SELECT,
+				orderBy: { number: "asc" },
+				skip,
+				take: pagination.limit,
+			}),
+			prisma.problem.count(),
+		]);
+		return { data, total };
 	}
 
-	queryProblems(filters: ProblemQueryFilters) {
-		return prisma.problem.findMany({
-			where: {
-				...(filters.difficulty && { difficulty: filters.difficulty }),
-				...(filters.isPublished !== undefined && {
-					isPublished: filters.isPublished,
-				}),
-				...(filters.categories?.length && {
-					categories: { hasSome: filters.categories },
-				}),
-				...(filters.search && {
-					OR: [
-						{ title: { contains: filters.search, mode: "insensitive" } },
-						{ slug: { contains: filters.search, mode: "insensitive" } },
-					],
-				}),
-			},
-			select: PROBLEM_LIST_SELECT,
-			orderBy: { number: "asc" },
-		});
+	async queryProblems(filters: ProblemQueryFilters, pagination: PaginationParams) {
+		const skip = (pagination.page - 1) * pagination.limit;
+		const where: Prisma.ProblemWhereInput = {
+			...(filters.difficulty && { difficulty: filters.difficulty }),
+			...(filters.isPublished !== undefined && {
+				isPublished: filters.isPublished,
+			}),
+			...(filters.categories?.length && {
+				categories: { hasSome: filters.categories },
+			}),
+			...(filters.search && {
+				OR: [
+					{ title: { contains: filters.search, mode: "insensitive" } },
+					{ slug: { contains: filters.search, mode: "insensitive" } },
+				],
+			}),
+		};
+		const [data, total] = await Promise.all([
+			prisma.problem.findMany({
+				where,
+				select: PROBLEM_LIST_SELECT,
+				orderBy: { number: "asc" },
+				skip,
+				take: pagination.limit,
+			}),
+			prisma.problem.count({ where }),
+		]);
+		return { data, total };
 	}
 
 	getProblemById(id: string) {

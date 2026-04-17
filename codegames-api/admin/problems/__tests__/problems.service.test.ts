@@ -23,25 +23,31 @@ describe("ProblemsService", () => {
 	});
 
 	describe("getAllProblems", () => {
-		it("delegates to repository.getAllProblems", async () => {
-			mockRepo.getAllProblems.mockResolvedValue([mockProblemSummary] as any);
+		it("returns a PaginatedResult from the repository", async () => {
+			mockRepo.getAllProblems.mockResolvedValue({ data: [mockProblemSummary], total: 1 } as any);
 
-			const result = await service.getAllProblems();
+			const result = await service.getAllProblems({ page: 1, limit: 20 });
 
-			expect(result).toEqual([mockProblemSummary]);
-			expect(mockRepo.getAllProblems).toHaveBeenCalledTimes(1);
+			expect(result).toEqual({
+				data: [mockProblemSummary],
+				pagination: { page: 1, limit: 20, total: 1, totalPages: 1 },
+			});
+			expect(mockRepo.getAllProblems).toHaveBeenCalledWith({ page: 1, limit: 20 });
 		});
 	});
 
 	describe("queryProblems", () => {
-		it("delegates filters to repository.queryProblems", async () => {
+		it("delegates filters and pagination to repository.queryProblems", async () => {
 			const filters = { difficulty: "EASY" as const, isPublished: true };
-			mockRepo.queryProblems.mockResolvedValue([mockProblemSummary] as any);
+			mockRepo.queryProblems.mockResolvedValue({ data: [mockProblemSummary], total: 1 } as any);
 
-			const result = await service.queryProblems(filters);
+			const result = await service.queryProblems(filters, { page: 1, limit: 20 });
 
-			expect(result).toEqual([mockProblemSummary]);
-			expect(mockRepo.queryProblems).toHaveBeenCalledWith(filters);
+			expect(result).toEqual({
+				data: [mockProblemSummary],
+				pagination: { page: 1, limit: 20, total: 1, totalPages: 1 },
+			});
+			expect(mockRepo.queryProblems).toHaveBeenCalledWith(filters, { page: 1, limit: 20 });
 		});
 	});
 

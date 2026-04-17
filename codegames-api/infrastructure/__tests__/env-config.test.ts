@@ -15,6 +15,7 @@ const validEnv = {
     MINIO_ROOT_PASSWORD: "minioadmin",
     MINIO_BUCKET: "codegames",
     MINIO_PUBLIC_URL: "http://localhost:9000",
+    CORS_ORIGIN: "http://localhost:3000",
     SALT_ROUNDS: "10",
 };
 

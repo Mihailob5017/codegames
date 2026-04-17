@@ -41,6 +41,7 @@ export class PistonService {
 		const { language: pistonLang, version } = PISTON_LANGUAGE_MAP[language];
 		const response = await fetch(this.pistonUrl, {
 			method: "POST",
+			signal: AbortSignal.timeout(10_000),
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
 				language: pistonLang,

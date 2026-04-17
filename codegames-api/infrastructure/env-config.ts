@@ -34,6 +34,7 @@ const envSchema = z.object({
 	MINIO_ROOT_PASSWORD: z.string().min(1, "MINIO_ROOT_PASSWORD is required"),
 	MINIO_BUCKET: z.string().min(1, "MINIO_BUCKET is required").default("codegames"),
 	MINIO_PUBLIC_URL: z.url("MINIO_PUBLIC_URL must be a valid URL"),
+	CORS_ORIGIN: z.url("CORS_ORIGIN must be a valid URL").default("http://localhost:3000"),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;
