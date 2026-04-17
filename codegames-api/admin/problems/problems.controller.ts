@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ControllerType } from "../../shared/types/common.types";
+import { ControllerType, PaginationSchema } from "../../shared/types/common.types";
 import { NotFoundError, ValidationError } from "../../shared/errors/app-error";
 import ProblemsService from "./problems.service";
 import {
@@ -10,9 +10,10 @@ import {
 class ProblemsController {
 	private static readonly service = new ProblemsService();
 
-	static readonly getProblems: ControllerType<void> = async (_req, res) => {
-		const problems = await ProblemsController.service.getAllProblems();
-		res.status(200).json({ status: "success", data: problems });
+	static readonly getProblems: ControllerType<void> = async (req, res) => {
+		const pagination = PaginationSchema.parse(req.query);
+		const result = await ProblemsController.service.getAllProblems(pagination);
+		res.status(200).json({ status: "success", ...result });
 	};
 
 	static readonly queryProblems: ControllerType<void> = async (req, res) => {
@@ -23,10 +24,9 @@ class ProblemsController {
 				z.flattenError(parsed.error).fieldErrors,
 			);
 		}
-		const problems = await ProblemsController.service.queryProblems(
-			parsed.data,
-		);
-		res.status(200).json({ status: "success", data: problems });
+		const pagination = PaginationSchema.parse(req.query);
+		const result = await ProblemsController.service.queryProblems(parsed.data, pagination);
+		res.status(200).json({ status: "success", ...result });
 	};
 
 	static readonly getProblemById: ControllerType<void> = async (req, res) => {

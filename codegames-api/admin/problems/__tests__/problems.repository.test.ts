@@ -9,6 +9,7 @@ jest.mock("../../../infrastructure/prisma", () => ({
 	default: {
 		problem: {
 			findMany: jest.fn(),
+			count: jest.fn(),
 			findUnique: jest.fn(),
 			create: jest.fn(),
 			update: jest.fn(),
@@ -24,6 +25,8 @@ const db = prisma as unknown as {
 	problem: Record<string, jest.Mock>;
 };
 
+const PAGE1 = { page: 1, limit: 20 };
+
 describe("ProblemsRepository", () => {
 	let repository: ProblemsRepository;
 
@@ -32,23 +35,26 @@ describe("ProblemsRepository", () => {
 	});
 
 	describe("getAllProblems", () => {
-		it("returns problems ordered by number", async () => {
+		it("returns paginated problems ordered by number", async () => {
 			db.problem.findMany.mockResolvedValue([mockProblemSummary]);
+			db.problem.count.mockResolvedValue(1);
 
-			const result = await repository.getAllProblems();
+			const result = await repository.getAllProblems(PAGE1);
 
-			expect(result).toEqual([mockProblemSummary]);
+			expect(result).toEqual({ data: [mockProblemSummary], total: 1 });
 			expect(db.problem.findMany).toHaveBeenCalledWith(
-				expect.objectContaining({ orderBy: { number: "asc" } }),
+				expect.objectContaining({ orderBy: { number: "asc" }, skip: 0, take: 20 }),
 			);
+			expect(db.problem.count).toHaveBeenCalledTimes(1);
 		});
 	});
 
 	describe("queryProblems", () => {
 		it("applies no filters when none are provided", async () => {
 			db.problem.findMany.mockResolvedValue([mockProblemSummary]);
+			db.problem.count.mockResolvedValue(1);
 
-			await repository.queryProblems({});
+			await repository.queryProblems({}, PAGE1);
 
 			expect(db.problem.findMany).toHaveBeenCalledWith(
 				expect.objectContaining({ where: {} }),
@@ -57,8 +63,9 @@ describe("ProblemsRepository", () => {
 
 		it("filters by difficulty", async () => {
 			db.problem.findMany.mockResolvedValue([mockProblemSummary]);
+			db.problem.count.mockResolvedValue(1);
 
-			await repository.queryProblems({ difficulty: "EASY" });
+			await repository.queryProblems({ difficulty: "EASY" }, PAGE1);
 
 			expect(db.problem.findMany).toHaveBeenCalledWith(
 				expect.objectContaining({ where: { difficulty: "EASY" } }),
@@ -67,8 +74,9 @@ describe("ProblemsRepository", () => {
 
 		it("filters by isPublished", async () => {
 			db.problem.findMany.mockResolvedValue([]);
+			db.problem.count.mockResolvedValue(0);
 
-			await repository.queryProblems({ isPublished: false });
+			await repository.queryProblems({ isPublished: false }, PAGE1);
 
 			expect(db.problem.findMany).toHaveBeenCalledWith(
 				expect.objectContaining({ where: { isPublished: false } }),
@@ -77,8 +85,9 @@ describe("ProblemsRepository", () => {
 
 		it("filters by categories using hasSome", async () => {
 			db.problem.findMany.mockResolvedValue([mockProblemSummary]);
+			db.problem.count.mockResolvedValue(1);
 
-			await repository.queryProblems({ categories: ["ARRAYS", "STRINGS"] });
+			await repository.queryProblems({ categories: ["ARRAYS", "STRINGS"] }, PAGE1);
 
 			expect(db.problem.findMany).toHaveBeenCalledWith(
 				expect.objectContaining({
@@ -89,8 +98,9 @@ describe("ProblemsRepository", () => {
 
 		it("filters by search term across title and slug", async () => {
 			db.problem.findMany.mockResolvedValue([mockProblemSummary]);
+			db.problem.count.mockResolvedValue(1);
 
-			await repository.queryProblems({ search: "two sum" });
+			await repository.queryProblems({ search: "two sum" }, PAGE1);
 
 			expect(db.problem.findMany).toHaveBeenCalledWith(
 				expect.objectContaining({

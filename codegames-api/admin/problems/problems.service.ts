@@ -4,6 +4,7 @@ import {
 	CreateProblemInput,
 	ProblemQueryFilters,
 } from "./problems.dto";
+import { PaginatedResult, PaginationParams } from "../../shared/types/common.types";
 
 class ProblemsService {
 	private readonly repository: ProblemsRepository;
@@ -12,12 +13,30 @@ class ProblemsService {
 		this.repository = new ProblemsRepository();
 	}
 
-	getAllProblems() {
-		return this.repository.getAllProblems();
+	async getAllProblems(pagination: PaginationParams): Promise<PaginatedResult<unknown>> {
+		const { data, total } = await this.repository.getAllProblems(pagination);
+		return {
+			data,
+			pagination: {
+				page: pagination.page,
+				limit: pagination.limit,
+				total,
+				totalPages: Math.ceil(total / pagination.limit),
+			},
+		};
 	}
 
-	queryProblems(filters: ProblemQueryFilters) {
-		return this.repository.queryProblems(filters);
+	async queryProblems(filters: ProblemQueryFilters, pagination: PaginationParams): Promise<PaginatedResult<unknown>> {
+		const { data, total } = await this.repository.queryProblems(filters, pagination);
+		return {
+			data,
+			pagination: {
+				page: pagination.page,
+				limit: pagination.limit,
+				total,
+				totalPages: Math.ceil(total / pagination.limit),
+			},
+		};
 	}
 
 	getProblemById(id: string) {

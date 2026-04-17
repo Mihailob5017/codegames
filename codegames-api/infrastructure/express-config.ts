@@ -1,4 +1,5 @@
 import express, { Express } from "express";
+import cors from "cors";
 import { EnvConfig } from "./env-config";
 import { Server } from "node:http";
 import { adminRouter } from "../admin";
@@ -24,6 +25,7 @@ class ExpressServer {
 	}
 
 	private setupMiddleware() {
+		this.app.use(cors({ origin: this.config.CORS_ORIGIN }));
 		this.app.use(helmet());
 		this.app.use(requestLogger);
 		this.app.use(generalRateLimiter);
