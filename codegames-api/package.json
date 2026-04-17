@@ -10,7 +10,10 @@
 		"lint": "eslint . --ext .ts",
 		"test": "jest",
 		"test:watch": "jest --watchAll",
-		"seed": "npx tsx prisma/seed.ts"
+		"seed": "npx tsx prisma/seed.ts",
+		"migrate:dev": "prisma migrate dev",
+		"migrate:reset": "prisma migrate reset",
+		"migrate:new": "prisma migrate dev --create-only --name"
 	},
 	"keywords": [],
 	"author": "",
