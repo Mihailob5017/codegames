@@ -1,6 +1,6 @@
 import type { Language, TestCase } from "@prisma/client";
 
-class WrapperService {
+class CodePreparationService {
 	wrapCode(code: string, language: Language, testCases: TestCase[]): string {
 		switch (language) {
 			case "JAVASCRIPT":
@@ -384,4 +384,4 @@ ${testBlocks}
 	}
 }
 
-export default WrapperService;
+export default CodePreparationService;

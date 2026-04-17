@@ -1,7 +1,7 @@
 import { Language, StarterCode, type TestCase } from "@prisma/client";
 import CodeRepository from "./code.repository";
 import { PistonService } from "./piston.service";
-import WrapperService from "./wrapper.service";
+import CodePreparationService from "./code-preparation.service";
 import type { CodeExecutionInput } from "./code.dto";
 import { NotFoundError } from "../shared/errors/app-error";
 
@@ -34,12 +34,12 @@ export interface RunResult {
 
 class CodeService {
 	private readonly codeRepository: CodeRepository;
-	private readonly wrapperService: WrapperService;
+	private readonly codePreparationService: CodePreparationService;
 	private readonly pistonService: PistonService;
 
 	constructor(pistonUrl: string) {
 		this.codeRepository = new CodeRepository();
-		this.wrapperService = new WrapperService();
+		this.codePreparationService = new CodePreparationService();
 		this.pistonService = new PistonService(pistonUrl);
 	}
 
@@ -51,7 +51,7 @@ class CodeService {
 			throw new NotFoundError("No test cases found for the given problem ID");
 		}
 
-		const wrappedCode = this.wrapperService.wrapCode(
+		const wrappedCode = this.codePreparationService.wrapCode(
 			code,
 			language as Language,
 			testCases,
@@ -73,7 +73,7 @@ class CodeService {
 			throw new NotFoundError("No test cases found for the given problem ID");
 		}
 
-		const wrappedCode = this.wrapperService.wrapCode(
+		const wrappedCode = this.codePreparationService.wrapCode(
 			code,
 			language as Language,
 			testCases,

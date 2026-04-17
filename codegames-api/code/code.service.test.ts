@@ -2,19 +2,19 @@ import { mockTestCase } from "../shared/test-utils/test-helpers";
 import { NotFoundError } from "../shared/errors/app-error";
 
 jest.mock("./code.repository");
-jest.mock("./wrapper.service");
+jest.mock("./code-preparation.service");
 jest.mock("./piston.service");
 
 import CodeRepository from "./code.repository";
-import WrapperService from "./wrapper.service";
+import CodePreparationService from "./code-preparation.service";
 import { PistonService } from "./piston.service";
 import CodeService from "./code.service";
 
 const MockCodeRepository = CodeRepository as jest.MockedClass<
 	typeof CodeRepository
 >;
-const MockWrapperService = WrapperService as jest.MockedClass<
-	typeof WrapperService
+const MockCodePreparationService = CodePreparationService as jest.MockedClass<
+	typeof CodePreparationService
 >;
 const MockPistonService = PistonService as jest.MockedClass<
 	typeof PistonService
@@ -28,7 +28,7 @@ function makeTestCase(id: string, input: string, expectedOutput: string) {
 describe("CodeService", () => {
 	let service: CodeService;
 	let mockRepo: jest.Mocked<CodeRepository>;
-	let mockWrapper: jest.Mocked<WrapperService>;
+	let mockCodePrep: jest.Mocked<CodePreparationService>;
 	let mockPiston: jest.Mocked<PistonService>;
 
 	const validInput = {
@@ -41,8 +41,8 @@ describe("CodeService", () => {
 		service = new CodeService("http://piston.test");
 		mockRepo = MockCodeRepository.mock
 			.instances[0] as jest.Mocked<CodeRepository>;
-		mockWrapper = MockWrapperService.mock
-			.instances[0] as jest.Mocked<WrapperService>;
+		mockCodePrep = MockCodePreparationService.mock
+			.instances[0] as jest.Mocked<CodePreparationService>;
 		mockPiston = MockPistonService.mock
 			.instances[0] as jest.Mocked<PistonService>;
 	});
@@ -56,12 +56,12 @@ describe("CodeService", () => {
 			await expect(service.run(validInput)).rejects.toBeInstanceOf(
 				NotFoundError,
 			);
-			expect(mockWrapper.wrapCode).not.toHaveBeenCalled();
+			expect(mockCodePrep.wrapCode).not.toHaveBeenCalled();
 		});
 
 		it("returns RunResult with passing tests when stdout matches expected", async () => {
 			mockRepo.getSampleTestCases.mockResolvedValue([mockTestCase] as any);
-			mockWrapper.wrapCode.mockReturnValue("wrapped code");
+			mockCodePrep.wrapCode.mockReturnValue("wrapped code");
 			mockPiston.execute.mockResolvedValue({
 				stdout: mockTestCase.expectedOutput + "\n",
 				stderr: "",
@@ -78,7 +78,7 @@ describe("CodeService", () => {
 
 		it("returns failed results with stderr when piston returns stderr", async () => {
 			mockRepo.getSampleTestCases.mockResolvedValue([mockTestCase] as any);
-			mockWrapper.wrapCode.mockReturnValue("wrapped code");
+			mockCodePrep.wrapCode.mockReturnValue("wrapped code");
 			mockPiston.execute.mockResolvedValue({
 				stdout: "",
 				stderr: "ReferenceError: x is not defined",
@@ -100,7 +100,7 @@ describe("CodeService", () => {
 		it("passes when stdout exactly matches expected output", async () => {
 			const tc = makeTestCase("tc1", "[1,2]", "3");
 			mockRepo.getSampleTestCases.mockResolvedValue([tc] as any);
-			mockWrapper.wrapCode.mockReturnValue("wrapped");
+			mockCodePrep.wrapCode.mockReturnValue("wrapped");
 			mockPiston.execute.mockResolvedValue({
 				stdout: "3\n",
 				stderr: "",
@@ -115,7 +115,7 @@ describe("CodeService", () => {
 		it("passes when JSON output differs only in whitespace ([0,2] vs [0, 2])", async () => {
 			const tc = makeTestCase("tc1", "[3,3]", "[0, 2]");
 			mockRepo.getSampleTestCases.mockResolvedValue([tc] as any);
-			mockWrapper.wrapCode.mockReturnValue("wrapped");
+			mockCodePrep.wrapCode.mockReturnValue("wrapped");
 			mockPiston.execute.mockResolvedValue({
 				stdout: "[0,2]\n",
 				stderr: "",
@@ -130,7 +130,7 @@ describe("CodeService", () => {
 		it("passes when nested array whitespace differs ([[0,1],[2,3]] vs [[0, 1], [2, 3]])", async () => {
 			const tc = makeTestCase("tc1", "input", "[[0, 1], [2, 3]]");
 			mockRepo.getSampleTestCases.mockResolvedValue([tc] as any);
-			mockWrapper.wrapCode.mockReturnValue("wrapped");
+			mockCodePrep.wrapCode.mockReturnValue("wrapped");
 			mockPiston.execute.mockResolvedValue({
 				stdout: "[[0,1],[2,3]]\n",
 				stderr: "",
@@ -145,7 +145,7 @@ describe("CodeService", () => {
 		it("fails when actual value is wrong", async () => {
 			const tc = makeTestCase("tc1", "[1,2]", "3");
 			mockRepo.getSampleTestCases.mockResolvedValue([tc] as any);
-			mockWrapper.wrapCode.mockReturnValue("wrapped");
+			mockCodePrep.wrapCode.mockReturnValue("wrapped");
 			mockPiston.execute.mockResolvedValue({
 				stdout: "7\n",
 				stderr: "",
@@ -163,7 +163,7 @@ describe("CodeService", () => {
 			const tc2 = makeTestCase("tc2", "[3,3]", "0 1");
 			const tc3 = makeTestCase("tc3", "[1,2]", "0 2");
 			mockRepo.getSampleTestCases.mockResolvedValue([tc1, tc2, tc3] as any);
-			mockWrapper.wrapCode.mockReturnValue("wrapped");
+			mockCodePrep.wrapCode.mockReturnValue("wrapped");
 			mockPiston.execute.mockResolvedValue({
 				stdout: "0 1\n0 1\nWRONG\n",
 				stderr: "",
@@ -182,7 +182,7 @@ describe("CodeService", () => {
 		it("falls back to plain string comparison for non-JSON output", async () => {
 			const tc = makeTestCase("tc1", "input", "hello world");
 			mockRepo.getSampleTestCases.mockResolvedValue([tc] as any);
-			mockWrapper.wrapCode.mockReturnValue("wrapped");
+			mockCodePrep.wrapCode.mockReturnValue("wrapped");
 			mockPiston.execute.mockResolvedValue({
 				stdout: "hello world\n",
 				stderr: "",
@@ -208,7 +208,7 @@ describe("CodeService", () => {
 
 		it("returns RunResult with passing tests", async () => {
 			mockRepo.getAllTestCases.mockResolvedValue([mockTestCase] as any);
-			mockWrapper.wrapCode.mockReturnValue("wrapped code");
+			mockCodePrep.wrapCode.mockReturnValue("wrapped code");
 			mockPiston.execute.mockResolvedValue({
 				stdout: mockTestCase.expectedOutput + "\n",
 				stderr: "",
@@ -223,7 +223,7 @@ describe("CodeService", () => {
 
 		it("returns failed results with stderr when piston returns stderr", async () => {
 			mockRepo.getAllTestCases.mockResolvedValue([mockTestCase] as any);
-			mockWrapper.wrapCode.mockReturnValue("wrapped code");
+			mockCodePrep.wrapCode.mockReturnValue("wrapped code");
 			mockPiston.execute.mockResolvedValue({
 				stdout: "",
 				stderr: "SyntaxError: Unexpected token",
