@@ -13,7 +13,9 @@
 		"seed": "npx tsx prisma/seed.ts",
 		"migrate:dev": "prisma migrate dev",
 		"migrate:reset": "prisma migrate reset",
-		"migrate:new": "prisma migrate dev --create-only --name"
+		"migrate:new": "prisma migrate dev --create-only --name",
+		"migrate:status": "prisma migrate status",
+		"migrate:rollback": "npx tsx prisma/scripts/rollback.ts"
 	},
 	"keywords": [],
 	"author": "",
