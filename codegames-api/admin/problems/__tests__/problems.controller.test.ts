@@ -4,13 +4,13 @@ import {
 	createMockResponse,
 	mockProblemFull,
 	mockProblemSummary,
-} from "../../shared/test-utils/test-helpers";
-import { NotFoundError, ValidationError } from "../../shared/errors/app-error";
+} from "../../../shared/test-utils/test-helpers";
+import { NotFoundError, ValidationError } from "../../../shared/errors/app-error";
 
-jest.mock("./problems.service");
+jest.mock("../problems.service");
 
-import ProblemsService from "./problems.service";
-import ProblemsController from "./problems.controller";
+import ProblemsService from "../problems.service";
+import ProblemsController from "../problems.controller";
 
 const MockProblemsService = ProblemsService as jest.MockedClass<
 	typeof ProblemsService

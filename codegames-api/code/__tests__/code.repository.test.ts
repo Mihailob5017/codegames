@@ -1,6 +1,6 @@
-import { mockTestCase } from "../shared/test-utils/test-helpers";
+import { mockTestCase } from "../../shared/test-utils/test-helpers";
 
-jest.mock("../infrastructure/prisma", () => ({
+jest.mock("../../infrastructure/prisma", () => ({
 	__esModule: true,
 	default: {
 		testCase: {
@@ -9,8 +9,8 @@ jest.mock("../infrastructure/prisma", () => ({
 	},
 }));
 
-import prisma from "../infrastructure/prisma";
-import CodeRepository from "./code.repository";
+import prisma from "../../infrastructure/prisma";
+import CodeRepository from "../code.repository";
 
 const db = prisma as unknown as {
 	testCase: Record<string, jest.Mock>;
@@ -32,6 +32,7 @@ describe("CodeRepository", () => {
 			expect(result).toEqual([mockTestCase]);
 			expect(db.testCase.findMany).toHaveBeenCalledWith({
 				where: { problemId: "problem-id-1", isSample: true },
+				orderBy: { id: "asc" },
 			});
 		});
 	});
@@ -45,6 +46,7 @@ describe("CodeRepository", () => {
 			expect(result).toEqual([mockTestCase]);
 			expect(db.testCase.findMany).toHaveBeenCalledWith({
 				where: { problemId: "problem-id-1" },
+				orderBy: { id: "asc" },
 			});
 		});
 	});

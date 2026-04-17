@@ -3,13 +3,13 @@ import {
 	createMockRequest,
 	createMockResponse,
 	mockTestCase,
-} from "../../shared/test-utils/test-helpers";
-import { ValidationError } from "../../shared/errors/app-error";
+} from "../../../shared/test-utils/test-helpers";
+import { ValidationError } from "../../../shared/errors/app-error";
 
-jest.mock("./test-cases.service");
+jest.mock("../test-cases.service");
 
-import TestCasesService from "./test-cases.service";
-import TestCasesController from "./test-cases.controller";
+import TestCasesService from "../test-cases.service";
+import TestCasesController from "../test-cases.controller";
 
 const MockTestCasesService = TestCasesService as jest.MockedClass<
 	typeof TestCasesService

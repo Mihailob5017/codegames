@@ -3,14 +3,14 @@ import {
 	ExternalServiceError,
 	NotFoundError,
 	ValidationError,
-} from "../shared/errors/app-error";
+} from "../../shared/errors/app-error";
 import {
 	createMockNext,
 	createMockRequest,
 	createMockResponse,
-} from "../shared/test-utils/test-helpers";
+} from "../../shared/test-utils/test-helpers";
 
-jest.mock("../infrastructure/logger", () => ({
+jest.mock("../../infrastructure/logger", () => ({
 	__esModule: true,
 	default: {
 		warn: jest.fn(),
@@ -37,7 +37,7 @@ jest.mock("@prisma/client", () => {
 });
 
 import { Prisma } from "@prisma/client";
-import { errorMiddleware } from "./error-middleware";
+import { errorMiddleware } from "../error-middleware";
 
 describe("errorMiddleware", () => {
 	const req = createMockRequest();

@@ -1,5 +1,4 @@
-// codegames-api/infrastructure/env-config.test.ts
-import { validateEnv } from "./env-config";
+import { validateEnv } from "../env-config";
 
 const validEnv = {
     NODE_ENV: "test",

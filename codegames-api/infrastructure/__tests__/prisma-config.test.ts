@@ -1,5 +1,4 @@
-// codegames-api/infrastructure/prisma-config.test.ts
-jest.mock("./prisma", () => ({
+jest.mock("../prisma", () => ({
 	__esModule: true,
 	default: {
 		$connect: jest.fn(),
@@ -7,13 +6,13 @@ jest.mock("./prisma", () => ({
 		$queryRaw: jest.fn(),
 	},
 }));
-jest.mock("./logger", () => ({
+jest.mock("../logger", () => ({
 	__esModule: true,
 	default: { info: jest.fn(), error: jest.fn(), warn: jest.fn() },
 }));
 
-import prisma from "./prisma";
-import PrismaService from "./prisma-config";
+import prisma from "../prisma";
+import PrismaService from "../prisma-config";
 
 const mockPrisma = prisma as jest.Mocked<typeof prisma>;
 
@@ -70,7 +69,7 @@ describe("PrismaService", () => {
 		});
 
 		it("returns false and logs error when query fails", async () => {
-			const logger = (await import("./logger")).default;
+			const logger = (await import("../logger")).default;
 			(mockPrisma.$queryRaw as jest.Mock).mockRejectedValue(new Error("DB down"));
 			const result = await service.healthCheck();
 			expect(result).toBe(false);

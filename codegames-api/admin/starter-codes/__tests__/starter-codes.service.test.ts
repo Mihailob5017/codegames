@@ -1,9 +1,9 @@
-import { mockStarterCode } from "../../shared/test-utils/test-helpers";
+import { mockStarterCode } from "../../../shared/test-utils/test-helpers";
 
-jest.mock("./starter-codes.repository");
+jest.mock("../starter-codes.repository");
 
-import StarterCodesRepository from "./starter-codes.repository";
-import StarterCodesService from "./starter-codes.service";
+import StarterCodesRepository from "../starter-codes.repository";
+import StarterCodesService from "../starter-codes.service";
 
 const MockStarterCodesRepository = StarterCodesRepository as jest.MockedClass<
 	typeof StarterCodesRepository

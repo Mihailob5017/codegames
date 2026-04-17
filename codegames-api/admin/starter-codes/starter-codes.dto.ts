@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { Language } from "@prisma/client";
 
-const LANGUAGES = Object.values(Language) as [string, ...string[]];
+const LANGUAGES = Object.values(Language) as [Language, ...Language[]];
 
 export const BulkAddStarterCodesSchema = z
 	.array(

@@ -6,7 +6,7 @@ import {
 	NotFoundError,
 	UnauthorizedError,
 	ValidationError,
-} from "./app-error";
+} from "../app-error";
 
 describe("AppError", () => {
 	it("stores message and statusCode", () => {

@@ -1,12 +1,12 @@
 import {
 	mockProblemFull,
 	mockProblemSummary,
-} from "../../shared/test-utils/test-helpers";
+} from "../../../shared/test-utils/test-helpers";
 
-jest.mock("./problems.repository");
+jest.mock("../problems.repository");
 
-import ProblemsRepository from "./problems.repository";
-import ProblemsService from "./problems.service";
+import ProblemsRepository from "../problems.repository";
+import ProblemsService from "../problems.service";
 
 const MockProblemsRepository = ProblemsRepository as jest.MockedClass<
 	typeof ProblemsRepository

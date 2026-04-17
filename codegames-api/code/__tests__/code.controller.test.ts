@@ -2,13 +2,13 @@ import {
 	createMockNext,
 	createMockRequest,
 	createMockResponse,
-} from "../shared/test-utils/test-helpers";
-import { ValidationError } from "../shared/errors/app-error";
+} from "../../shared/test-utils/test-helpers";
+import { ValidationError } from "../../shared/errors/app-error";
 
-jest.mock("./code.service");
+jest.mock("../code.service");
 
-import CodeService from "./code.service";
-import CodeController from "./code.controller";
+import CodeService from "../code.service";
+import CodeController from "../code.controller";
 
 const MockCodeService = CodeService as jest.MockedClass<typeof CodeService>;
 

@@ -3,13 +3,13 @@ import {
 	createMockRequest,
 	createMockResponse,
 	mockStarterCode,
-} from "../../shared/test-utils/test-helpers";
-import { ValidationError } from "../../shared/errors/app-error";
+} from "../../../shared/test-utils/test-helpers";
+import { ValidationError } from "../../../shared/errors/app-error";
 
-jest.mock("./starter-codes.service");
+jest.mock("../starter-codes.service");
 
-import StarterCodesService from "./starter-codes.service";
-import StarterCodesController from "./starter-codes.controller";
+import StarterCodesService from "../starter-codes.service";
+import StarterCodesController from "../starter-codes.controller";
 
 const MockStarterCodesService = StarterCodesService as jest.MockedClass<
 	typeof StarterCodesService

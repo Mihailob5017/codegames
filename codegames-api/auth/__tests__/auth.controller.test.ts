@@ -1,19 +1,18 @@
-// codegames-api/auth/auth.controller.test.ts
 import {
     createMockNext,
     createMockRequest,
     createMockResponse,
-} from "../shared/test-utils/test-helpers";
-import { ValidationError, AppError } from "../shared/errors/app-error";
+} from "../../shared/test-utils/test-helpers";
+import { ValidationError, AppError } from "../../shared/errors/app-error";
 
-jest.mock("./auth.service", () => ({
+jest.mock("../auth.service", () => ({
     AuthService: {
         register: jest.fn(),
     },
 }));
 
-import { AuthService } from "./auth.service";
-import AuthController from "./auth.controller";
+import { AuthService } from "../auth.service";
+import AuthController from "../auth.controller";
 
 const mockRegister = AuthService.register as jest.MockedFunction<typeof AuthService.register>;
 

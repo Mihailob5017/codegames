@@ -2,9 +2,9 @@ import {
 	mockProblemFull,
 	mockProblemSummary,
 	mockTestCase,
-} from "../../shared/test-utils/test-helpers";
+} from "../../../shared/test-utils/test-helpers";
 
-jest.mock("../../infrastructure/prisma", () => ({
+jest.mock("../../../infrastructure/prisma", () => ({
 	__esModule: true,
 	default: {
 		problem: {
@@ -17,8 +17,8 @@ jest.mock("../../infrastructure/prisma", () => ({
 	},
 }));
 
-import prisma from "../../infrastructure/prisma";
-import ProblemsRepository from "./problems.repository";
+import prisma from "../../../infrastructure/prisma";
+import ProblemsRepository from "../problems.repository";
 
 const db = prisma as unknown as {
 	problem: Record<string, jest.Mock>;

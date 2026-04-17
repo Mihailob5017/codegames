@@ -1,14 +1,14 @@
-import { mockTestCase } from "../shared/test-utils/test-helpers";
-import { NotFoundError } from "../shared/errors/app-error";
+import { mockTestCase } from "../../shared/test-utils/test-helpers";
+import { NotFoundError } from "../../shared/errors/app-error";
 
-jest.mock("./code.repository");
-jest.mock("./code-preparation.service");
-jest.mock("./piston.service");
+jest.mock("../code.repository");
+jest.mock("../code-preparation.service");
+jest.mock("../piston.service");
 
-import CodeRepository from "./code.repository";
-import CodePreparationService from "./code-preparation.service";
-import { PistonService } from "./piston.service";
-import CodeService from "./code.service";
+import CodeRepository from "../code.repository";
+import CodePreparationService from "../code-preparation.service";
+import { PistonService } from "../piston.service";
+import CodeService from "../code.service";
 
 const MockCodeRepository = CodeRepository as jest.MockedClass<
 	typeof CodeRepository
@@ -20,7 +20,6 @@ const MockPistonService = PistonService as jest.MockedClass<
 	typeof PistonService
 >;
 
-// Helper to build a minimal TestCase-shaped object
 function makeTestCase(id: string, input: string, expectedOutput: string) {
 	return { id, input, expectedOutput, isSample: true, problemId: "p1" };
 }

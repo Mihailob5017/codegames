@@ -1,9 +1,9 @@
-import { mockTestCase } from "../../shared/test-utils/test-helpers";
+import { mockTestCase } from "../../../shared/test-utils/test-helpers";
 
-jest.mock("./test-cases.repository");
+jest.mock("../test-cases.repository");
 
-import TestCasesRepository from "./test-cases.repository";
-import TestCasesService from "./test-cases.service";
+import TestCasesRepository from "../test-cases.repository";
+import TestCasesService from "../test-cases.service";
 
 const MockTestCasesRepository = TestCasesRepository as jest.MockedClass<
 	typeof TestCasesRepository

@@ -1,6 +1,6 @@
-import { mockStarterCode } from "../../shared/test-utils/test-helpers";
+import { mockStarterCode } from "../../../shared/test-utils/test-helpers";
 
-jest.mock("../../infrastructure/prisma", () => ({
+jest.mock("../../../infrastructure/prisma", () => ({
 	__esModule: true,
 	default: {
 		starterCode: {
@@ -11,8 +11,8 @@ jest.mock("../../infrastructure/prisma", () => ({
 	},
 }));
 
-import prisma from "../../infrastructure/prisma";
-import StarterCodesRepository from "./starter-codes.repository";
+import prisma from "../../../infrastructure/prisma";
+import StarterCodesRepository from "../starter-codes.repository";
 
 const db = prisma as unknown as {
 	starterCode: Record<string, jest.Mock>;
