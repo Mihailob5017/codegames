@@ -36,14 +36,14 @@ codegames-api/
 │   ├── code.service.ts
 │   ├── code.repository.ts
 │   ├── piston.service.ts
-│   ├── wrapper.service.ts
+│   ├── code-preparation.service.ts
 │   └── code.route.ts
 ├── admin/
 ├── auth/
 ├── upload/
 ├── user/
 ├── infrastructure/
-└── util/
+└── shared/
 ```
 
 **Why feature folders over layer folders (`controllers/`, `services/`, `repositories/`):**
@@ -121,10 +121,10 @@ Judge0 was tried earlier in the project. It requires its own separate Postgres a
 - Spinning up a sandbox has non-trivial overhead. Batching all test cases into one execution is significantly faster.
 - The harness iterates over test cases in a loop and writes one JSON line to stdout per case — easy to parse back into structured results.
 
-**How the harness works (`wrapper.service.ts`):**
+**How the harness works (`code-preparation.service.ts`):**
 
 - The user submits a function (e.g. `function solution(nums, target) { ... }`).
-- `WrapperService` injects the test cases as hardcoded literals and adds a loop that calls `solution(...)` with each set of arguments, printing the result as JSON to stdout.
+- `CodePreparationService` injects the test cases as hardcoded literals and adds a loop that calls `solution(...)` with each set of arguments, printing the result as JSON to stdout.
 - Test case inputs are stored as JSON strings in the DB (e.g. `[[2,7,11,15],9]`) — an array of arguments that get spread into the function call.
 - Each language has its own wrapper implementation to handle type system differences (Java and C++ need typed declarations; Python and JS can use dynamic argument spreading).
 
@@ -191,6 +191,12 @@ expectedOutput: "[0,1]"             -> parsed and compared
 - Startup fails immediately with a clear error message if a required variable is missing or malformed (e.g. a non-URL string for `DATABASE_URL`, a port number out of range for `API_PORT`).
 - Without this, the server starts successfully but crashes at runtime when the first request hits the misconfigured code path — much harder to diagnose.
 
+**Current implementation detail:**
+
+- Startup validates the environment once, then stores the parsed result in `infrastructure/app-config.ts`.
+- Runtime services that need config now read from `getAppConfig()` instead of scattering raw `process.env` access across feature modules.
+- This keeps configuration usage aligned with validated startup state and reduces module-load timing issues.
+
 **`.env` vs `.env.local`:**
 
 - `.env` is committed to git and contains safe defaults and documentation comments. It has no real secrets.
@@ -247,6 +253,41 @@ Browser -> localhost:3000 (web)
 **Why not Kubernetes / separate containers without Compose:**
 
 - This is a personal learning project. Compose is the right level of complexity — simple to run, simple to understand, no infra overhead.
+
+---
+
+## 12. API Boundary Validation
+
+**Decision:** All HTTP write endpoints should validate request payloads with Zod before they reach services or Prisma.
+
+**Why:**
+
+- Prisma input types are not a safe external API contract
+- Validation rules belong at the module boundary
+- This keeps controller behavior consistent across features and avoids partially validated write paths
+
+**Current implementation status:**
+
+- `auth`, `code`, and admin create/bulk endpoints already follow this pattern
+- single test-case creation, single starter-code creation, problem updates, and upload deletion were aligned to this pattern as part of the current cleanup
+
+---
+
+## 13. Configuration and Service Construction
+
+**Decision:** Avoid eager feature-service construction that depends on runtime config during module load.
+
+**Why:**
+
+- Static construction tied to `process.env` makes startup order brittle
+- Tests become harder to isolate
+- Config validity can diverge from actual runtime usage
+
+**Current implementation status:**
+
+- `CodeController` now lazily resolves `CodeService`
+- upload and S3 infrastructure read validated app config instead of owning fallback env logic
+- auth password hashing reads validated `SALT_ROUNDS` from app config
 
 ---
 

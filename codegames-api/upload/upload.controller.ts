@@ -7,6 +7,10 @@ const UploadParamsSchema = z.object({
 	folder: z.enum(["problem-images", "company-logos", "user-avatars"]),
 });
 
+const DeleteFileSchema = z.object({
+	key: z.string().min(1, "File key is required"),
+});
+
 class UploadController {
 	private static readonly uploadService = new UploadService();
 
@@ -53,11 +57,14 @@ class UploadController {
 	};
 
 	static readonly deleteFile: ControllerType<void> = async (req, res) => {
-		const { key } = req.body;
-		if (!key || typeof key !== "string") {
-			throw new BadRequestError("File key is required");
+		const parsed = DeleteFileSchema.safeParse(req.body);
+		if (!parsed.success) {
+			throw new ValidationError(
+				"Invalid delete payload",
+				z.flattenError(parsed.error).fieldErrors,
+			);
 		}
-		await UploadController.uploadService.delete(key);
+		await UploadController.uploadService.delete(parsed.data.key);
 		res.status(200).json({ status: "success", message: "File deleted" });
 	};
 }

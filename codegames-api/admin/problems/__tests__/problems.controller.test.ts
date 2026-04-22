@@ -257,6 +257,20 @@ describe("ProblemsController", () => {
 				data: updated,
 			});
 		});
+
+		it("throws ValidationError when no update fields are provided", async () => {
+			const req = createMockRequest({
+				params: { id: "problem-id-1" },
+				body: {},
+			});
+			const res = createMockResponse();
+
+			await expect(
+				ProblemsController.updateProblem(req as any, res as any, createMockNext()),
+			).rejects.toBeInstanceOf(ValidationError);
+
+			expect(mockService.updateProblem).not.toHaveBeenCalled();
+		});
 	});
 
 	// ─── DELETE /problems/:id ─────────────────────────────────────────────────

@@ -66,6 +66,24 @@ describe("TestCasesController", () => {
 				data: mockTestCase,
 			});
 		});
+
+		it("throws ValidationError when the payload is invalid", async () => {
+			const req = createMockRequest({
+				params: { id: "problem-id-1" },
+				body: { input: "", expectedOutput: "" },
+			});
+			const res = createMockResponse();
+
+			await expect(
+				TestCasesController.addTestCaseToProblem(
+					req as any,
+					res as any,
+					createMockNext(),
+				),
+			).rejects.toBeInstanceOf(ValidationError);
+
+			expect(mockService.addTestCaseToProblem).not.toHaveBeenCalled();
+		});
 	});
 
 	describe("bulkAddTestCasesToProblem", () => {

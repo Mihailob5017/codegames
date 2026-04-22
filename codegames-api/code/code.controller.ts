@@ -4,11 +4,25 @@ import { CodeExecutionSchema } from "./code.dto";
 import { ValidationError } from "../shared/errors/app-error";
 import CodeService from "./code.service";
 import logger from "../infrastructure/logger";
+import { getAppConfig } from "../infrastructure/app-config";
 
 class CodeController {
-	private static readonly codeService: CodeService = new CodeService(
-		process.env.PISTON_URL!,
-	);
+	private static codeService: CodeService | null = null;
+
+	private static getCodeService(): CodeService {
+		if (!CodeController.codeService) {
+			const pistonUrl =
+				(() => {
+					try {
+						return getAppConfig().PISTON_URL;
+					} catch {
+						return process.env.PISTON_URL ?? "http://localhost:2000";
+					}
+				})();
+			CodeController.codeService = new CodeService(pistonUrl);
+		}
+		return CodeController.codeService;
+	}
 
 	static readonly healthCheck: ControllerType<void> = async (_req, res) => {
 		logger.debug("API: v1/code/health-check");
@@ -23,7 +37,7 @@ class CodeController {
 				z.flattenError(parsed.error).fieldErrors,
 			);
 		}
-		const result = await CodeController.codeService.execute(parsed.data);
+		const result = await CodeController.getCodeService().execute(parsed.data);
 		res.status(200).json({ status: "success", data: result });
 	};
 
@@ -35,7 +49,7 @@ class CodeController {
 				z.flattenError(parsed.error).fieldErrors,
 			);
 		}
-		const result = await CodeController.codeService.run(parsed.data);
+		const result = await CodeController.getCodeService().run(parsed.data);
 		res.status(200).json({ status: "success", data: result });
 	};
 
@@ -43,13 +57,13 @@ class CodeController {
 		_req,
 		res,
 	) => {
-		const languages = CodeController.codeService.getSupportedLanguages();
+		const languages = CodeController.getCodeService().getSupportedLanguages();
 		res.status(200).json({ status: "success", data: languages });
 	};
 
 	static readonly getStarterCode: ControllerType<void> = async (req, res) => {
 		const { problemId } = req.params;
-		const starterCode = await CodeController.codeService.getStarterCode(
+		const starterCode = await CodeController.getCodeService().getStarterCode(
 			problemId as string,
 		);
 		res.status(200).json({ status: "success", data: starterCode });

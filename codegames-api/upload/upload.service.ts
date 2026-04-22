@@ -9,6 +9,7 @@ import { getS3Client } from "../infrastructure/s3-client";
 import { v4 as uuidv4 } from "uuid";
 import path from "node:path";
 import logger from "../infrastructure/logger";
+import { getAppConfig } from "../infrastructure/app-config";
 
 export type UploadFolder = "problem-images" | "company-logos" | "user-avatars";
 
@@ -18,12 +19,12 @@ export interface UploadResult {
 }
 
 class UploadService {
-	private readonly bucket: string;
-	private readonly publicUrl: string;
+	private get bucket(): string {
+		return getAppConfig().MINIO_BUCKET;
+	}
 
-	constructor() {
-		this.bucket = process.env.MINIO_BUCKET || "codegames";
-		this.publicUrl = process.env.MINIO_PUBLIC_URL || "http://localhost:9000";
+	private get publicUrl(): string {
+		return getAppConfig().MINIO_PUBLIC_URL;
 	}
 
 	async ensureBucket(): Promise<void> {

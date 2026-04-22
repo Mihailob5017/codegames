@@ -5,6 +5,7 @@ import ProblemsService from "./problems.service";
 import {
 	CreateProblemSchema,
 	ProblemQuerySchema,
+	UpdateProblemSchema,
 } from "./problems.dto";
 
 class ProblemsController {
@@ -52,9 +53,16 @@ class ProblemsController {
 	};
 
 	static readonly updateProblem: ControllerType<void> = async (req, res) => {
+		const parsed = UpdateProblemSchema.safeParse(req.body);
+		if (!parsed.success) {
+			throw new ValidationError(
+				"Invalid problem data",
+				z.flattenError(parsed.error).fieldErrors,
+			);
+		}
 		const problem = await ProblemsController.service.updateProblem(
 			req.params.id as string,
-			req.body,
+			parsed.data,
 		);
 		res.status(200).json({ status: "success", data: problem });
 	};

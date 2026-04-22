@@ -1,7 +1,10 @@
 import { ControllerType } from "../../shared/types/common.types";
 import { ValidationError } from "../../shared/errors/app-error";
 import StarterCodesService from "./starter-codes.service";
-import { BulkAddStarterCodesSchema } from "./starter-codes.dto";
+import {
+	BulkAddStarterCodesSchema,
+	StarterCodeSchema,
+} from "./starter-codes.dto";
 
 class StarterCodesController {
 	private static readonly service = new StarterCodesService();
@@ -21,10 +24,14 @@ class StarterCodesController {
 		req,
 		res,
 	) => {
+		const parsed = StarterCodeSchema.safeParse(req.body);
+		if (!parsed.success) {
+			throw new ValidationError("Invalid starter code data");
+		}
 		const starterCode =
 			await StarterCodesController.service.addStarterCodeToProblem(
 				req.params.id as string,
-				req.body,
+				parsed.data,
 			);
 		res.status(201).json({ status: "success", data: starterCode });
 	};

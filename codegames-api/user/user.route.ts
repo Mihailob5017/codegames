@@ -1,5 +1,5 @@
 // codegames-api/user/user.route.ts
-import Router from "express";
+import { Router } from "express";
 
 const router = Router();
 

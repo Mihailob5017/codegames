@@ -8,9 +8,9 @@ A LeetCode-style coding challenge platform. Users submit code, it runs against t
 Browser → localhost:3000 (web)
                 ↓ proxy /api/*
           localhost:4000 (api)
-              ↙        ↘
-    db:5432          piston:2000
-   (postgres)     (code execution)
+           ↙        ↓        ↘
+   db:5432     minio:9000   piston:2000
+  (postgres)   (object)    (code execution)
 ```
 
 **Services:**
@@ -18,6 +18,7 @@ Browser → localhost:3000 (web)
 - `web` — React + Vite frontend (port 3000)
 - `api` — Express + TypeScript backend (port 4000)
 - `db` — PostgreSQL 15 via Prisma ORM (port 5432)
+- `minio` — S3-compatible object storage (ports 9000/9001)
 - `piston` — sandboxed code execution engine (port 2000)
 
 All services run in Docker Compose on a shared bridge network and communicate via Docker DNS.
@@ -41,25 +42,28 @@ codegames/
 ├── codegames-api/               # Express backend
 │   ├── code/                    # Code execution feature
 │   │   ├── piston.service.ts    # HTTP client for Piston
-│   │   ├── wrapper.service.ts   # Wraps user code in test harness
+│   │   ├── code-preparation.service.ts
 │   │   ├── code.repository.ts   # Fetches problems + test cases from DB
-│   │   ├── code.service.ts      # Orchestrates the full execution pipeline
-│   │   ├── code.controller.ts   # HTTP request handler
+│   │   ├── code.service.ts      # Orchestrates the execution pipeline
+│   │   ├── code.controller.ts   # HTTP request handlers
 │   │   └── code.route.ts        # Route definitions
-│   ├── admin/                   # Admin feature (same structure)
-│   ├── auth/                    # Auth feature (JWT, refresh tokens, OTP)
+│   ├── admin/                   # Problems, test cases, starter codes
+│   ├── auth/                    # Registration (login/JWT planned)
+│   ├── upload/                  # MinIO/S3 file uploads
+│   ├── user/                    # Profile placeholder
 │   ├── infrastructure/
 │   │   ├── express-config.ts    # Express setup + route mounting
 │   │   ├── prisma-config.ts     # PrismaService lifecycle
 │   │   ├── prisma.ts            # PrismaClient singleton
-│   │   └── env-config.ts        # Zod env validation
-│   ├── types/
-│   │   ├── common.types.ts      # Shared types (ControllerType etc.)
-│   │   └── dto.types.ts         # Request/response shapes
+│   │   ├── env-config.ts        # Zod env validation
+│   │   └── app-config.ts        # Validated config bootstrap
+│   ├── shared/
+│   │   ├── errors/              # AppError hierarchy
+│   │   ├── types/               # Shared controller/pagination types
+│   │   └── test-utils/          # Shared test factories/helpers
 │   └── prisma/
 │       └── schema.prisma        # DB schema
 ├── codegames-web/               # React + Vite frontend
-├── codegames-dashboard/         # Admin dashboard (separate app)
 ├── piston/
 │   └── piston-entrypoint.sh     # Custom entrypoint (cgroup setup + runtime install)
 ├── docs/                        # Documentation
@@ -84,7 +88,7 @@ POST /api/{version}/code/run  { problemId, language, code }
 1. Fetch problem + test cases from DB
         │
         ▼
-2. Wrap user's function in a test harness (wrapper.service.ts)
+2. Wrap user's function in a test harness (`code-preparation.service.ts`)
         │
         ▼
 3. Send the complete script to Piston (one HTTP request)
@@ -124,7 +128,6 @@ Versions can be overridden per-language via env vars (`PISTON_VERSION_JAVASCRIPT
 | `API_PORT`          | `4000`                              | Express server port            |
 | `API_HOST`          | `0.0.0.0`                           | Express bind address           |
 | `WEB_PORT`          | `3000`                              | Vite dev server port           |
-| `DASHBOARD_PORT`    | `3001`                              | Admin dashboard port           |
 | `NODE_ENV`          | `development`                       | Runtime environment            |
 | `JWT_SECRET`        | _(required)_                        | JWT signing secret             |
 | `JWT_EXPIRES_IN`    | `7d`                                | JWT token TTL                  |
@@ -132,6 +135,9 @@ Versions can be overridden per-language via env vars (`PISTON_VERSION_JAVASCRIPT
 | `API_VERSION`       | _(required)_                        | API version prefix (e.g. `v1`) |
 | `CORS_ORIGIN`       | `http://localhost:3000,...`         | Allowed CORS origins           |
 | `PISTON_URL`        | `http://piston:2000/api/v2/execute` | Piston execute endpoint        |
+| `MINIO_ENDPOINT`    | `http://minio:9000`                 | Internal MinIO endpoint        |
+| `MINIO_PUBLIC_URL`  | `http://localhost:9000`             | Public file URL base           |
+| `MINIO_BUCKET`      | `codegames`                         | Upload bucket name             |
 | `EMAIL_USER`        | _(required for OTP)_                | SMTP username                  |
 | `EMAIL_PASSWORD`    | _(required for OTP)_                | SMTP password                  |
 

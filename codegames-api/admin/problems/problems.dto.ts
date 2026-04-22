@@ -48,8 +48,45 @@ export const CreateProblemSchema = z.object({
 				language: z.enum(LANGUAGES),
 				code: z.string(),
 			}),
-		)
-		.default([]),
+	)
+	.default([]),
 });
 
 export type CreateProblemInput = z.infer<typeof CreateProblemSchema>;
+
+export const UpdateProblemSchema = z
+	.object({
+		title: z.string().min(1).optional(),
+		slug: z.string().min(1).optional(),
+		description: z.string().min(1).optional(),
+		examples: z.array(z.string()).optional(),
+		constrains: z.string().min(1).optional(),
+		hints: z.array(z.string()).optional(),
+		difficulty: z.enum(DIFFICULTIES).optional(),
+		categories: z.array(z.enum(CATEGORIES)).optional(),
+		solution: z.string().min(1).optional(),
+		explanation: z.string().min(1).optional(),
+		isPublished: z.boolean().optional(),
+		testCases: z
+			.array(
+				z.object({
+					input: z.string(),
+					expectedOutput: z.string(),
+					isSample: z.boolean().default(false),
+				}),
+			)
+			.optional(),
+		starterCodes: z
+			.array(
+				z.object({
+					language: z.enum(LANGUAGES),
+					code: z.string(),
+				}),
+			)
+			.optional(),
+	})
+	.refine((data) => Object.keys(data).length > 0, {
+		message: "At least one field must be provided",
+	});
+
+export type UpdateProblemInput = z.infer<typeof UpdateProblemSchema>;

@@ -66,6 +66,24 @@ describe("StarterCodesController", () => {
 				data: mockStarterCode,
 			});
 		});
+
+		it("throws ValidationError when the payload is invalid", async () => {
+			const req = createMockRequest({
+				params: { id: "problem-id-1" },
+				body: { language: "JAVASCRIPT", code: "" },
+			});
+			const res = createMockResponse();
+
+			await expect(
+				StarterCodesController.addStarterCodeToProblem(
+					req as any,
+					res as any,
+					createMockNext(),
+				),
+			).rejects.toBeInstanceOf(ValidationError);
+
+			expect(mockService.addStarterCodeToProblem).not.toHaveBeenCalled();
+		});
 	});
 
 	describe("bulkAddStarterCodesToProblem", () => {

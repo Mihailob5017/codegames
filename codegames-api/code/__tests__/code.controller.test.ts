@@ -29,8 +29,11 @@ const mockRunResult = {
 };
 
 describe("CodeController", () => {
-	beforeAll(() => {
-		mockService = MockCodeService.mock.instances[0] as jest.Mocked<CodeService>;
+	beforeEach(() => {
+		jest.clearAllMocks();
+		(CodeController as any).codeService = null;
+		mockService = new CodeService("http://piston.test") as jest.Mocked<CodeService>;
+		(CodeController as any).codeService = mockService;
 	});
 
 	describe("healthCheck", () => {

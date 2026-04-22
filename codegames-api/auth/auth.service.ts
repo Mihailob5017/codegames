@@ -4,6 +4,7 @@ import { AppError } from "../shared/errors/app-error";
 import { RegisterInput } from "./auth.dto";
 import { AuthRepository } from "./auth.repository";
 import bcrypt from "bcryptjs";
+import { getAppConfig } from "../infrastructure/app-config";
 
 export class AuthService {
     private static readonly uploadService = new UploadService();
@@ -13,10 +14,10 @@ export class AuthService {
         userInfo: RegisterInput,
         profileImage?: Express.Multer.File,
     ) => {
-        const saltRounds = parseInt(process.env.SALT_ROUNDS!, 10);
+        const { SALT_ROUNDS } = getAppConfig();
 
         const [passwordHash, existingUser] = await Promise.all([
-            bcrypt.hash(userInfo.password, saltRounds),
+            bcrypt.hash(userInfo.password, SALT_ROUNDS),
             AuthService.authRepository.findByUsernameOrEmail(
                 userInfo.username,
                 userInfo.email,

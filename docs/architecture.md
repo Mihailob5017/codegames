@@ -6,7 +6,7 @@
 
 ## System Overview
 
-CodeGames is composed of three applications and two infrastructure services, all orchestrated via Docker Compose.
+CodeGames is currently composed of two applications and three infrastructure services, all orchestrated via Docker Compose.
 
 ```mermaid
 graph TD
@@ -15,16 +15,13 @@ graph TD
     subgraph Docker["Docker Compose — codegames-network"]
         Web["codegames-web\nReact + Vite\n:3000"]
         API["codegames-api\nExpress 5 + TypeScript\n:4000"]
-        Dashboard["codegames-dashboard\nReact (admin)\n:3001"]
         DB["PostgreSQL 15\n:5432"]
         Piston["Piston\n(code execution sandbox)\n:2000"]
         MinIO["MinIO\n(S3-compatible object storage)\n:9000"]
     end
 
     Browser -->|"HTTP /api/*"| Web
-    Browser -->|"direct (dev)"| Dashboard
     Web -->|"REST /api/v1/*"| API
-    Dashboard -->|"REST /api/v1/admin/*"| API
     API -->|"Prisma ORM"| DB
     API -->|"POST /api/v2/execute"| Piston
     API -->|"AWS SDK S3"| MinIO
@@ -33,7 +30,7 @@ graph TD
 **Startup order** (via `depends_on` + healthchecks):
 1. `db` and `piston` start in parallel
 2. `api` waits for both to be healthy
-3. `web` and `dashboard` wait for `api`
+3. `web` waits for `api`
 
 ---
 
@@ -65,7 +62,7 @@ codegames-api/
 | `admin/starter-codes` | Done | Get, add single, add bulk | — |
 | `user` | Stub | `findById()` only | All profile endpoints, stats, streaks |
 | `upload` | Done | MinIO bucket setup, single/multi file upload | — |
-| `infrastructure` | Done | Helmet, rate limiting, error handling, Zod env validation, Winston logger | CORS origin restriction |
+| `infrastructure` | Done | Helmet, CORS, rate limiting, error handling, Zod env validation, Winston logger, validated config bootstrap | Auth guard wiring |
 | `middleware` | Done | Error mapping, request logger, rate limiter | Auth guard (JWT verification) |
 | `shared` | Done | Custom error classes, test utilities | — |
 
@@ -93,6 +90,16 @@ flowchart LR
 ```
 
 Code execution routes additionally pass through `codeSubmissionRateLimiter` (10 req / min per IP) before the controller.
+
+### Runtime configuration bootstrapping
+
+Startup now follows this order:
+
+1. `validateEnv(process.env)` parses and validates the environment
+2. `initializeAppConfig(config)` stores the validated config once
+3. infrastructure and feature services read config through `getAppConfig()`
+
+This keeps runtime-sensitive services away from ad hoc `process.env` reads and avoids module-load ordering bugs.
 
 ---
 
@@ -165,7 +172,7 @@ sequenceDiagram
     Client->>AuthController: POST /auth/register { username, email, password, ... }
     AuthController->>AuthController: Validate RegisterSchema (Zod)
     AuthController->>AuthService: register(input, profileImage?)
-    AuthService->>AuthService: bcrypt.hash(password, SALT_ROUNDS)
+    AuthService->>AuthService: bcrypt.hash(password, validated SALT_ROUNDS)
     AuthService->>AuthRepository: findByUsernameOrEmail (duplicate check)
     AuthRepository->>DB: SELECT id WHERE username=? OR email=?
     DB-->>AuthRepository: null | User
@@ -193,7 +200,7 @@ sequenceDiagram
 
 ## Planned: Submission Flow
 
-> **Status:** Code execution works but results are not persisted. The Submission model needs to be added to the schema.
+> **Status:** Code execution works but results are not persisted. The Submission model still needs to be added to the schema.
 
 ```mermaid
 sequenceDiagram

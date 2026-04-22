@@ -1,8 +1,8 @@
-import { Prisma } from "@prisma/client";
 import ProblemsRepository from "./problems.repository";
 import {
 	CreateProblemInput,
 	ProblemQueryFilters,
+	UpdateProblemInput,
 } from "./problems.dto";
 import { PaginatedResult, PaginationParams } from "../../shared/types/common.types";
 
@@ -53,7 +53,7 @@ class ProblemsService {
 		});
 	}
 
-	updateProblem(id: string, data: Prisma.ProblemUpdateInput) {
+	updateProblem(id: string, data: UpdateProblemInput) {
 		return this.repository.updateProblem(id, data);
 	}
 

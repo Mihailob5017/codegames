@@ -1,7 +1,7 @@
 import { ControllerType } from "../../shared/types/common.types";
 import { ValidationError } from "../../shared/errors/app-error";
 import TestCasesService from "./test-cases.service";
-import { BulkAddTestCasesSchema } from "./test-cases.dto";
+import { BulkAddTestCasesSchema, TestCaseSchema } from "./test-cases.dto";
 
 class TestCasesController {
 	private static readonly service = new TestCasesService();
@@ -20,9 +20,13 @@ class TestCasesController {
 		req,
 		res,
 	) => {
+		const parsed = TestCaseSchema.safeParse(req.body);
+		if (!parsed.success) {
+			throw new ValidationError("Invalid test case data");
+		}
 		const testCase = await TestCasesController.service.addTestCaseToProblem(
 			req.params.id as string,
-			req.body,
+			parsed.data,
 		);
 		res.status(201).json({ status: "success", data: testCase });
 	};
