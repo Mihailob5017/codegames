@@ -7,7 +7,10 @@
 		"dev": "nodemon",
 		"generate": "prisma generate",
 		"build": "tsc",
-		"lint": "eslint . --ext .ts",
+		"lint": "eslint .",
+		"lint:fix": "eslint . --fix",
+		"format": "prettier --write .",
+		"format:check": "prettier --check .",
 		"test": "jest",
 		"test:watch": "jest --watchAll",
 		"seed": "npx tsx prisma/seed.ts",
@@ -46,6 +49,7 @@
 		"zod": "^4.3.6"
 	},
 	"devDependencies": {
+		"@eslint/js": "^9.39.4",
 		"@types/cors": "^2.8.19",
 		"@types/express": "^5.0.6",
 		"@types/jest": "^30.0.0",
@@ -56,7 +60,12 @@
 		"@types/pg": "^8.16.0",
 		"@types/supertest": "^6.0.3",
 		"@types/uuid": "^10.0.0",
+		"eslint": "^9.39.4",
+		"eslint-config-prettier": "^10.1.8",
+		"globals": "^17.6.0",
 		"jest": "^30.2.0",
-		"ts-jest": "^29.4.6"
+		"prettier": "^3.8.3",
+		"ts-jest": "^29.4.6",
+		"typescript-eslint": "^8.60.0"
 	}
 }
