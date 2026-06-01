@@ -394,7 +394,7 @@ The leaderboard is a **materialized snapshot** — a background cron job recompu
 | Password storage | bcryptjs (configurable rounds) | ✅ Done |
 | Auth guard (JWT verification) | Middleware on protected routes | ❌ Not yet |
 | Role-based access control | ADMIN / SUPER_USER / USER role checks | ❌ Not yet |
-| CORS origin restriction | `cors({ origin: CORS_ORIGIN })` | ❌ Not yet |
+| CORS origin restriction | `cors({ origin: CORS_ORIGIN })` | ✅ Done |
 | Admin route obscurity | Secret `ADMIN_ROUTE` env var | ✅ Done (temporary) |
-| Piston request timeout | `AbortSignal.timeout()` | ❌ Not yet |
+| Piston request timeout | `AbortSignal.timeout(10s)` | ✅ Done |
 | Non-root Docker user | `USER node` in Dockerfile | ❌ Not yet |
