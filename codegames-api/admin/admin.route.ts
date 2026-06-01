@@ -1,7 +1,7 @@
 import { Router } from "express";
-import ProblemsController from "./problems/problems.controller";
-import TestCasesController from "./test-cases/test-cases.controller";
-import StarterCodesController from "./starter-codes/starter-codes.controller";
+import { ProblemsController } from "./problems";
+import { TestCasesController } from "./test-cases";
+import { StarterCodesController } from "./starter-codes";
 
 const router = Router();
 

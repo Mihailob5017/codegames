@@ -7,7 +7,7 @@ jest.mock("../piston.service");
 
 import CodeRepository from "../code.repository";
 import CodePreparationService from "../code-preparation.service";
-import { PistonService } from "../piston.service";
+import PistonService from "../piston.service";
 import CodeService from "../code.service";
 
 const MockCodeRepository = CodeRepository as jest.MockedClass<

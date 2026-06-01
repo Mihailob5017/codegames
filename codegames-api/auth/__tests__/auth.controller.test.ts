@@ -5,18 +5,14 @@ import {
 } from "../../shared/test-utils/test-helpers";
 import { ValidationError, AppError } from "../../shared/errors/app-error";
 
-jest.mock("../auth.service", () => ({
-	AuthService: {
-		register: jest.fn(),
-	},
-}));
+jest.mock("../auth.service");
 
-import { AuthService } from "../auth.service";
+import AuthService from "../auth.service";
 import AuthController from "../auth.controller";
 
-const mockRegister = AuthService.register as jest.MockedFunction<
-	typeof AuthService.register
->;
+const MockAuthService = AuthService as jest.MockedClass<typeof AuthService>;
+
+let mockService: jest.Mocked<AuthService>;
 
 const validBody = {
 	username: "johndoe",
@@ -27,13 +23,18 @@ const validBody = {
 };
 
 describe("AuthController", () => {
+	beforeAll(() => {
+		mockService = MockAuthService.mock
+			.instances[0] as jest.Mocked<AuthService>;
+	});
+
 	beforeEach(() => {
 		jest.clearAllMocks();
 	});
 
 	describe("register", () => {
 		it("returns 201 with success message for valid input", async () => {
-			mockRegister.mockResolvedValue({} as any);
+			mockService.register.mockResolvedValue({} as any);
 
 			const req = createMockRequest({ body: validBody });
 			const res = createMockResponse();
@@ -44,7 +45,7 @@ describe("AuthController", () => {
 				createMockNext(),
 			);
 
-			expect(mockRegister).toHaveBeenCalledWith(
+			expect(mockService.register).toHaveBeenCalledWith(
 				expect.objectContaining({ username: validBody.username }),
 				undefined,
 			);
@@ -67,7 +68,7 @@ describe("AuthController", () => {
 				),
 			).rejects.toBeInstanceOf(ValidationError);
 
-			expect(mockRegister).not.toHaveBeenCalled();
+			expect(mockService.register).not.toHaveBeenCalled();
 		});
 
 		it("throws ValidationError when password lacks uppercase letter", async () => {
@@ -86,7 +87,7 @@ describe("AuthController", () => {
 		});
 
 		it("propagates errors thrown by AuthService.register", async () => {
-			mockRegister.mockRejectedValue(
+			mockService.register.mockRejectedValue(
 				new AppError("Resource already exists", 409),
 			);
 

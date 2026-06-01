@@ -34,7 +34,7 @@ export interface PistonResult {
 	exitCode: number;
 }
 
-export class PistonService {
+class PistonService {
 	constructor(private readonly pistonUrl: string) {}
 
 	async execute(
@@ -70,3 +70,5 @@ export class PistonService {
 		};
 	}
 }
+
+export default PistonService;
