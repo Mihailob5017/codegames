@@ -28,6 +28,11 @@ const envSchema = z.object({
 		.email("DUMMY_EMAIL must be a valid email address")
 		.optional(),
 	PISTON_URL: z.url("PISTON_URL must be a valid URL"),
+	PISTON_VERSION_JAVASCRIPT: z.string().min(1).default("20.11.1"),
+	PISTON_VERSION_PYTHON: z.string().min(1).default("3.12.0"),
+	PISTON_VERSION_JAVA: z.string().min(1).default("15.0.2"),
+	PISTON_VERSION_CSHARP: z.string().min(1).default("6.12.0"),
+	PISTON_VERSION_CPP: z.string().min(1).default("10.2.0"),
 	SALT_ROUNDS: z.string().transform((val) => {
 		const rounds = Number(val);
 		if (Number.isNaN(rounds) || rounds < 1) {

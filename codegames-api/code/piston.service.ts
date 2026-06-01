@@ -1,31 +1,23 @@
 import { Language } from "@prisma/client";
 import { ExternalServiceError } from "../shared/errors/app-error";
+import { getAppConfig } from "../infrastructure/app-config";
+import type { EnvConfig } from "../infrastructure/env-config";
 
-// Maps our Language enum to what Piston expects
-const PISTON_LANGUAGE_MAP: Record<
+// Our Language enum -> the runtime identifier Piston expects, plus the
+// config key holding the pinned version. Versions are resolved from the
+// validated app config at call time (never read from process.env directly).
+const PISTON_RUNTIMES: Record<
 	Language,
-	{ language: string; version: string }
+	{ language: string; versionKey: keyof EnvConfig }
 > = {
 	JAVASCRIPT: {
 		language: "javascript",
-		version: process.env.PISTON_VERSION_JAVASCRIPT ?? "20.11.1",
+		versionKey: "PISTON_VERSION_JAVASCRIPT",
 	},
-	PYTHON: {
-		language: "python",
-		version: process.env.PISTON_VERSION_PYTHON ?? "3.12.0",
-	},
-	JAVA: {
-		language: "java",
-		version: process.env.PISTON_VERSION_JAVA ?? "15.0.2",
-	},
-	CSHARP: {
-		language: "mono",
-		version: process.env.PISTON_VERSION_CSHARP ?? "6.12.0",
-	},
-	CPP: {
-		language: "c++",
-		version: process.env.PISTON_VERSION_CPP ?? "10.2.0",
-	},
+	PYTHON: { language: "python", versionKey: "PISTON_VERSION_PYTHON" },
+	JAVA: { language: "java", versionKey: "PISTON_VERSION_JAVA" },
+	CSHARP: { language: "mono", versionKey: "PISTON_VERSION_CSHARP" },
+	CPP: { language: "c++", versionKey: "PISTON_VERSION_CPP" },
 };
 
 export interface PistonResult {
@@ -41,7 +33,8 @@ class PistonService {
 		language: Language,
 		sourceCode: string,
 	): Promise<PistonResult> {
-		const { language: pistonLang, version } = PISTON_LANGUAGE_MAP[language];
+		const { language: pistonLang, versionKey } = PISTON_RUNTIMES[language];
+		const version = getAppConfig()[versionKey] as string;
 		const response = await fetch(this.pistonUrl, {
 			method: "POST",
 			signal: AbortSignal.timeout(10_000),

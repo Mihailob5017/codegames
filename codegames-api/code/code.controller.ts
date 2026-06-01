@@ -11,14 +11,9 @@ class CodeController {
 
 	private static getCodeService(): CodeService {
 		if (!CodeController.codeService) {
-			const pistonUrl = (() => {
-				try {
-					return getAppConfig().PISTON_URL;
-				} catch {
-					return process.env.PISTON_URL ?? "http://localhost:2000";
-				}
-			})();
-			CodeController.codeService = new CodeService(pistonUrl);
+			CodeController.codeService = new CodeService(
+				getAppConfig().PISTON_URL,
+			);
 		}
 		return CodeController.codeService;
 	}

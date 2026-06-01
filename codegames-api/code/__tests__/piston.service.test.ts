@@ -1,4 +1,5 @@
 import { ExternalServiceError } from "../../shared/errors/app-error";
+import { initTestAppConfig } from "../../shared/test-utils/test-helpers";
 import PistonService from "../piston.service";
 
 const mockFetch = jest.fn();
@@ -6,6 +7,10 @@ global.fetch = mockFetch;
 
 describe("PistonService", () => {
 	let service: PistonService;
+
+	beforeAll(() => {
+		initTestAppConfig();
+	});
 
 	beforeEach(() => {
 		service = new PistonService("http://piston.test/api/v2/execute");

@@ -81,6 +81,8 @@ export function errorMiddleware(
 	});
 	res.status(500).json({
 		status: "error",
+		// Read directly from process.env (not getAppConfig): the error handler is
+		// the last line of defense and must not throw if config init itself failed.
 		message:
 			process.env.NODE_ENV === "production"
 				? "Internal server error"

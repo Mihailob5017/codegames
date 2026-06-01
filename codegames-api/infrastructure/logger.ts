@@ -1,6 +1,8 @@
 import winston from "winston";
 
 const logger = winston.createLogger({
+	// Read directly from process.env (not getAppConfig): the logger is created at
+	// module load, before validateEnv/initializeAppConfig run at startup.
 	level: process.env.NODE_ENV === "production" ? "info" : "debug",
 	format: winston.format.combine(
 		winston.format.timestamp(),
