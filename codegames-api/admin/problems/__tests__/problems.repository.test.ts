@@ -43,7 +43,11 @@ describe("ProblemsRepository", () => {
 
 			expect(result).toEqual({ data: [mockProblemSummary], total: 1 });
 			expect(db.problem.findMany).toHaveBeenCalledWith(
-				expect.objectContaining({ orderBy: { number: "asc" }, skip: 0, take: 20 }),
+				expect.objectContaining({
+					orderBy: { number: "asc" },
+					skip: 0,
+					take: 20,
+				}),
 			);
 			expect(db.problem.count).toHaveBeenCalledTimes(1);
 		});
@@ -87,7 +91,10 @@ describe("ProblemsRepository", () => {
 			db.problem.findMany.mockResolvedValue([mockProblemSummary]);
 			db.problem.count.mockResolvedValue(1);
 
-			await repository.queryProblems({ categories: ["ARRAYS", "STRINGS"] }, PAGE1);
+			await repository.queryProblems(
+				{ categories: ["ARRAYS", "STRINGS"] },
+				PAGE1,
+			);
 
 			expect(db.problem.findMany).toHaveBeenCalledWith(
 				expect.objectContaining({
@@ -106,8 +113,18 @@ describe("ProblemsRepository", () => {
 				expect.objectContaining({
 					where: {
 						OR: [
-							{ title: { contains: "two sum", mode: "insensitive" } },
-							{ slug: { contains: "two sum", mode: "insensitive" } },
+							{
+								title: {
+									contains: "two sum",
+									mode: "insensitive",
+								},
+							},
+							{
+								slug: {
+									contains: "two sum",
+									mode: "insensitive",
+								},
+							},
 						],
 					},
 				}),
@@ -117,7 +134,10 @@ describe("ProblemsRepository", () => {
 
 	describe("getProblemById", () => {
 		it("returns the problem with TestCases included", async () => {
-			const problemWithCases = { ...mockProblemFull, TestCases: [mockTestCase] };
+			const problemWithCases = {
+				...mockProblemFull,
+				TestCases: [mockTestCase],
+			};
 			db.problem.findUnique.mockResolvedValue(problemWithCases);
 
 			const result = await repository.getProblemById("problem-id-1");
@@ -142,7 +162,9 @@ describe("ProblemsRepository", () => {
 		it("creates a problem and returns it with TestCases and StarterCodes", async () => {
 			db.problem.create.mockResolvedValue(mockProblemFull);
 
-			const result = await repository.createProblem(mockProblemFull as any);
+			const result = await repository.createProblem(
+				mockProblemFull as any,
+			);
 
 			expect(result).toEqual(mockProblemFull);
 			expect(db.problem.create).toHaveBeenCalledWith({
@@ -157,7 +179,9 @@ describe("ProblemsRepository", () => {
 			const updated = { ...mockProblemFull, title: "Updated Title" };
 			db.problem.update.mockResolvedValue(updated);
 
-			const result = await repository.updateProblem("problem-id-1", { title: "Updated Title" });
+			const result = await repository.updateProblem("problem-id-1", {
+				title: "Updated Title",
+			});
 
 			expect(result).toEqual(updated);
 			expect(db.problem.update).toHaveBeenCalledWith({

@@ -5,6 +5,10 @@ import AuthController from "./auth.controller";
 
 const router = Router();
 
-router.post("/register", imageUpload.single("profileImage"), AuthController.register);
+router.post(
+	"/register",
+	imageUpload.single("profileImage"),
+	AuthController.register,
+);
 
 export const authRouter = router;

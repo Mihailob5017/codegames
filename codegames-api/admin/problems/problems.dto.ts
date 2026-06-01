@@ -1,8 +1,14 @@
 import { z } from "zod";
 import { problem_difficulty, problem_category, Language } from "@prisma/client";
 
-const DIFFICULTIES = Object.values(problem_difficulty) as [problem_difficulty, ...problem_difficulty[]];
-const CATEGORIES = Object.values(problem_category) as [problem_category, ...problem_category[]];
+const DIFFICULTIES = Object.values(problem_difficulty) as [
+	problem_difficulty,
+	...problem_difficulty[],
+];
+const CATEGORIES = Object.values(problem_category) as [
+	problem_category,
+	...problem_category[],
+];
 const LANGUAGES = Object.values(Language) as [Language, ...Language[]];
 
 export const ProblemQuerySchema = z.object({
@@ -48,8 +54,8 @@ export const CreateProblemSchema = z.object({
 				language: z.enum(LANGUAGES),
 				code: z.string(),
 			}),
-	)
-	.default([]),
+		)
+		.default([]),
 });
 
 export type CreateProblemInput = z.infer<typeof CreateProblemSchema>;

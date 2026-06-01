@@ -80,20 +80,64 @@ const problems: SeedProblem[] = [
 			"Use a hash map to store each number's index as you iterate. For each number, check if its complement (target - current) already exists in the map. This gives O(n) time complexity instead of O(n^2) with brute force.",
 		isPublished: true,
 		testCases: [
-			{ input: "[[2,7,11,15],9]", expectedOutput: "[0,1]", isSample: true },
+			{
+				input: "[[2,7,11,15],9]",
+				expectedOutput: "[0,1]",
+				isSample: true,
+			},
 			{ input: "[[3,2,4],6]", expectedOutput: "[1,2]", isSample: true },
 			{ input: "[[3,3],6]", expectedOutput: "[0,1]", isSample: true },
-			{ input: "[[1,2,3,4,5],9]", expectedOutput: "[3,4]", isSample: false },
-			{ input: "[[-3,4,3,90],0]", expectedOutput: "[0,2]", isSample: false },
-			{ input: "[[0,4,3,0],0]", expectedOutput: "[0,3]", isSample: false },
-			{ input: "[[1,5,1,5],10]", expectedOutput: "[1,3]", isSample: false },
-			{ input: "[[100,200,300,400],700]", expectedOutput: "[2,3]", isSample: false },
-			{ input: "[[-1000000,1000000,500000],0]", expectedOutput: "[0,1]", isSample: false },
-			{ input: "[[1,2,3,4,5,6,7,8,9,10],19]", expectedOutput: "[8,9]", isSample: false },
+			{
+				input: "[[1,2,3,4,5],9]",
+				expectedOutput: "[3,4]",
+				isSample: false,
+			},
+			{
+				input: "[[-3,4,3,90],0]",
+				expectedOutput: "[0,2]",
+				isSample: false,
+			},
+			{
+				input: "[[0,4,3,0],0]",
+				expectedOutput: "[0,3]",
+				isSample: false,
+			},
+			{
+				input: "[[1,5,1,5],10]",
+				expectedOutput: "[1,3]",
+				isSample: false,
+			},
+			{
+				input: "[[100,200,300,400],700]",
+				expectedOutput: "[2,3]",
+				isSample: false,
+			},
+			{
+				input: "[[-1000000,1000000,500000],0]",
+				expectedOutput: "[0,1]",
+				isSample: false,
+			},
+			{
+				input: "[[1,2,3,4,5,6,7,8,9,10],19]",
+				expectedOutput: "[8,9]",
+				isSample: false,
+			},
 			{ input: "[[0,0],0]", expectedOutput: "[0,1]", isSample: false },
-			{ input: "[[5,75,25],100]", expectedOutput: "[1,2]", isSample: false },
-			{ input: "[[2,5,5,11],10]", expectedOutput: "[1,2]", isSample: false },
-			{ input: "[[1000000000,1000000000],2000000000]", expectedOutput: "[0,1]", isSample: false },
+			{
+				input: "[[5,75,25],100]",
+				expectedOutput: "[1,2]",
+				isSample: false,
+			},
+			{
+				input: "[[2,5,5,11],10]",
+				expectedOutput: "[1,2]",
+				isSample: false,
+			},
+			{
+				input: "[[1000000000,1000000000],2000000000]",
+				expectedOutput: "[0,1]",
+				isSample: false,
+			},
 		],
 		starterCodes: [
 			{
@@ -145,15 +189,31 @@ const problems: SeedProblem[] = [
 		testCases: [
 			{ input: "[[1,2,3,1]]", expectedOutput: "true", isSample: true },
 			{ input: "[[1,2,3,4]]", expectedOutput: "false", isSample: true },
-			{ input: "[[1,1,1,3,3,4,3,2,4,2]]", expectedOutput: "true", isSample: true },
+			{
+				input: "[[1,1,1,3,3,4,3,2,4,2]]",
+				expectedOutput: "true",
+				isSample: true,
+			},
 			{ input: "[[1]]", expectedOutput: "false", isSample: false },
 			{ input: "[[1,1]]", expectedOutput: "true", isSample: false },
-			{ input: "[[1,2,3,4,5,6,7,8,9,10]]", expectedOutput: "false", isSample: false },
-			{ input: "[[1,2,3,4,5,6,7,8,9,1]]", expectedOutput: "true", isSample: false },
+			{
+				input: "[[1,2,3,4,5,6,7,8,9,10]]",
+				expectedOutput: "false",
+				isSample: false,
+			},
+			{
+				input: "[[1,2,3,4,5,6,7,8,9,1]]",
+				expectedOutput: "true",
+				isSample: false,
+			},
 			{ input: "[[-1,-1]]", expectedOutput: "true", isSample: false },
 			{ input: "[[-1,0,1]]", expectedOutput: "false", isSample: false },
 			{ input: "[[0,0,0,0]]", expectedOutput: "true", isSample: false },
-			{ input: "[[1000000000,-1000000000,1000000000]]", expectedOutput: "true", isSample: false },
+			{
+				input: "[[1000000000,-1000000000,1000000000]]",
+				expectedOutput: "true",
+				isSample: false,
+			},
 		],
 		starterCodes: [
 			{
@@ -184,7 +244,7 @@ const problems: SeedProblem[] = [
 		title: "Valid Anagram",
 		slug: "valid-anagram",
 		description:
-			'Given two strings `s` and `t`, return `true` if `t` is an anagram of `s`, and `false` otherwise.\n\nAn anagram is a word or phrase formed by rearranging the letters of a different word or phrase, using all the original letters exactly once.',
+			"Given two strings `s` and `t`, return `true` if `t` is an anagram of `s`, and `false` otherwise.\n\nAn anagram is a word or phrase formed by rearranging the letters of a different word or phrase, using all the original letters exactly once.",
 		examples: [
 			'Input: s = "anagram", t = "nagaram"\nOutput: true',
 			'Input: s = "rat", t = "car"\nOutput: false',
@@ -198,22 +258,42 @@ const problems: SeedProblem[] = [
 		difficulty: "EASY",
 		categories: ["STRINGS", "HASHMAPS"],
 		solution:
-			'function solution(s, t) {\n  if (s.length !== t.length) return false;\n  const count = {};\n  for (const c of s) count[c] = (count[c] || 0) + 1;\n  for (const c of t) {\n    if (!count[c]) return false;\n    count[c]--;\n  }\n  return true;\n}',
+			"function solution(s, t) {\n  if (s.length !== t.length) return false;\n  const count = {};\n  for (const c of s) count[c] = (count[c] || 0) + 1;\n  for (const c of t) {\n    if (!count[c]) return false;\n    count[c]--;\n  }\n  return true;\n}",
 		explanation:
 			"Count character frequencies in the first string, then decrement for each character in the second. If any count goes below zero or the lengths differ, it's not an anagram. O(n) time, O(1) space (fixed 26-letter alphabet).",
 		isPublished: true,
 		testCases: [
-			{ input: '["anagram","nagaram"]', expectedOutput: "true", isSample: true },
+			{
+				input: '["anagram","nagaram"]',
+				expectedOutput: "true",
+				isSample: true,
+			},
 			{ input: '["rat","car"]', expectedOutput: "false", isSample: true },
-			{ input: '["listen","silent"]', expectedOutput: "true", isSample: true },
+			{
+				input: '["listen","silent"]',
+				expectedOutput: "true",
+				isSample: true,
+			},
 			{ input: '["a","a"]', expectedOutput: "true", isSample: false },
 			{ input: '["a","b"]', expectedOutput: "false", isSample: false },
 			{ input: '["ab","ba"]', expectedOutput: "true", isSample: false },
 			{ input: '["ab","a"]', expectedOutput: "false", isSample: false },
 			{ input: '["",""]', expectedOutput: "true", isSample: false },
-			{ input: '["aabbcc","abcabc"]', expectedOutput: "true", isSample: false },
-			{ input: '["aabbcc","aabbcd"]', expectedOutput: "false", isSample: false },
-			{ input: '["aacc","ccac"]', expectedOutput: "false", isSample: false },
+			{
+				input: '["aabbcc","abcabc"]',
+				expectedOutput: "true",
+				isSample: false,
+			},
+			{
+				input: '["aabbcc","aabbcd"]',
+				expectedOutput: "false",
+				isSample: false,
+			},
+			{
+				input: '["aacc","ccac"]',
+				expectedOutput: "false",
+				isSample: false,
+			},
 		],
 		starterCodes: [
 			{
@@ -272,8 +352,16 @@ const problems: SeedProblem[] = [
 			{ input: "[[1,2,3,4,5]]", expectedOutput: "4", isSample: false },
 			{ input: "[[5,4,3,2,1,10]]", expectedOutput: "9", isSample: false },
 			{ input: "[[1,4,2,7,1,3]]", expectedOutput: "6", isSample: false },
-			{ input: "[[10000,1,10000]]", expectedOutput: "9999", isSample: false },
-			{ input: "[[1,2,4,2,5,7,2,4,9,0]]", expectedOutput: "8", isSample: false },
+			{
+				input: "[[10000,1,10000]]",
+				expectedOutput: "9999",
+				isSample: false,
+			},
+			{
+				input: "[[1,2,4,2,5,7,2,4,9,0]]",
+				expectedOutput: "8",
+				isSample: false,
+			},
 		],
 		starterCodes: [
 			{
@@ -310,8 +398,7 @@ const problems: SeedProblem[] = [
 			"Input: nums = [1]\nOutput: 1\nExplanation: The subarray [1] has the largest sum 1.",
 			"Input: nums = [5,4,-1,7,8]\nOutput: 23\nExplanation: The subarray [5,4,-1,7,8] has the largest sum 23.",
 		],
-		constrains:
-			"1 <= nums.length <= 10^5\n-10^4 <= nums[i] <= 10^4",
+		constrains: "1 <= nums.length <= 10^5\n-10^4 <= nums[i] <= 10^4",
 		hints: [
 			"Think about whether extending the current subarray helps or hurts.",
 			"At each position, you either extend the previous subarray or start a new one from the current element.",
@@ -325,7 +412,11 @@ const problems: SeedProblem[] = [
 			"Kadane's algorithm: maintain the maximum subarray sum ending at the current position. At each step, either start a new subarray at the current element or extend the previous one. Track the global maximum. O(n) time, O(1) space.",
 		isPublished: true,
 		testCases: [
-			{ input: "[[-2,1,-3,4,-1,2,1,-5,4]]", expectedOutput: "6", isSample: true },
+			{
+				input: "[[-2,1,-3,4,-1,2,1,-5,4]]",
+				expectedOutput: "6",
+				isSample: true,
+			},
 			{ input: "[[1]]", expectedOutput: "1", isSample: true },
 			{ input: "[[5,4,-1,7,8]]", expectedOutput: "23", isSample: true },
 			{ input: "[[-1]]", expectedOutput: "-1", isSample: false },
@@ -334,8 +425,16 @@ const problems: SeedProblem[] = [
 			{ input: "[[-1,-2,-3,-4]]", expectedOutput: "-1", isSample: false },
 			{ input: "[[1,-1,1,-1,1]]", expectedOutput: "1", isSample: false },
 			{ input: "[[-2,1]]", expectedOutput: "1", isSample: false },
-			{ input: "[[8,-19,5,-4,20]]", expectedOutput: "21", isSample: false },
-			{ input: "[[100,-1,100,-1,100]]", expectedOutput: "298", isSample: false },
+			{
+				input: "[[8,-19,5,-4,20]]",
+				expectedOutput: "21",
+				isSample: false,
+			},
+			{
+				input: "[[100,-1,100,-1,100]]",
+				expectedOutput: "298",
+				isSample: false,
+			},
 			{ input: "[[-1,0,-2]]", expectedOutput: "0", isSample: false },
 		],
 		starterCodes: [

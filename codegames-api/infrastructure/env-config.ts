@@ -12,15 +12,21 @@ const envSchema = z.object({
 		}
 		return port;
 	}),
-	ADMIN_ROUTE: z.string().min(1, "ADMIN_ROUTE is required and cannot be empty"),
-	API_VERSION: z.string().min(1, "API_VERSION is required and cannot be empty"),
+	ADMIN_ROUTE: z
+		.string()
+		.min(1, "ADMIN_ROUTE is required and cannot be empty"),
+	API_VERSION: z
+		.string()
+		.min(1, "API_VERSION is required and cannot be empty"),
 	DATABASE_URL: z.url("DATABASE_URL must be a valid URL"),
 	JWT_SECRET: z
 		.string()
 		.min(16, "JWT_SECRET must be at least 16 characters for security"),
 	EMAIL_USER: z.email("EMAIL_USER must be a valid email address"),
 	EMAIL_PASSWORD: z.string().min(1, "EMAIL_PASSWORD is required"),
-	DUMMY_EMAIL: z.email("DUMMY_EMAIL must be a valid email address").optional(),
+	DUMMY_EMAIL: z
+		.email("DUMMY_EMAIL must be a valid email address")
+		.optional(),
 	PISTON_URL: z.url("PISTON_URL must be a valid URL"),
 	SALT_ROUNDS: z.string().transform((val) => {
 		const rounds = Number(val);
@@ -32,9 +38,14 @@ const envSchema = z.object({
 	MINIO_ENDPOINT: z.url("MINIO_ENDPOINT must be a valid URL"),
 	MINIO_ROOT_USER: z.string().min(1, "MINIO_ROOT_USER is required"),
 	MINIO_ROOT_PASSWORD: z.string().min(1, "MINIO_ROOT_PASSWORD is required"),
-	MINIO_BUCKET: z.string().min(1, "MINIO_BUCKET is required").default("codegames"),
+	MINIO_BUCKET: z
+		.string()
+		.min(1, "MINIO_BUCKET is required")
+		.default("codegames"),
 	MINIO_PUBLIC_URL: z.url("MINIO_PUBLIC_URL must be a valid URL"),
-	CORS_ORIGIN: z.url("CORS_ORIGIN must be a valid URL").default("http://localhost:3000"),
+	CORS_ORIGIN: z
+		.url("CORS_ORIGIN must be a valid URL")
+		.default("http://localhost:3000"),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;

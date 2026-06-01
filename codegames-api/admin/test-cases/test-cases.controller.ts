@@ -10,9 +10,10 @@ class TestCasesController {
 		req,
 		res,
 	) => {
-		const testCases = await TestCasesController.service.getTestCasesByProblemId(
-			req.params.id as string,
-		);
+		const testCases =
+			await TestCasesController.service.getTestCasesByProblemId(
+				req.params.id as string,
+			);
 		res.status(200).json({ status: "success", data: testCases });
 	};
 
@@ -39,10 +40,11 @@ class TestCasesController {
 		if (!parsed.success) {
 			throw new ValidationError("Invalid test cases data");
 		}
-		const result = await TestCasesController.service.bulkAddTestCasesToProblem(
-			req.params.id as string,
-			parsed.data,
-		);
+		const result =
+			await TestCasesController.service.bulkAddTestCasesToProblem(
+				req.params.id as string,
+				parsed.data,
+			);
 		res.status(201).json({ status: "success", data: result });
 	};
 }

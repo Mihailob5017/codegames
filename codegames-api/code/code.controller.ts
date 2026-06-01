@@ -11,14 +11,13 @@ class CodeController {
 
 	private static getCodeService(): CodeService {
 		if (!CodeController.codeService) {
-			const pistonUrl =
-				(() => {
-					try {
-						return getAppConfig().PISTON_URL;
-					} catch {
-						return process.env.PISTON_URL ?? "http://localhost:2000";
-					}
-				})();
+			const pistonUrl = (() => {
+				try {
+					return getAppConfig().PISTON_URL;
+				} catch {
+					return process.env.PISTON_URL ?? "http://localhost:2000";
+				}
+			})();
 			CodeController.codeService = new CodeService(pistonUrl);
 		}
 		return CodeController.codeService;
@@ -37,7 +36,9 @@ class CodeController {
 				z.flattenError(parsed.error).fieldErrors,
 			);
 		}
-		const result = await CodeController.getCodeService().execute(parsed.data);
+		const result = await CodeController.getCodeService().execute(
+			parsed.data,
+		);
 		res.status(200).json({ status: "success", data: result });
 	};
 
@@ -57,15 +58,17 @@ class CodeController {
 		_req,
 		res,
 	) => {
-		const languages = CodeController.getCodeService().getSupportedLanguages();
+		const languages =
+			CodeController.getCodeService().getSupportedLanguages();
 		res.status(200).json({ status: "success", data: languages });
 	};
 
 	static readonly getStarterCode: ControllerType<void> = async (req, res) => {
 		const { problemId } = req.params;
-		const starterCode = await CodeController.getCodeService().getStarterCode(
-			problemId as string,
-		);
+		const starterCode =
+			await CodeController.getCodeService().getStarterCode(
+				problemId as string,
+			);
 		res.status(200).json({ status: "success", data: starterCode });
 	};
 }

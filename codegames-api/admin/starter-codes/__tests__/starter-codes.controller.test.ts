@@ -25,7 +25,9 @@ describe("StarterCodesController", () => {
 
 	describe("getStarterCodesByProblemId", () => {
 		it("returns 200 with starter codes", async () => {
-			mockService.getStarterCodesByProblemId.mockResolvedValue([mockStarterCode] as any);
+			mockService.getStarterCodesByProblemId.mockResolvedValue([
+				mockStarterCode,
+			] as any);
 
 			const req = createMockRequest({ params: { id: "problem-id-1" } });
 			const res = createMockResponse();
@@ -46,7 +48,9 @@ describe("StarterCodesController", () => {
 
 	describe("addStarterCodeToProblem", () => {
 		it("returns 201 with the created starter code", async () => {
-			mockService.addStarterCodeToProblem.mockResolvedValue(mockStarterCode as any);
+			mockService.addStarterCodeToProblem.mockResolvedValue(
+				mockStarterCode as any,
+			);
 
 			const req = createMockRequest({
 				params: { id: "problem-id-1" },
@@ -88,7 +92,9 @@ describe("StarterCodesController", () => {
 
 	describe("bulkAddStarterCodesToProblem", () => {
 		it("returns 201 with the insert count for a valid array", async () => {
-			mockService.bulkAddStarterCodesToProblem.mockResolvedValue({ count: 2 });
+			mockService.bulkAddStarterCodesToProblem.mockResolvedValue({
+				count: 2,
+			});
 
 			const req = createMockRequest({
 				params: { id: "problem-id-1" },
@@ -113,7 +119,10 @@ describe("StarterCodesController", () => {
 		});
 
 		it("throws ValidationError when body is an empty array", async () => {
-			const req = createMockRequest({ params: { id: "problem-id-1" }, body: [] });
+			const req = createMockRequest({
+				params: { id: "problem-id-1" },
+				body: [],
+			});
 			const res = createMockResponse();
 
 			await expect(
@@ -124,7 +133,9 @@ describe("StarterCodesController", () => {
 				),
 			).rejects.toBeInstanceOf(ValidationError);
 
-			expect(mockService.bulkAddStarterCodesToProblem).not.toHaveBeenCalled();
+			expect(
+				mockService.bulkAddStarterCodesToProblem,
+			).not.toHaveBeenCalled();
 		});
 
 		it("throws ValidationError when language is invalid", async () => {

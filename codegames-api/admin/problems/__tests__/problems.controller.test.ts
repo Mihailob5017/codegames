@@ -5,7 +5,10 @@ import {
 	mockProblemFull,
 	mockProblemSummary,
 } from "../../../shared/test-utils/test-helpers";
-import { NotFoundError, ValidationError } from "../../../shared/errors/app-error";
+import {
+	NotFoundError,
+	ValidationError,
+} from "../../../shared/errors/app-error";
 
 jest.mock("../problems.service");
 
@@ -32,7 +35,9 @@ describe("ProblemsController", () => {
 				data: [mockProblemSummary],
 				pagination: { page: 1, limit: 20, total: 1, totalPages: 1 },
 			};
-			mockService.getAllProblems.mockResolvedValue(paginatedResult as any);
+			mockService.getAllProblems.mockResolvedValue(
+				paginatedResult as any,
+			);
 
 			const req = createMockRequest();
 			const res = createMockResponse();
@@ -82,11 +87,17 @@ describe("ProblemsController", () => {
 		});
 
 		it("throws ValidationError when difficulty is invalid", async () => {
-			const req = createMockRequest({ query: { difficulty: "LEGENDARY" } });
+			const req = createMockRequest({
+				query: { difficulty: "LEGENDARY" },
+			});
 			const res = createMockResponse();
 
 			await expect(
-				ProblemsController.queryProblems(req as any, res as any, createMockNext()),
+				ProblemsController.queryProblems(
+					req as any,
+					res as any,
+					createMockNext(),
+				),
 			).rejects.toBeInstanceOf(ValidationError);
 		});
 
@@ -118,7 +129,9 @@ describe("ProblemsController", () => {
 
 	describe("getProblemById", () => {
 		it("returns 200 with the problem when found", async () => {
-			mockService.getProblemById.mockResolvedValue(mockProblemFull as any);
+			mockService.getProblemById.mockResolvedValue(
+				mockProblemFull as any,
+			);
 
 			const req = createMockRequest({ params: { id: "problem-id-1" } });
 			const res = createMockResponse();
@@ -143,7 +156,11 @@ describe("ProblemsController", () => {
 			const res = createMockResponse();
 
 			await expect(
-				ProblemsController.getProblemById(req as any, res as any, createMockNext()),
+				ProblemsController.getProblemById(
+					req as any,
+					res as any,
+					createMockNext(),
+				),
 			).rejects.toBeInstanceOf(NotFoundError);
 		});
 	});
@@ -189,8 +206,12 @@ describe("ProblemsController", () => {
 
 			const body = {
 				...validBody,
-				testCases: [{ input: "1", expectedOutput: "2", isSample: false }],
-				starterCodes: [{ language: "JAVASCRIPT", code: "function f() {}" }],
+				testCases: [
+					{ input: "1", expectedOutput: "2", isSample: false },
+				],
+				starterCodes: [
+					{ language: "JAVASCRIPT", code: "function f() {}" },
+				],
 			};
 			const req = createMockRequest({ body });
 			const res = createMockResponse();
@@ -214,7 +235,11 @@ describe("ProblemsController", () => {
 			const res = createMockResponse();
 
 			await expect(
-				ProblemsController.createProblem(req as any, res as any, createMockNext()),
+				ProblemsController.createProblem(
+					req as any,
+					res as any,
+					createMockNext(),
+				),
 			).rejects.toBeInstanceOf(ValidationError);
 
 			expect(mockService.createProblem).not.toHaveBeenCalled();
@@ -227,7 +252,11 @@ describe("ProblemsController", () => {
 			const res = createMockResponse();
 
 			await expect(
-				ProblemsController.createProblem(req as any, res as any, createMockNext()),
+				ProblemsController.createProblem(
+					req as any,
+					res as any,
+					createMockNext(),
+				),
 			).rejects.toBeInstanceOf(ValidationError);
 		});
 	});
@@ -266,7 +295,11 @@ describe("ProblemsController", () => {
 			const res = createMockResponse();
 
 			await expect(
-				ProblemsController.updateProblem(req as any, res as any, createMockNext()),
+				ProblemsController.updateProblem(
+					req as any,
+					res as any,
+					createMockNext(),
+				),
 			).rejects.toBeInstanceOf(ValidationError);
 
 			expect(mockService.updateProblem).not.toHaveBeenCalled();

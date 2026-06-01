@@ -29,7 +29,8 @@ describe("StarterCodesRepository", () => {
 		it("returns all starter codes for a problem", async () => {
 			db.starterCode.findMany.mockResolvedValue([mockStarterCode]);
 
-			const result = await repository.getStarterCodesByProblemId("problem-id-1");
+			const result =
+				await repository.getStarterCodesByProblemId("problem-id-1");
 
 			expect(result).toEqual([mockStarterCode]);
 			expect(db.starterCode.findMany).toHaveBeenCalledWith({
@@ -42,10 +43,13 @@ describe("StarterCodesRepository", () => {
 		it("creates a starter code connected to the problem", async () => {
 			db.starterCode.create.mockResolvedValue(mockStarterCode);
 
-			const result = await repository.addStarterCodeToProblem("problem-id-1", {
-				language: "JAVASCRIPT",
-				code: "function twoSum() {}",
-			});
+			const result = await repository.addStarterCodeToProblem(
+				"problem-id-1",
+				{
+					language: "JAVASCRIPT",
+					code: "function twoSum() {}",
+				},
+			);
 
 			expect(result).toEqual(mockStarterCode);
 			expect(db.starterCode.create).toHaveBeenCalledWith({
@@ -63,17 +67,31 @@ describe("StarterCodesRepository", () => {
 			db.starterCode.createMany.mockResolvedValue({ count: 2 });
 
 			const starterCodes = [
-				{ language: "JAVASCRIPT" as const, code: "function twoSum() {}" },
+				{
+					language: "JAVASCRIPT" as const,
+					code: "function twoSum() {}",
+				},
 				{ language: "PYTHON" as const, code: "def two_sum():" },
 			];
 
-			const result = await repository.bulkAddStarterCodesToProblem("problem-id-1", starterCodes);
+			const result = await repository.bulkAddStarterCodesToProblem(
+				"problem-id-1",
+				starterCodes,
+			);
 
 			expect(result).toEqual({ count: 2 });
 			expect(db.starterCode.createMany).toHaveBeenCalledWith({
 				data: [
-					{ problemId: "problem-id-1", language: "JAVASCRIPT", code: "function twoSum() {}" },
-					{ problemId: "problem-id-1", language: "PYTHON", code: "def two_sum():" },
+					{
+						problemId: "problem-id-1",
+						language: "JAVASCRIPT",
+						code: "function twoSum() {}",
+					},
+					{
+						problemId: "problem-id-1",
+						language: "PYTHON",
+						code: "def two_sum():",
+					},
 				],
 				skipDuplicates: true,
 			});

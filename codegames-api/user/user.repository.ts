@@ -2,7 +2,7 @@
 import prisma from "../infrastructure/prisma";
 
 export class UserRepository {
-    findById(id: string) {
-        return prisma.user.findUnique({ where: { id } });
-    }
+	findById(id: string) {
+		return prisma.user.findUnique({ where: { id } });
+	}
 }

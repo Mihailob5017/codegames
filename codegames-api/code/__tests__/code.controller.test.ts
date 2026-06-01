@@ -32,7 +32,9 @@ describe("CodeController", () => {
 	beforeEach(() => {
 		jest.clearAllMocks();
 		(CodeController as any).codeService = null;
-		mockService = new CodeService("http://piston.test") as jest.Mocked<CodeService>;
+		mockService = new CodeService(
+			"http://piston.test",
+		) as jest.Mocked<CodeService>;
 		(CodeController as any).codeService = mockService;
 	});
 
@@ -41,7 +43,11 @@ describe("CodeController", () => {
 			const req = createMockRequest();
 			const res = createMockResponse();
 
-			await CodeController.healthCheck(req as any, res as any, createMockNext());
+			await CodeController.healthCheck(
+				req as any,
+				res as any,
+				createMockNext(),
+			);
 
 			expect((res as any).json).toHaveBeenCalledWith({
 				status: "ok",
@@ -57,7 +63,11 @@ describe("CodeController", () => {
 			const req = createMockRequest({ body: validBody });
 			const res = createMockResponse();
 
-			await CodeController.executeCode(req as any, res as any, createMockNext());
+			await CodeController.executeCode(
+				req as any,
+				res as any,
+				createMockNext(),
+			);
 
 			expect(mockService.execute).toHaveBeenCalledWith(
 				expect.objectContaining({ code: validBody.code }),
@@ -70,11 +80,17 @@ describe("CodeController", () => {
 		});
 
 		it("throws ValidationError for invalid input", async () => {
-			const req = createMockRequest({ body: { code: "", language: "INVALID" } });
+			const req = createMockRequest({
+				body: { code: "", language: "INVALID" },
+			});
 			const res = createMockResponse();
 
 			await expect(
-				CodeController.executeCode(req as any, res as any, createMockNext()),
+				CodeController.executeCode(
+					req as any,
+					res as any,
+					createMockNext(),
+				),
 			).rejects.toBeInstanceOf(ValidationError);
 
 			expect(mockService.execute).not.toHaveBeenCalled();
@@ -88,7 +104,11 @@ describe("CodeController", () => {
 			const req = createMockRequest({ body: validBody });
 			const res = createMockResponse();
 
-			await CodeController.runCode(req as any, res as any, createMockNext());
+			await CodeController.runCode(
+				req as any,
+				res as any,
+				createMockNext(),
+			);
 
 			expect(mockService.run).toHaveBeenCalledWith(
 				expect.objectContaining({ code: validBody.code }),
@@ -105,7 +125,11 @@ describe("CodeController", () => {
 			const res = createMockResponse();
 
 			await expect(
-				CodeController.runCode(req as any, res as any, createMockNext()),
+				CodeController.runCode(
+					req as any,
+					res as any,
+					createMockNext(),
+				),
 			).rejects.toBeInstanceOf(ValidationError);
 
 			expect(mockService.run).not.toHaveBeenCalled();

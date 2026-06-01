@@ -59,7 +59,9 @@ describe("CodeService", () => {
 		});
 
 		it("returns RunResult with passing tests when stdout matches expected", async () => {
-			mockRepo.getSampleTestCases.mockResolvedValue([mockTestCase] as any);
+			mockRepo.getSampleTestCases.mockResolvedValue([
+				mockTestCase,
+			] as any);
 			mockCodePrep.wrapCode.mockReturnValue("wrapped code");
 			mockPiston.execute.mockResolvedValue({
 				stdout: mockTestCase.expectedOutput + "\n",
@@ -76,7 +78,9 @@ describe("CodeService", () => {
 		});
 
 		it("returns failed results with stderr when piston returns stderr", async () => {
-			mockRepo.getSampleTestCases.mockResolvedValue([mockTestCase] as any);
+			mockRepo.getSampleTestCases.mockResolvedValue([
+				mockTestCase,
+			] as any);
 			mockCodePrep.wrapCode.mockReturnValue("wrapped code");
 			mockPiston.execute.mockResolvedValue({
 				stdout: "",
@@ -161,7 +165,11 @@ describe("CodeService", () => {
 			const tc1 = makeTestCase("tc1", "[2,7]", "0 1");
 			const tc2 = makeTestCase("tc2", "[3,3]", "0 1");
 			const tc3 = makeTestCase("tc3", "[1,2]", "0 2");
-			mockRepo.getSampleTestCases.mockResolvedValue([tc1, tc2, tc3] as any);
+			mockRepo.getSampleTestCases.mockResolvedValue([
+				tc1,
+				tc2,
+				tc3,
+			] as any);
 			mockCodePrep.wrapCode.mockReturnValue("wrapped");
 			mockPiston.execute.mockResolvedValue({
 				stdout: "0 1\n0 1\nWRONG\n",

@@ -24,7 +24,10 @@ describe("ProblemsService", () => {
 
 	describe("getAllProblems", () => {
 		it("returns a PaginatedResult from the repository", async () => {
-			mockRepo.getAllProblems.mockResolvedValue({ data: [mockProblemSummary], total: 1 } as any);
+			mockRepo.getAllProblems.mockResolvedValue({
+				data: [mockProblemSummary],
+				total: 1,
+			} as any);
 
 			const result = await service.getAllProblems({ page: 1, limit: 20 });
 
@@ -32,22 +35,34 @@ describe("ProblemsService", () => {
 				data: [mockProblemSummary],
 				pagination: { page: 1, limit: 20, total: 1, totalPages: 1 },
 			});
-			expect(mockRepo.getAllProblems).toHaveBeenCalledWith({ page: 1, limit: 20 });
+			expect(mockRepo.getAllProblems).toHaveBeenCalledWith({
+				page: 1,
+				limit: 20,
+			});
 		});
 	});
 
 	describe("queryProblems", () => {
 		it("delegates filters and pagination to repository.queryProblems", async () => {
 			const filters = { difficulty: "EASY" as const, isPublished: true };
-			mockRepo.queryProblems.mockResolvedValue({ data: [mockProblemSummary], total: 1 } as any);
+			mockRepo.queryProblems.mockResolvedValue({
+				data: [mockProblemSummary],
+				total: 1,
+			} as any);
 
-			const result = await service.queryProblems(filters, { page: 1, limit: 20 });
+			const result = await service.queryProblems(filters, {
+				page: 1,
+				limit: 20,
+			});
 
 			expect(result).toEqual({
 				data: [mockProblemSummary],
 				pagination: { page: 1, limit: 20, total: 1, totalPages: 1 },
 			});
-			expect(mockRepo.queryProblems).toHaveBeenCalledWith(filters, { page: 1, limit: 20 });
+			expect(mockRepo.queryProblems).toHaveBeenCalledWith(filters, {
+				page: 1,
+				limit: 20,
+			});
 		});
 	});
 
@@ -58,7 +73,9 @@ describe("ProblemsService", () => {
 			const result = await service.getProblemById("problem-id-1");
 
 			expect(result).toEqual(mockProblemFull);
-			expect(mockRepo.getProblemById).toHaveBeenCalledWith("problem-id-1");
+			expect(mockRepo.getProblemById).toHaveBeenCalledWith(
+				"problem-id-1",
+			);
 		});
 	});
 
@@ -80,21 +97,33 @@ describe("ProblemsService", () => {
 		it("passes only core fields when testCases and starterCodes are empty", async () => {
 			mockRepo.createProblem.mockResolvedValue(mockProblemFull as any);
 
-			await service.createProblem({ ...baseInput, testCases: [], starterCodes: [] });
+			await service.createProblem({
+				...baseInput,
+				testCases: [],
+				starterCodes: [],
+			});
 
 			expect(mockRepo.createProblem).toHaveBeenCalledWith(
 				expect.not.objectContaining({ TestCases: expect.anything() }),
 			);
 			expect(mockRepo.createProblem).toHaveBeenCalledWith(
-				expect.not.objectContaining({ StarterCodes: expect.anything() }),
+				expect.not.objectContaining({
+					StarterCodes: expect.anything(),
+				}),
 			);
 		});
 
 		it("includes nested TestCases when testCases are provided", async () => {
 			mockRepo.createProblem.mockResolvedValue(mockProblemFull as any);
-			const testCases = [{ input: "[2,7]\n9", expectedOutput: "[0,1]", isSample: true }];
+			const testCases = [
+				{ input: "[2,7]\n9", expectedOutput: "[0,1]", isSample: true },
+			];
 
-			await service.createProblem({ ...baseInput, testCases, starterCodes: [] });
+			await service.createProblem({
+				...baseInput,
+				testCases,
+				starterCodes: [],
+			});
 
 			expect(mockRepo.createProblem).toHaveBeenCalledWith(
 				expect.objectContaining({ TestCases: { create: testCases } }),
@@ -103,21 +132,37 @@ describe("ProblemsService", () => {
 
 		it("includes nested StarterCodes when starterCodes are provided", async () => {
 			mockRepo.createProblem.mockResolvedValue(mockProblemFull as any);
-			const starterCodes = [{ language: "JAVASCRIPT" as const, code: "function f() {}" }];
+			const starterCodes = [
+				{ language: "JAVASCRIPT" as const, code: "function f() {}" },
+			];
 
-			await service.createProblem({ ...baseInput, testCases: [], starterCodes });
+			await service.createProblem({
+				...baseInput,
+				testCases: [],
+				starterCodes,
+			});
 
 			expect(mockRepo.createProblem).toHaveBeenCalledWith(
-				expect.objectContaining({ StarterCodes: { create: starterCodes } }),
+				expect.objectContaining({
+					StarterCodes: { create: starterCodes },
+				}),
 			);
 		});
 
 		it("includes both nested creates when both arrays are provided", async () => {
 			mockRepo.createProblem.mockResolvedValue(mockProblemFull as any);
-			const testCases = [{ input: "1", expectedOutput: "2", isSample: false }];
-			const starterCodes = [{ language: "PYTHON" as const, code: "def f():" }];
+			const testCases = [
+				{ input: "1", expectedOutput: "2", isSample: false },
+			];
+			const starterCodes = [
+				{ language: "PYTHON" as const, code: "def f():" },
+			];
 
-			await service.createProblem({ ...baseInput, testCases, starterCodes });
+			await service.createProblem({
+				...baseInput,
+				testCases,
+				starterCodes,
+			});
 
 			expect(mockRepo.createProblem).toHaveBeenCalledWith(
 				expect.objectContaining({
@@ -132,10 +177,15 @@ describe("ProblemsService", () => {
 		it("delegates to repository.updateProblem", async () => {
 			mockRepo.updateProblem.mockResolvedValue(mockProblemFull as any);
 
-			const result = await service.updateProblem("problem-id-1", { title: "Updated" });
+			const result = await service.updateProblem("problem-id-1", {
+				title: "Updated",
+			});
 
 			expect(result).toEqual(mockProblemFull);
-			expect(mockRepo.updateProblem).toHaveBeenCalledWith("problem-id-1", { title: "Updated" });
+			expect(mockRepo.updateProblem).toHaveBeenCalledWith(
+				"problem-id-1",
+				{ title: "Updated" },
+			);
 		});
 	});
 

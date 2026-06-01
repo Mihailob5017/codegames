@@ -20,7 +20,9 @@ class CodePreparationService {
 	// JSON.stringify output is valid JS syntax, embed directly as an array literal.
 
 	private wrapJavaScript(code: string, testCases: TestCase[]): string {
-		const inputs = JSON.stringify(testCases.map((tc) => JSON.parse(tc.input)));
+		const inputs = JSON.stringify(
+			testCases.map((tc) => JSON.parse(tc.input)),
+		);
 		return `${code}
 
 const __inputs = ${inputs};
@@ -38,7 +40,9 @@ for (const __args of __inputs) {
 	// Base64-encode the JSON so we avoid all quote / newline escaping issues.
 
 	private wrapPython(code: string, testCases: TestCase[]): string {
-		const inputs = JSON.stringify(testCases.map((tc) => JSON.parse(tc.input)));
+		const inputs = JSON.stringify(
+			testCases.map((tc) => JSON.parse(tc.input)),
+		);
 		const b64 = Buffer.from(inputs).toString("base64");
 		return `import json, base64
 
@@ -135,7 +139,10 @@ ${testBlocks}
 }`;
 	}
 
-	private toJavaLiteral(value: unknown): { javaType: string; literal: string } {
+	private toJavaLiteral(value: unknown): {
+		javaType: string;
+		literal: string;
+	} {
 		if (typeof value === "boolean") {
 			return { javaType: "boolean", literal: String(value) };
 		}
@@ -160,16 +167,25 @@ ${testBlocks}
 				Number.isInteger(first) &&
 				value.every((v) => typeof v === "number" && Number.isInteger(v))
 			) {
-				return { javaType: "int[]", literal: `new int[]{${value.join(", ")}}` };
+				return {
+					javaType: "int[]",
+					literal: `new int[]{${value.join(", ")}}`,
+				};
 			}
 			if (
 				typeof first === "string" &&
 				value.every((v) => typeof v === "string")
 			) {
 				const items = (value as string[])
-					.map((s) => `"${s.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`)
+					.map(
+						(s) =>
+							`"${s.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`,
+					)
 					.join(", ");
-				return { javaType: "String[]", literal: `new String[]{${items}}` };
+				return {
+					javaType: "String[]",
+					literal: `new String[]{${items}}`,
+				};
 			}
 			if (
 				Array.isArray(first) &&
@@ -248,7 +264,10 @@ ${testBlocks}
 }`;
 	}
 
-	private toCSharpLiteral(value: unknown): { csType: string; literal: string } {
+	private toCSharpLiteral(value: unknown): {
+		csType: string;
+		literal: string;
+	} {
 		if (typeof value === "boolean") {
 			return { csType: "bool", literal: value ? "true" : "false" };
 		}
@@ -270,16 +289,25 @@ ${testBlocks}
 				Number.isInteger(first) &&
 				value.every((v) => typeof v === "number" && Number.isInteger(v))
 			) {
-				return { csType: "int[]", literal: `new int[]{${value.join(", ")}}` };
+				return {
+					csType: "int[]",
+					literal: `new int[]{${value.join(", ")}}`,
+				};
 			}
 			if (
 				typeof first === "string" &&
 				value.every((v) => typeof v === "string")
 			) {
 				const items = (value as string[])
-					.map((s) => `"${s.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`)
+					.map(
+						(s) =>
+							`"${s.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`,
+					)
 					.join(", ");
-				return { csType: "string[]", literal: `new string[]{${items}}` };
+				return {
+					csType: "string[]",
+					literal: `new string[]{${items}}`,
+				};
 			}
 		}
 		return { csType: "object", literal: "null" };
@@ -346,21 +374,28 @@ ${testBlocks}
 			return { cppType: "string", literal: `"${esc}"` };
 		}
 		if (Array.isArray(value)) {
-			if (value.length === 0) return { cppType: "vector<int>", literal: "{}" };
+			if (value.length === 0)
+				return { cppType: "vector<int>", literal: "{}" };
 			const first = value[0];
 			if (
 				typeof first === "number" &&
 				Number.isInteger(first) &&
 				value.every((v) => typeof v === "number" && Number.isInteger(v))
 			) {
-				return { cppType: "vector<int>", literal: `{${value.join(", ")}}` };
+				return {
+					cppType: "vector<int>",
+					literal: `{${value.join(", ")}}`,
+				};
 			}
 			if (
 				typeof first === "string" &&
 				value.every((v) => typeof v === "string")
 			) {
 				const items = (value as string[])
-					.map((s) => `"${s.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`)
+					.map(
+						(s) =>
+							`"${s.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`,
+					)
 					.join(", ");
 				return { cppType: "vector<string>", literal: `{${items}}` };
 			}

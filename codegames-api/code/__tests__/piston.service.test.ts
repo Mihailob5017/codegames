@@ -21,7 +21,10 @@ describe("PistonService", () => {
 				}),
 			});
 
-			const result = await service.execute("JAVASCRIPT", "console.log(42)");
+			const result = await service.execute(
+				"JAVASCRIPT",
+				"console.log(42)",
+			);
 
 			expect(result).toEqual({ stdout: "42\n", stderr: "", exitCode: 0 });
 		});
@@ -41,7 +44,9 @@ describe("PistonService", () => {
 		it("sends the correct language and version for JAVASCRIPT", async () => {
 			mockFetch.mockResolvedValue({
 				ok: true,
-				json: async () => ({ run: { stdout: "", stderr: "", code: 0 } }),
+				json: async () => ({
+					run: { stdout: "", stderr: "", code: 0 },
+				}),
 			});
 
 			await service.execute("JAVASCRIPT", "console.log(1)");
@@ -55,7 +60,9 @@ describe("PistonService", () => {
 		it("sends the correct language for PYTHON", async () => {
 			mockFetch.mockResolvedValue({
 				ok: true,
-				json: async () => ({ run: { stdout: "", stderr: "", code: 0 } }),
+				json: async () => ({
+					run: { stdout: "", stderr: "", code: 0 },
+				}),
 			});
 
 			await service.execute("PYTHON", "print(1)");

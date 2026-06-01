@@ -25,7 +25,9 @@ describe("TestCasesController", () => {
 
 	describe("getTestCasesByProblemId", () => {
 		it("returns 200 with the test cases", async () => {
-			mockService.getTestCasesByProblemId.mockResolvedValue([mockTestCase] as any);
+			mockService.getTestCasesByProblemId.mockResolvedValue([
+				mockTestCase,
+			] as any);
 
 			const req = createMockRequest({ params: { id: "problem-id-1" } });
 			const res = createMockResponse();
@@ -46,11 +48,17 @@ describe("TestCasesController", () => {
 
 	describe("addTestCaseToProblem", () => {
 		it("returns 201 with the created test case", async () => {
-			mockService.addTestCaseToProblem.mockResolvedValue(mockTestCase as any);
+			mockService.addTestCaseToProblem.mockResolvedValue(
+				mockTestCase as any,
+			);
 
 			const req = createMockRequest({
 				params: { id: "problem-id-1" },
-				body: { input: "[2,7]\n9", expectedOutput: "[0,1]", isSample: true },
+				body: {
+					input: "[2,7]\n9",
+					expectedOutput: "[0,1]",
+					isSample: true,
+				},
 			});
 			const res = createMockResponse();
 
@@ -88,13 +96,23 @@ describe("TestCasesController", () => {
 
 	describe("bulkAddTestCasesToProblem", () => {
 		it("returns 201 with the insert count for a valid array", async () => {
-			mockService.bulkAddTestCasesToProblem.mockResolvedValue({ count: 2 });
+			mockService.bulkAddTestCasesToProblem.mockResolvedValue({
+				count: 2,
+			});
 
 			const req = createMockRequest({
 				params: { id: "problem-id-1" },
 				body: [
-					{ input: "[2,7]\n9", expectedOutput: "[0,1]", isSample: true },
-					{ input: "[3,2,4]\n6", expectedOutput: "[1,2]", isSample: false },
+					{
+						input: "[2,7]\n9",
+						expectedOutput: "[0,1]",
+						isSample: true,
+					},
+					{
+						input: "[3,2,4]\n6",
+						expectedOutput: "[1,2]",
+						isSample: false,
+					},
 				],
 			});
 			const res = createMockResponse();
@@ -113,7 +131,10 @@ describe("TestCasesController", () => {
 		});
 
 		it("throws ValidationError when body is an empty array", async () => {
-			const req = createMockRequest({ params: { id: "problem-id-1" }, body: [] });
+			const req = createMockRequest({
+				params: { id: "problem-id-1" },
+				body: [],
+			});
 			const res = createMockResponse();
 
 			await expect(
@@ -124,7 +145,9 @@ describe("TestCasesController", () => {
 				),
 			).rejects.toBeInstanceOf(ValidationError);
 
-			expect(mockService.bulkAddTestCasesToProblem).not.toHaveBeenCalled();
+			expect(
+				mockService.bulkAddTestCasesToProblem,
+			).not.toHaveBeenCalled();
 		});
 
 		it("throws ValidationError when body is not an array", async () => {

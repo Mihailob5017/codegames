@@ -51,7 +51,9 @@ describe("errorMiddleware", () => {
 
 	describe("ValidationError", () => {
 		it("responds 400 with fieldErrors when present", () => {
-			const err = new ValidationError("Invalid input", { code: ["Required"] });
+			const err = new ValidationError("Invalid input", {
+				code: ["Required"],
+			});
 			const res = runMiddleware(err);
 
 			expect((res as any).status).toHaveBeenCalledWith(400);

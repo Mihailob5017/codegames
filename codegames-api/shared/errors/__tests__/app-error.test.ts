@@ -99,7 +99,9 @@ describe("ExternalServiceError", () => {
 		expect(new ExternalServiceError().statusCode).toBe(502);
 	});
 	it("uses default message", () => {
-		expect(new ExternalServiceError().message).toBe("External service error");
+		expect(new ExternalServiceError().message).toBe(
+			"External service error",
+		);
 	});
 	it("is an instance of AppError", () => {
 		expect(new ExternalServiceError()).toBeInstanceOf(AppError);

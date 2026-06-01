@@ -15,9 +15,10 @@ class AuthController {
 			);
 		}
 		await AuthService.register(parsed.data, req.file);
-		res
-			.status(201)
-			.json({ status: "success", message: "User registered successfully" });
+		res.status(201).json({
+			status: "success",
+			message: "User registered successfully",
+		});
 	};
 }
 

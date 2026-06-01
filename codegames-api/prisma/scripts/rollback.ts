@@ -25,9 +25,9 @@ const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-    type MigrationRow = { migration_name: string; finished_at: Date | null };
+	type MigrationRow = { migration_name: string; finished_at: Date | null };
 
-    const rows = await prisma.$queryRaw<MigrationRow[]>`
+	const rows = await prisma.$queryRaw<MigrationRow[]>`
         SELECT migration_name, finished_at
         FROM _prisma_migrations
         WHERE finished_at IS NOT NULL
@@ -36,32 +36,38 @@ async function main() {
         LIMIT 1
     `;
 
-    if (!rows.length) {
-        console.log("No applied migrations found — nothing to roll back.");
-        return;
-    }
+	if (!rows.length) {
+		console.log("No applied migrations found — nothing to roll back.");
+		return;
+	}
 
-    const { migration_name } = rows[0];
+	const { migration_name } = rows[0];
 
-    console.log(`Last applied migration: ${migration_name}`);
-    console.log(`Marking as rolled back…\n`);
+	console.log(`Last applied migration: ${migration_name}`);
+	console.log(`Marking as rolled back…\n`);
 
-    execSync(`prisma migrate resolve --rolled-back "${migration_name}"`, {
-        stdio: "inherit",
-        cwd: process.cwd(),
-    });
+	execSync(`prisma migrate resolve --rolled-back "${migration_name}"`, {
+		stdio: "inherit",
+		cwd: process.cwd(),
+	});
 
-    console.log(`\n✔  "${migration_name}" is now marked as rolled back.`);
-    console.log(`\nNext steps:`);
-    console.log(`  • If you want to re-apply it:    npm run migrate:dev`);
-    console.log(`  • If you want to undo the schema change, write the reverse SQL first,`);
-    console.log(`    run it with: npx prisma db execute --file ./prisma/scripts/down.sql`);
-    console.log(`    then run this script again, or create a new forward migration.`);
+	console.log(`\n✔  "${migration_name}" is now marked as rolled back.`);
+	console.log(`\nNext steps:`);
+	console.log(`  • If you want to re-apply it:    npm run migrate:dev`);
+	console.log(
+		`  • If you want to undo the schema change, write the reverse SQL first,`,
+	);
+	console.log(
+		`    run it with: npx prisma db execute --file ./prisma/scripts/down.sql`,
+	);
+	console.log(
+		`    then run this script again, or create a new forward migration.`,
+	);
 }
 
 main()
-    .catch((e) => {
-        console.error("Rollback script failed:", e);
-        process.exit(1);
-    })
-    .finally(() => prisma.$disconnect());
+	.catch((e) => {
+		console.error("Rollback script failed:", e);
+		process.exit(1);
+	})
+	.finally(() => prisma.$disconnect());

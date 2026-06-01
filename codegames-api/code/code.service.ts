@@ -45,9 +45,12 @@ class CodeService {
 
 	async run(body: CodeExecutionInput): Promise<RunResult> {
 		const { problemId } = body;
-		const testCases = await this.codeRepository.getSampleTestCases(problemId);
+		const testCases =
+			await this.codeRepository.getSampleTestCases(problemId);
 		if (testCases.length === 0) {
-			throw new NotFoundError("No test cases found for the given problem ID");
+			throw new NotFoundError(
+				"No test cases found for the given problem ID",
+			);
 		}
 		return this._runWithTestCases(body, testCases);
 	}
@@ -56,7 +59,9 @@ class CodeService {
 		const { problemId } = body;
 		const testCases = await this.codeRepository.getAllTestCases(problemId);
 		if (testCases.length === 0) {
-			throw new NotFoundError("No test cases found for the given problem ID");
+			throw new NotFoundError(
+				"No test cases found for the given problem ID",
+			);
 		}
 		return this._runWithTestCases(body, testCases);
 	}

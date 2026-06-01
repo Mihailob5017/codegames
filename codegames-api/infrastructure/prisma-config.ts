@@ -23,7 +23,8 @@ class PrismaService {
 			await prisma.$queryRaw`SELECT 1`;
 			return true;
 		} catch (error) {
-			const err = error instanceof Error ? error : new Error(String(error));
+			const err =
+				error instanceof Error ? error : new Error(String(error));
 			logger.error("Database health check failed", {
 				error: err.message,
 				stack: err.stack,

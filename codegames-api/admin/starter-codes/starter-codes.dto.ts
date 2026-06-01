@@ -13,4 +13,6 @@ export const BulkAddStarterCodesSchema = z
 	.min(1, "At least one starter code is required");
 
 export type StarterCodeInput = z.infer<typeof StarterCodeSchema>;
-export type BulkAddStarterCodesInput = z.infer<typeof BulkAddStarterCodesSchema>;
+export type BulkAddStarterCodesInput = z.infer<
+	typeof BulkAddStarterCodesSchema
+>;

@@ -21,39 +21,63 @@ describe("StarterCodesService", () => {
 
 	describe("getStarterCodesByProblemId", () => {
 		it("delegates to repository.getStarterCodesByProblemId", async () => {
-			mockRepo.getStarterCodesByProblemId.mockResolvedValue([mockStarterCode] as any);
+			mockRepo.getStarterCodesByProblemId.mockResolvedValue([
+				mockStarterCode,
+			] as any);
 
-			const result = await service.getStarterCodesByProblemId("problem-id-1");
+			const result =
+				await service.getStarterCodesByProblemId("problem-id-1");
 
 			expect(result).toEqual([mockStarterCode]);
-			expect(mockRepo.getStarterCodesByProblemId).toHaveBeenCalledWith("problem-id-1");
+			expect(mockRepo.getStarterCodesByProblemId).toHaveBeenCalledWith(
+				"problem-id-1",
+			);
 		});
 	});
 
 	describe("addStarterCodeToProblem", () => {
 		it("delegates to repository.addStarterCodeToProblem", async () => {
-			mockRepo.addStarterCodeToProblem.mockResolvedValue(mockStarterCode as any);
-			const data = { language: "JAVASCRIPT" as const, code: "function f() {}" };
+			mockRepo.addStarterCodeToProblem.mockResolvedValue(
+				mockStarterCode as any,
+			);
+			const data = {
+				language: "JAVASCRIPT" as const,
+				code: "function f() {}",
+			};
 
-			const result = await service.addStarterCodeToProblem("problem-id-1", data);
+			const result = await service.addStarterCodeToProblem(
+				"problem-id-1",
+				data,
+			);
 
 			expect(result).toEqual(mockStarterCode);
-			expect(mockRepo.addStarterCodeToProblem).toHaveBeenCalledWith("problem-id-1", data);
+			expect(mockRepo.addStarterCodeToProblem).toHaveBeenCalledWith(
+				"problem-id-1",
+				data,
+			);
 		});
 	});
 
 	describe("bulkAddStarterCodesToProblem", () => {
 		it("delegates to repository.bulkAddStarterCodesToProblem", async () => {
-			mockRepo.bulkAddStarterCodesToProblem.mockResolvedValue({ count: 2 });
+			mockRepo.bulkAddStarterCodesToProblem.mockResolvedValue({
+				count: 2,
+			});
 			const starterCodes = [
 				{ language: "JAVASCRIPT" as const, code: "function f() {}" },
 				{ language: "PYTHON" as const, code: "def f():" },
 			];
 
-			const result = await service.bulkAddStarterCodesToProblem("problem-id-1", starterCodes);
+			const result = await service.bulkAddStarterCodesToProblem(
+				"problem-id-1",
+				starterCodes,
+			);
 
 			expect(result).toEqual({ count: 2 });
-			expect(mockRepo.bulkAddStarterCodesToProblem).toHaveBeenCalledWith("problem-id-1", starterCodes);
+			expect(mockRepo.bulkAddStarterCodesToProblem).toHaveBeenCalledWith(
+				"problem-id-1",
+				starterCodes,
+			);
 		});
 	});
 });

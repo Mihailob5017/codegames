@@ -4,7 +4,10 @@ import {
 	ProblemQueryFilters,
 	UpdateProblemInput,
 } from "./problems.dto";
-import { PaginatedResult, PaginationParams } from "../../shared/types/common.types";
+import {
+	PaginatedResult,
+	PaginationParams,
+} from "../../shared/types/common.types";
 
 class ProblemsService {
 	private readonly repository: ProblemsRepository;
@@ -13,8 +16,11 @@ class ProblemsService {
 		this.repository = new ProblemsRepository();
 	}
 
-	async getAllProblems(pagination: PaginationParams): Promise<PaginatedResult<unknown>> {
-		const { data, total } = await this.repository.getAllProblems(pagination);
+	async getAllProblems(
+		pagination: PaginationParams,
+	): Promise<PaginatedResult<unknown>> {
+		const { data, total } =
+			await this.repository.getAllProblems(pagination);
 		return {
 			data,
 			pagination: {
@@ -26,8 +32,14 @@ class ProblemsService {
 		};
 	}
 
-	async queryProblems(filters: ProblemQueryFilters, pagination: PaginationParams): Promise<PaginatedResult<unknown>> {
-		const { data, total } = await this.repository.queryProblems(filters, pagination);
+	async queryProblems(
+		filters: ProblemQueryFilters,
+		pagination: PaginationParams,
+	): Promise<PaginatedResult<unknown>> {
+		const { data, total } = await this.repository.queryProblems(
+			filters,
+			pagination,
+		);
 		return {
 			data,
 			pagination: {
@@ -43,7 +55,11 @@ class ProblemsService {
 		return this.repository.getProblemById(id);
 	}
 
-	createProblem({ testCases, starterCodes, ...problemData }: CreateProblemInput) {
+	createProblem({
+		testCases,
+		starterCodes,
+		...problemData
+	}: CreateProblemInput) {
 		return this.repository.createProblem({
 			...problemData,
 			...(testCases.length > 0 && { TestCases: { create: testCases } }),

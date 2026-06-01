@@ -32,7 +32,10 @@ class ProblemsRepository {
 		return { data, total };
 	}
 
-	async queryProblems(filters: ProblemQueryFilters, pagination: PaginationParams) {
+	async queryProblems(
+		filters: ProblemQueryFilters,
+		pagination: PaginationParams,
+	) {
 		const skip = (pagination.page - 1) * pagination.limit;
 		const where: Prisma.ProblemWhereInput = {
 			...(filters.difficulty && { difficulty: filters.difficulty }),
@@ -44,7 +47,12 @@ class ProblemsRepository {
 			}),
 			...(filters.search && {
 				OR: [
-					{ title: { contains: filters.search, mode: "insensitive" } },
+					{
+						title: {
+							contains: filters.search,
+							mode: "insensitive",
+						},
+					},
 					{ slug: { contains: filters.search, mode: "insensitive" } },
 				],
 			}),

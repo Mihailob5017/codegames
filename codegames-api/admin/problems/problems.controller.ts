@@ -1,5 +1,8 @@
 import { z } from "zod";
-import { ControllerType, PaginationSchema } from "../../shared/types/common.types";
+import {
+	ControllerType,
+	PaginationSchema,
+} from "../../shared/types/common.types";
 import { NotFoundError, ValidationError } from "../../shared/errors/app-error";
 import ProblemsService from "./problems.service";
 import {
@@ -13,7 +16,8 @@ class ProblemsController {
 
 	static readonly getProblems: ControllerType<void> = async (req, res) => {
 		const pagination = PaginationSchema.parse(req.query);
-		const result = await ProblemsController.service.getAllProblems(pagination);
+		const result =
+			await ProblemsController.service.getAllProblems(pagination);
 		res.status(200).json({ status: "success", ...result });
 	};
 
@@ -26,7 +30,10 @@ class ProblemsController {
 			);
 		}
 		const pagination = PaginationSchema.parse(req.query);
-		const result = await ProblemsController.service.queryProblems(parsed.data, pagination);
+		const result = await ProblemsController.service.queryProblems(
+			parsed.data,
+			pagination,
+		);
 		res.status(200).json({ status: "success", ...result });
 	};
 
@@ -48,7 +55,9 @@ class ProblemsController {
 				z.flattenError(parsed.error).fieldErrors,
 			);
 		}
-		const problem = await ProblemsController.service.createProblem(parsed.data);
+		const problem = await ProblemsController.service.createProblem(
+			parsed.data,
+		);
 		res.status(201).json({ status: "success", data: problem });
 	};
 

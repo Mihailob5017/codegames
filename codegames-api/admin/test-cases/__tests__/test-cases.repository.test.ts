@@ -29,7 +29,8 @@ describe("TestCasesRepository", () => {
 		it("returns all test cases for a problem", async () => {
 			db.testCase.findMany.mockResolvedValue([mockTestCase]);
 
-			const result = await repository.getTestCasesByProblemId("problem-id-1");
+			const result =
+				await repository.getTestCasesByProblemId("problem-id-1");
 
 			expect(result).toEqual([mockTestCase]);
 			expect(db.testCase.findMany).toHaveBeenCalledWith({
@@ -42,11 +43,14 @@ describe("TestCasesRepository", () => {
 		it("creates a test case connected to the problem", async () => {
 			db.testCase.create.mockResolvedValue(mockTestCase);
 
-			const result = await repository.addTestCaseToProblem("problem-id-1", {
-				input: "[2,7,11,15]\n9",
-				expectedOutput: "[0,1]",
-				isSample: true,
-			});
+			const result = await repository.addTestCaseToProblem(
+				"problem-id-1",
+				{
+					input: "[2,7,11,15]\n9",
+					expectedOutput: "[0,1]",
+					isSample: true,
+				},
+			);
 
 			expect(result).toEqual(mockTestCase);
 			expect(db.testCase.create).toHaveBeenCalledWith({
@@ -60,7 +64,10 @@ describe("TestCasesRepository", () => {
 		});
 
 		it("defaults isSample to false when not provided", async () => {
-			db.testCase.create.mockResolvedValue({ ...mockTestCase, isSample: false });
+			db.testCase.create.mockResolvedValue({
+				...mockTestCase,
+				isSample: false,
+			});
 
 			await repository.addTestCaseToProblem("problem-id-1", {
 				input: "5",
@@ -84,13 +91,26 @@ describe("TestCasesRepository", () => {
 				{ input: "[3,2,4]\n6", expectedOutput: "[1,2]" },
 			];
 
-			const result = await repository.bulkAddTestCasesToProblem("problem-id-1", testCases);
+			const result = await repository.bulkAddTestCasesToProblem(
+				"problem-id-1",
+				testCases,
+			);
 
 			expect(result).toEqual({ count: 2 });
 			expect(db.testCase.createMany).toHaveBeenCalledWith({
 				data: [
-					{ problemId: "problem-id-1", input: "[2,7]\n9", expectedOutput: "[0,1]", isSample: true },
-					{ problemId: "problem-id-1", input: "[3,2,4]\n6", expectedOutput: "[1,2]", isSample: false },
+					{
+						problemId: "problem-id-1",
+						input: "[2,7]\n9",
+						expectedOutput: "[0,1]",
+						isSample: true,
+					},
+					{
+						problemId: "problem-id-1",
+						input: "[3,2,4]\n6",
+						expectedOutput: "[1,2]",
+						isSample: false,
+					},
 				],
 			});
 		});

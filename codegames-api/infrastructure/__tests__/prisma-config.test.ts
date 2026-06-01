@@ -34,7 +34,9 @@ describe("PrismaService", () => {
 		it("propagates errors from $connect so startServer can fail fast", async () => {
 			const dbError = new Error("Connection refused");
 			(mockPrisma.$connect as jest.Mock).mockRejectedValue(dbError);
-			await expect(service.connect()).rejects.toThrow("Connection refused");
+			await expect(service.connect()).rejects.toThrow(
+				"Connection refused",
+			);
 		});
 
 		it("does not call $connect a second time if already connected", async () => {
@@ -63,14 +65,18 @@ describe("PrismaService", () => {
 
 	describe("healthCheck", () => {
 		it("returns true when query succeeds", async () => {
-			(mockPrisma.$queryRaw as jest.Mock).mockResolvedValue([{ "?column?": 1 }]);
+			(mockPrisma.$queryRaw as jest.Mock).mockResolvedValue([
+				{ "?column?": 1 },
+			]);
 			const result = await service.healthCheck();
 			expect(result).toBe(true);
 		});
 
 		it("returns false and logs error when query fails", async () => {
 			const logger = (await import("../logger")).default;
-			(mockPrisma.$queryRaw as jest.Mock).mockRejectedValue(new Error("DB down"));
+			(mockPrisma.$queryRaw as jest.Mock).mockRejectedValue(
+				new Error("DB down"),
+			);
 			const result = await service.healthCheck();
 			expect(result).toBe(false);
 			expect(logger.error).toHaveBeenCalledWith(
