@@ -141,13 +141,14 @@ Run `/architecture-review` to regenerate concrete findings against the current c
 
 ### Backend consistency & standards
 
-- [ ] Standardise services on **one** pattern — instance-based with a constructor (current mix: `auth` uses `static` members, `admin/*` use instances)
-- [ ] Standardise indentation across the API (current mix: tabs in `code`/`admin`/`upload`, spaces in `auth`/`user`) — enforce with Prettier/EditorConfig
-- [ ] Move remaining runtime-sensitive code off direct `process.env` reads (use `getAppConfig()`)
-- [ ] Standardise module exports across all backend features (`index.ts` barrels)
-- [ ] Standardise router files on `import { Router } from "express"`
+- [x] Standardise services on **one** pattern — instance-based with a constructor (`auth.service` converted from static)
+- [x] Standardise indentation across the API — Prettier + EditorConfig enforce tabs/4
+- [x] Move remaining runtime-sensitive code off direct `process.env` reads (`piston.service`/`code.controller` now use `getAppConfig()`; `logger` + `error-middleware` documented as bootstrap exceptions)
+- [x] Standardise module exports — default class exports + `index.ts` barrels on every slice
+- [x] Standardise router files on `import { Router } from "express"`
 - [ ] Audit and remove unused dependencies (verify `lodash` / `@types/lodash` are still needed)
-- [ ] Add API lint + build to the standard local/CI check flow
+- [x] Wire up lint — ESLint + Prettier installed and runnable (`npm run lint` / `format`)
+- [ ] Add API lint + build to a CI check flow
 
 ### API & validation discipline
 
