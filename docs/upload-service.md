@@ -42,7 +42,7 @@ codegames-api/
     ├── multer-config.ts      # Multer middleware config
     ├── upload.controller.ts  # HTTP handlers
     ├── upload.route.ts       # Route definitions
-    └── upload.service.ts     # Business logic (this file)
+    └── upload.service.ts     # Business logic
 ```
 
 ## How Each File Works
@@ -85,8 +85,8 @@ Multer handles parsing `multipart/form-data` requests. Our config:
 - UUID prevents filename collisions
 - Sends the file buffer to MinIO via `PutObjectCommand`
 - Returns `{ key, url }` where:
-  - `key` is the storage path (used for deletion later)
-  - `url` is the browser-accessible URL using `MINIO_PUBLIC_URL`
+    - `key` is the storage path (used for deletion later)
+    - `url` is the browser-accessible URL using `MINIO_PUBLIC_URL`
 
 **`delete(key)`** — Removes a file by its key.
 
@@ -135,11 +135,11 @@ These aren't real directories — S3/MinIO uses flat key-value storage. The `/` 
 The upload service is **decoupled** from entity CRUD. The workflow is two steps:
 
 1. **Upload first**: `POST /api/v1/upload/problem-images` with the image file
-   - Returns `{ key: "problem-images/abc.png", url: "http://localhost:9000/codegames/problem-images/abc.png" }`
+    - Returns `{ key: "problem-images/abc.png", url: "http://localhost:9000/codegames/problem-images/abc.png" }`
 
 2. **Associate the URL**: Send the `url` to the relevant create/update endpoint
-   - e.g., `POST /api/v1/admin/problems` with `url` in the `ProblemImage` field
-   - The database stores the URL string, not the file itself
+    - e.g., `POST /api/v1/admin/problems` with `url` in the `ProblemImage` field
+    - The database stores the URL string, not the file itself
 
 This means the upload service doesn't need to know about problems, companies, or users.
 

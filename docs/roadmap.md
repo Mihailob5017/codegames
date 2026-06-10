@@ -2,7 +2,7 @@
 
 > Single source of truth for what's done and what's next.
 > Organised by release scope; cross-cutting tech-debt lives at the bottom.
-> Last updated: 2026-06-01
+> Last updated: 2026-06-10
 
 ---
 
@@ -95,7 +95,7 @@ The core loop: browse problems, write code, run/submit, see results.
 - [ ] Auth middleware protecting all non-public routes
 - [ ] Non-root Docker user (`USER node` in Dockerfile)
 - [ ] Create production Dockerfile — multi-stage build, `npm run build`
-- [ ] Move `nodemon` / `ts-node` / `supertest` to `devDependencies`
+- [x] Move dev tooling (`nodemon`, `ts-node`, `typescript`, `prisma` CLI) to `devDependencies`; `supertest` removed as unused
 - [ ] Pin `wait-for-it.sh` to a specific commit hash
 
 ---
@@ -146,7 +146,7 @@ Run `/architecture-review` to regenerate concrete findings against the current c
 - [x] Move remaining runtime-sensitive code off direct `process.env` reads (`piston.service`/`code.controller` now use `getAppConfig()`; `logger` + `error-middleware` documented as bootstrap exceptions)
 - [x] Standardise module exports — default class exports + `index.ts` barrels on every slice
 - [x] Standardise router files on `import { Router } from "express"`
-- [ ] Audit and remove unused dependencies (verify `lodash` / `@types/lodash` are still needed)
+- [x] Audit and remove unused dependencies — dropped `lodash`, `uuid`, `supertest` (+ their `@types`); `jsonwebtoken` / `nodemailer` kept for the imminent auth/OTP work
 - [x] Wire up lint — ESLint + Prettier installed and runnable (`npm run lint` / `format`)
 - [ ] Add API lint + build to a CI check flow
 

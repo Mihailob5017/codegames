@@ -57,6 +57,7 @@ codegames/
 │   │   ├── prisma.ts            # PrismaClient singleton
 │   │   ├── env-config.ts        # Zod env validation
 │   │   └── app-config.ts        # Validated config bootstrap
+│   ├── middleware/              # Error handling, rate limiting, request logging
 │   ├── shared/
 │   │   ├── errors/              # AppError hierarchy
 │   │   ├── types/               # Shared controller/pagination types
@@ -66,12 +67,14 @@ codegames/
 ├── codegames-web/               # React + Vite frontend
 ├── piston/
 │   └── piston-entrypoint.sh     # Custom entrypoint (cgroup setup + runtime install)
-├── docs/                        # Documentation
+├── docs/                        # Documentation (see docs/README.md for the index)
+│   ├── architecture.md          # System design + data flow
 │   ├── docker.md                # Docker setup details
 │   ├── api-routes.md            # API endpoint reference
 │   ├── schema-design.md         # Full DB schema design
 │   ├── technical-decisions.md   # Architectural decisions log
-│   └── todo.md                  # Task list
+│   ├── upload-service.md        # MinIO/S3 upload service guide
+│   └── roadmap.md               # What's done / what's next
 ├── docker-compose.yml
 ├── .env                         # Committed defaults (no secrets)
 └── .env.local                   # Local overrides — NOT committed
@@ -129,8 +132,9 @@ Versions can be overridden per-language via env vars (`PISTON_VERSION_JAVASCRIPT
 | `API_HOST`          | `0.0.0.0`                           | Express bind address           |
 | `WEB_PORT`          | `3000`                              | Vite dev server port           |
 | `NODE_ENV`          | `development`                       | Runtime environment            |
-| `JWT_SECRET`        | _(required)_                        | JWT signing secret             |
-| `JWT_EXPIRES_IN`    | `7d`                                | JWT token TTL                  |
+| `JWT_SECRET`        | _(required, min 16 chars)_          | JWT signing secret             |
+| `JWT_EXPIRES_IN`    | `7d`                                | JWT token TTL _(planned)_      |
+| `SALT_ROUNDS`       | _(required)_                        | bcrypt hash rounds             |
 | `ADMIN_ROUTE`       | _(required)_                        | Secret admin URL prefix        |
 | `API_VERSION`       | _(required)_                        | API version prefix (e.g. `v1`) |
 | `CORS_ORIGIN`       | `http://localhost:3000,...`         | Allowed CORS origins           |
@@ -168,8 +172,12 @@ docker compose rm -sv api && docker compose up --build api
 
 ## Documentation
 
+Full index at [docs/README.md](docs/README.md).
+
+- [Architecture](docs/architecture.md) — system design, module breakdown, data flow
 - [Docker Setup](docs/docker.md) — services, volumes, healthchecks, troubleshooting
 - [API Routes](docs/api-routes.md) — all endpoints with methods and paths
 - [Schema Design](docs/schema-design.md) — full Prisma schema with design rationale
 - [Technical Decisions](docs/technical-decisions.md) — architectural choices and their reasoning
-- [TODO](docs/todo.md) — known issues and planned work
+- [Upload Service](docs/upload-service.md) — MinIO/S3 upload service guide
+- [Roadmap](docs/roadmap.md) — what's done and what's next

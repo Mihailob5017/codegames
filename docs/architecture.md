@@ -75,15 +75,16 @@ Every incoming request passes through this chain before reaching a route handler
 ```mermaid
 flowchart LR
     R["Incoming\nRequest"]
+    C["cors()\nOrigin restriction"]
     H["helmet()\nSecurity headers"]
     RL["requestLogger\nWinston logging"]
     GR["generalRateLimiter\n100 req / 15 min"]
     JP["express.json()\nBody parsing"]
     RH["Route Handler\n(controller)"]
-    EM["errorMiddleware\nAppError / Prisma / 500"]
+    EM["errorMiddleware\nZod / AppError / Prisma / 500"]
     RES["Response"]
 
-    R --> H --> RL --> GR --> JP --> RH
+    R --> C --> H --> RL --> GR --> JP --> RH
     RH -->|"error thrown"| EM
     RH -->|"success"| RES
     EM --> RES
@@ -149,9 +150,9 @@ sequenceDiagram
 |----------|-----------------|
 | JavaScript | Test args spread into `solution(...)`, each result logged as JSON |
 | Python | Test case JSON base64-encoded to avoid quote/newline escaping issues |
-| Java | Typed wrapper class + reflection-based invocation |
-| C# | Static class wrapping user method |
-| C++ | Typed main() with for-loop over serialized test args |
+| Java | User code wrapped in a `Solution` class; args emitted as typed Java literals at wrap time, results serialized by a generated `__json` helper |
+| C# | User code wrapped in a `Solution` class; typed literals + a generated `Serialize` helper |
+| C++ | Typed `main()` with one block per test case; `serialize` overloads cover the common return types |
 
 ---
 

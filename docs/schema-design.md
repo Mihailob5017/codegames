@@ -1,6 +1,6 @@
 # CodeGames — Database Schema Design
 
-> Solo learning project. Full scope intentionally large. Build iteratively per the [roadmap](todo.md).
+> Solo learning project. Full scope intentionally large. Build iteratively per the [roadmap](roadmap.md).
 
 ---
 

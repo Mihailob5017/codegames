@@ -13,6 +13,7 @@ point-in-time notes that are no longer active references.
 | [technical-decisions.md](technical-decisions.md) | ADR-style record of every significant architectural choice and its reasoning |
 | [api-routes.md](api-routes.md) | API route reference (✅ implemented / 🔲 planned / 🚧 partial) |
 | [docker.md](docker.md) | Docker Compose setup and service topology |
+| [upload-service.md](upload-service.md) | MinIO/S3 upload service — how uploads work end to end |
 | [roadmap.md](roadmap.md) | Single source of truth for done / next work + cross-cutting tech debt |
 
 ## Reviewing the codebase

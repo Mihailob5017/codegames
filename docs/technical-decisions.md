@@ -111,10 +111,10 @@ Judge0 was tried earlier in the project. It requires its own separate Postgres a
 
 **Decision:** User code is wrapped in a generated test harness and sent to Piston as a single script. One Piston request covers all test cases.
 
-**Run vs Submit behavior (from the plan):**
+**Run vs Submit behavior (current):**
 
-- **Run:** Execute against sample test cases only. If the code fails on the first test case, return the expected vs actual result immediately (fail-fast). If it passes the first test, continue and return the full results object with pass/fail per case.
-- **Submit:** Execute against all test cases (sample + hidden). Track the submission in the DB.
+- **Run** (`POST /code/run`): Execute against sample test cases only; returns the full results object with pass/fail per case. (Whether Run should switch to fail-fast is an open decision — see the roadmap.)
+- **Submit** (`POST /code/execute`): Execute against all test cases (sample + hidden). Persisting the submission to the DB is planned but not yet implemented.
 
 **Why not one request per test case:**
 
@@ -206,12 +206,12 @@ expectedOutput: "[0,1]"             -> parsed and compared
 
 ## 10. Piston Language Name Mapping
 
-**Decision:** A `PISTON_LANGUAGE_MAP` in `piston.service.ts` translates between the internal `Language` enum (uppercase: `JAVASCRIPT`, `PYTHON`, etc.) and the strings Piston expects.
+**Decision:** A `PISTON_RUNTIMES` map in `piston.service.ts` translates between the internal `Language` enum (uppercase: `JAVASCRIPT`, `PYTHON`, etc.) and the strings Piston expects.
 
 **Why needed:**
 
 - Piston's runtime names are lowercase (`javascript`, `python`, `c++`) and are not always predictable from the enum value.
-- The mapping also holds the default version string for each runtime, which can be overridden per-language via env vars (`PISTON_VERSION_JAVASCRIPT`, `PISTON_VERSION_PYTHON`, etc.) without a code change.
+- Each entry also points at the config key holding the pinned runtime version. Versions default in `env-config.ts` and can be overridden per-language via env vars (`PISTON_VERSION_JAVASCRIPT`, `PISTON_VERSION_PYTHON`, etc.) without a code change; they are read from the validated app config at call time.
 
 **Bug found and fixed during development:**
 
@@ -291,7 +291,7 @@ Browser -> localhost:3000 (web)
 
 ---
 
-## 12. Auth Strategy (planned)
+## 14. Auth Strategy (planned)
 
 **Decision:** JWT access tokens (short-lived) + refresh token rotation + OTP email verification.
 
@@ -314,7 +314,7 @@ Browser -> localhost:3000 (web)
 
 ---
 
-## 13. What Was Intentionally Left Out
+## 15. What Was Intentionally Left Out
 
 | Omitted                     | Why                                                                            |
 | --------------------------- | ------------------------------------------------------------------------------ |
