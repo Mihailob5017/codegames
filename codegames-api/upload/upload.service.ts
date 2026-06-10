@@ -6,7 +6,7 @@ import {
 	PutBucketPolicyCommand,
 } from "@aws-sdk/client-s3";
 import { getS3Client } from "../infrastructure/s3-client";
-import { v4 as uuidv4 } from "uuid";
+import { randomUUID } from "node:crypto";
 import path from "node:path";
 import logger from "../infrastructure/logger";
 import { getAppConfig } from "../infrastructure/app-config";
@@ -68,7 +68,7 @@ class UploadService {
 	): Promise<UploadResult> {
 		const s3 = getS3Client();
 		const ext = path.extname(file.originalname).toLowerCase();
-		const key = `${folder}/${uuidv4()}${ext}`;
+		const key = `${folder}/${randomUUID()}${ext}`;
 
 		await s3.send(
 			new PutObjectCommand({

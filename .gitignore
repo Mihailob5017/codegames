@@ -1,5 +1,8 @@
 **/node_modules/**
 **/.claude/**
+# ...but version project slash commands (referenced by docs/README.md)
+!.claude/commands/
+!.claude/commands/**
 # Environment files
 .env.local
 .env*.local
