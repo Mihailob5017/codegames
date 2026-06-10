@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { ControllerType } from "../../shared/types/common.types";
 import { ValidationError } from "../../shared/errors/app-error";
 import TestCasesService from "./test-cases.service";
@@ -23,7 +24,10 @@ class TestCasesController {
 	) => {
 		const parsed = TestCaseSchema.safeParse(req.body);
 		if (!parsed.success) {
-			throw new ValidationError("Invalid test case data");
+			throw new ValidationError(
+				"Invalid test case data",
+				z.flattenError(parsed.error).fieldErrors,
+			);
 		}
 		const testCase = await TestCasesController.service.addTestCaseToProblem(
 			req.params.id as string,
@@ -38,7 +42,14 @@ class TestCasesController {
 	) => {
 		const parsed = BulkAddTestCasesSchema.safeParse(req.body);
 		if (!parsed.success) {
-			throw new ValidationError("Invalid test cases data");
+			// Root schema is an array, so fieldErrors is keyed by index —
+			// convert to the Record shape ValidationError expects.
+			throw new ValidationError(
+				"Invalid test cases data",
+				Object.fromEntries(
+					Object.entries(z.flattenError(parsed.error).fieldErrors),
+				),
+			);
 		}
 		const result =
 			await TestCasesController.service.bulkAddTestCasesToProblem(

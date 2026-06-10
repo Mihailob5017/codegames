@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import { Prisma } from "@prisma/client";
+import { z } from "zod";
 import { AppError, ValidationError } from "../shared/errors/app-error";
 import logger from "../infrastructure/logger";
 
@@ -43,10 +44,21 @@ export function errorMiddleware(
 		return;
 	}
 
+	// Safety net for Zod errors thrown outside the controller safeParse pattern
+	// (e.g. a stray .parse() call) — they are client errors, not 500s.
+	if (err instanceof z.ZodError) {
+		logger.warn("Unhandled Zod validation error", { message: err.message });
+		res.status(400).json({
+			status: "error",
+			message: z.flattenError(err).fieldErrors,
+		});
+		return;
+	}
+
 	if (
 		err instanceof SyntaxError &&
 		"status" in err &&
-		(err as any).status === 400
+		(err as { status?: number }).status === 400
 	) {
 		logger.warn("Malformed JSON body", { message: err.message });
 		res.status(400).json({

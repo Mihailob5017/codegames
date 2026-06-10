@@ -134,7 +134,7 @@ class CodeService {
 
 	async getStarterCode(problemId: string): Promise<StarterCode[]> {
 		const starterCode = await this.codeRepository.getStarterCode(problemId);
-		if (!starterCode) {
+		if (starterCode.length === 0) {
 			throw new NotFoundError(
 				"Starter code not found for the given problem ID",
 			);

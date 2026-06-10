@@ -27,7 +27,7 @@ describe("validateEnv", () => {
 	});
 
 	it("throws when SALT_ROUNDS is missing", () => {
-		const { SALT_ROUNDS, ...withoutSalt } = validEnv;
+		const { SALT_ROUNDS: _omitted, ...withoutSalt } = validEnv;
 		expect(() => validateEnv(withoutSalt)).toThrow();
 	});
 

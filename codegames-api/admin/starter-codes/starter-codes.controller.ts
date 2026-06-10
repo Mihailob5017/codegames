@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { ControllerType } from "../../shared/types/common.types";
 import { ValidationError } from "../../shared/errors/app-error";
 import StarterCodesService from "./starter-codes.service";
@@ -26,7 +27,10 @@ class StarterCodesController {
 	) => {
 		const parsed = StarterCodeSchema.safeParse(req.body);
 		if (!parsed.success) {
-			throw new ValidationError("Invalid starter code data");
+			throw new ValidationError(
+				"Invalid starter code data",
+				z.flattenError(parsed.error).fieldErrors,
+			);
 		}
 		const starterCode =
 			await StarterCodesController.service.addStarterCodeToProblem(
@@ -42,7 +46,14 @@ class StarterCodesController {
 	) => {
 		const parsed = BulkAddStarterCodesSchema.safeParse(req.body);
 		if (!parsed.success) {
-			throw new ValidationError("Invalid starter codes data");
+			// Root schema is an array, so fieldErrors is keyed by index —
+			// convert to the Record shape ValidationError expects.
+			throw new ValidationError(
+				"Invalid starter codes data",
+				Object.fromEntries(
+					Object.entries(z.flattenError(parsed.error).fieldErrors),
+				),
+			);
 		}
 		const result =
 			await StarterCodesController.service.bulkAddStarterCodesToProblem(

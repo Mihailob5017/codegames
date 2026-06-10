@@ -10,8 +10,6 @@ jest.mock("../code.service");
 import CodeService from "../code.service";
 import CodeController from "../code.controller";
 
-const MockCodeService = CodeService as jest.MockedClass<typeof CodeService>;
-
 let mockService: jest.Mocked<CodeService>;
 
 const validBody = {

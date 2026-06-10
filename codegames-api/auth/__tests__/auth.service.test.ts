@@ -1,12 +1,12 @@
 import { initTestAppConfig } from "../../shared/test-utils/test-helpers";
-import { AppError } from "../../shared/errors/app-error";
+import { ConflictError } from "../../shared/errors/app-error";
 
 jest.mock("../auth.repository");
 jest.mock("../../upload/upload.service");
 jest.mock("bcryptjs");
 
 import bcrypt from "bcryptjs";
-import { AuthRepository } from "../auth.repository";
+import AuthRepository from "../auth.repository";
 import UploadService from "../../upload/upload.service";
 import AuthService from "../auth.service";
 
@@ -60,15 +60,12 @@ describe("AuthService.register", () => {
 		expect(upload.upload).not.toHaveBeenCalled();
 	});
 
-	it("throws a 409 AppError when the user already exists", async () => {
+	it("throws a ConflictError when the user already exists", async () => {
 		repo.findByUsernameOrEmail.mockResolvedValue({
 			id: "existing",
 		} as never);
 
-		await expect(service.register(input)).rejects.toMatchObject({
-			constructor: AppError,
-			statusCode: 409,
-		});
+		await expect(service.register(input)).rejects.toThrow(ConflictError);
 		expect(repo.registerUser).not.toHaveBeenCalled();
 	});
 

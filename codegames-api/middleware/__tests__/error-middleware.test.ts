@@ -1,5 +1,5 @@
+import { z } from "zod";
 import {
-	AppError,
 	ExternalServiceError,
 	NotFoundError,
 	ValidationError,
@@ -90,6 +90,23 @@ describe("errorMiddleware", () => {
 			const res = runMiddleware(new ExternalServiceError("Piston down"));
 
 			expect((res as any).status).toHaveBeenCalledWith(502);
+		});
+	});
+
+	describe("ZodError safety net", () => {
+		it("responds 400 with fieldErrors for a Zod error thrown outside safeParse", () => {
+			const schema = z.object({ page: z.coerce.number().int().min(1) });
+			const result = schema.safeParse({ page: "zero" });
+			if (result.success) throw new Error("expected parse failure");
+			const res = runMiddleware(result.error);
+
+			expect((res as any).status).toHaveBeenCalledWith(400);
+			expect((res as any).json).toHaveBeenCalledWith({
+				status: "error",
+				message: expect.objectContaining({
+					page: expect.any(Array),
+				}),
+			});
 		});
 	});
 

@@ -5,4 +5,4 @@ const router = Router();
 
 // Profile routes — not yet implemented
 
-export default router;
+export const userRouter = router;

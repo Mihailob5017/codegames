@@ -1,8 +1,8 @@
 // codegames-api/auth/auth.service.ts
 import UploadService from "../upload/upload.service";
-import { AppError } from "../shared/errors/app-error";
+import { ConflictError } from "../shared/errors/app-error";
 import { RegisterInput } from "./auth.dto";
-import { AuthRepository } from "./auth.repository";
+import AuthRepository from "./auth.repository";
 import bcrypt from "bcryptjs";
 import { getAppConfig } from "../infrastructure/app-config";
 
@@ -30,7 +30,9 @@ class AuthService {
 		]);
 
 		if (existingUser) {
-			throw new AppError("Resource already exists", 409);
+			throw new ConflictError(
+				"User with this username or email already exists",
+			);
 		}
 
 		const profilePictureUrl = profileImage

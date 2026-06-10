@@ -1,23 +1,24 @@
 // codegames-api/index.ts
 import "dotenv/config"; // Must be first — loads .env before any other module runs
 
-import ExpressInstance from "./infrastructure/express-config";
+import ExpressServer from "./infrastructure/express-config";
 import { initializeAppConfig } from "./infrastructure/app-config";
-import PrismaInstance from "./infrastructure/prisma-config";
+import PrismaService from "./infrastructure/prisma-config";
 import { validateEnv } from "./infrastructure/env-config";
+import logger from "./infrastructure/logger";
 import UploadService from "./upload/upload.service";
 
 type StartServerResult = {
-	server: ExpressInstance;
-	prisma: PrismaInstance;
+	server: ExpressServer;
+	prisma: PrismaService;
 };
 
 const startServer = async (): Promise<StartServerResult> => {
 	const config = validateEnv(process.env);
 	initializeAppConfig(config);
 
-	const serverInstance = new ExpressInstance(config);
-	const prismaInstance = new PrismaInstance();
+	const serverInstance = new ExpressServer(config);
+	const prismaInstance = new PrismaService();
 
 	await prismaInstance.connect();
 
@@ -36,7 +37,7 @@ const gracefulShutdown = async (
 	signal: string,
 	{ server, prisma }: StartServerResult,
 ) => {
-	console.log(`Received ${signal}. Shutting down gracefully...`);
+	logger.info(`Received ${signal}. Shutting down gracefully...`);
 	await prisma.disconnect();
 	await server.stop();
 	process.exit(0);

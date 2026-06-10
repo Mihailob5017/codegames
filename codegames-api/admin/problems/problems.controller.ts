@@ -15,7 +15,7 @@ class ProblemsController {
 	private static readonly service = new ProblemsService();
 
 	static readonly getProblems: ControllerType<void> = async (req, res) => {
-		const pagination = PaginationSchema.parse(req.query);
+		const pagination = ProblemsController.parsePagination(req.query);
 		const result =
 			await ProblemsController.service.getAllProblems(pagination);
 		res.status(200).json({ status: "success", ...result });
@@ -29,13 +29,24 @@ class ProblemsController {
 				z.flattenError(parsed.error).fieldErrors,
 			);
 		}
-		const pagination = PaginationSchema.parse(req.query);
+		const pagination = ProblemsController.parsePagination(req.query);
 		const result = await ProblemsController.service.queryProblems(
 			parsed.data,
 			pagination,
 		);
 		res.status(200).json({ status: "success", ...result });
 	};
+
+	private static parsePagination(query: unknown) {
+		const parsed = PaginationSchema.safeParse(query);
+		if (!parsed.success) {
+			throw new ValidationError(
+				"Invalid pagination parameters",
+				z.flattenError(parsed.error).fieldErrors,
+			);
+		}
+		return parsed.data;
+	}
 
 	static readonly getProblemById: ControllerType<void> = async (req, res) => {
 		const problem = await ProblemsController.service.getProblemById(

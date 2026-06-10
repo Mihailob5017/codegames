@@ -11,7 +11,7 @@ export type RegisterUserData = {
 	country?: string | null;
 };
 
-export class AuthRepository {
+class AuthRepository {
 	findByUsernameOrEmail(username: string, email: string) {
 		return prisma.user.findFirst({
 			where: {
@@ -25,3 +25,5 @@ export class AuthRepository {
 		return prisma.user.create({ data });
 	}
 }
+
+export default AuthRepository;
