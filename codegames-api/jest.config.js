@@ -4,8 +4,16 @@ module.exports = {
 	testEnvironment: "node",
 	testMatch: ["**/*.test.ts"],
 	clearMocks: true,
-	moduleNameMapper: {
-		// `uuid` ships ESM-only; stub it so ts-jest can load modules that import it.
-		"^uuid$": "<rootDir>/shared/test-utils/uuid.mock.ts",
-	},
+	// Count every source file so untested modules can't hide from the report.
+	// index.ts (bootstrap) and prisma/ (migration scripts) are exempt.
+	collectCoverageFrom: [
+		"**/*.ts",
+		"!**/__tests__/**",
+		"!**/node_modules/**",
+		"!dist/**",
+		"!coverage/**",
+		"!prisma/**",
+		"!prisma.config.ts",
+		"!index.ts",
+	],
 };
